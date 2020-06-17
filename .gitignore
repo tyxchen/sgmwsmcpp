@@ -1,0 +1,10 @@
+src/cmake-build-debug
+src/build
+
+.Rbuildignore
+.Rhistory
+.Rproj.user
+Read-and-delete-me
+*.Rproj
+
+.idea

@@ -1,0 +1,9 @@
+Package: sgmwsmcpp
+Type: Package
+Title: Sequential graph matching with sequential Monte Carlo
+Version: 1.0
+Date: 2020-06-04
+Author: Terry Chen
+Maintainer: Terry Chen <terry.chen@uwaterloo.ca>
+Description: R implementation of SGMWSMC (http://proceedings.mlr.press/v54/jun17b.html)
+License: LGPLv2.1 or later
