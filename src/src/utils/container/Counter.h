@@ -21,15 +21,16 @@
 #define SGMWSMC_COUNTER_H
 
 #include <algorithm>
-#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <unordered_map>
 #include <vector>
 #include <type_traits>
+#include <utility>
+#include <boost/container_hash/hash.hpp>
 
-using std::hash;
+#include "utils/type_traits.h"
 
 namespace
 {
@@ -38,16 +39,6 @@ bool compare(const std::pair<T, V> *lhs, const std::pair<T, V> *rhs) {
     return lhs->second > rhs->second;
 }
 
-template<typename T, typename = std::void_t<>>
-struct is_hashable : std::false_type
-{
-};
-
-template<typename T>
-struct is_hashable<T, std::void_t<decltype(std::declval<hash<T>>()(std::declval<T>()))>>
-        : std::true_type
-{
-};
 }
 
 namespace sgm
@@ -56,8 +47,11 @@ namespace sgm
 /**
  * A map from objects to doubles. Includes convenience methods for getting,
  * setting, and incrementing element counts. Objects not in the counter will
- * return a count of zero. The counter is backed by a HashMap (unless specified
- * otherwise with the MapFactory constructor).
+ * return a count of zero. The counter is backed by a HashMap.
+ *
+ * If the provided object type is not hashable, this map stores pointers to the objects.
+ * To store the objects themselves, you can define hash<T>() yourself, or pass in a hash
+ * function to the template argument Hash.
  *
  * Transformed from briefj.collections.Counter. The original author is Dan Klein.
  *
@@ -69,9 +63,9 @@ template<typename T,
          typename Hash = void>
 class Counter
 {
-    static constexpr bool is_hashable_v = ::is_hashable<T>::value || !std::is_void_v<Hash>;
+    static constexpr bool is_hashable_v = sgm::is_hashable_v<T> || !std::is_void_v<Hash>;
     using hasher = std::conditional_t<std::is_void_v<Hash>,
-                                      std::conditional_t<is_hashable_v, hash<T>, hash<const T *>>,
+                                      std::conditional_t<is_hashable_v, boost::hash<T>, boost::hash<const T *>>,
                                       Hash>;
 public:
     using key_type = T;
@@ -79,7 +73,6 @@ public:
     using value_type = std::pair<const T &, mapped_type>;
     using item_type = std::conditional_t<is_hashable_v, T, const T *>;
     using map_type = std::unordered_map<item_type, mapped_type, hasher>;
-    using const_iterator = typename map_type::const_iterator;
 
 private:
     size_t current_mod_count = 1;
