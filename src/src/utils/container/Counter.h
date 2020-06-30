@@ -24,13 +24,12 @@
 #include <initializer_list>
 #include <iostream>
 #include <limits>
-#include <unordered_map>
 #include <vector>
 #include <type_traits>
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
-#include "utils/type_traits.h"
+#include <parallel_hashmap/phmap.h>
 
 namespace
 {
@@ -63,22 +62,18 @@ template<typename T,
          typename Hash = void>
 class Counter
 {
-    static constexpr bool is_hashable_v = sgm::is_hashable_v<T> || !std::is_void_v<Hash>;
-    using hasher = std::conditional_t<std::is_void_v<Hash>,
-                                      std::conditional_t<is_hashable_v, boost::hash<T>, boost::hash<const T *>>,
-                                      Hash>;
+    using hasher = std::conditional_t<std::is_void_v<Hash>, boost::hash<T>, Hash>;
 public:
     using key_type = T;
     using mapped_type = Count;
     using value_type = std::pair<const T &, mapped_type>;
-    using item_type = std::conditional_t<is_hashable_v, T, const T *>;
-    using map_type = std::unordered_map<item_type, mapped_type, hasher>;
+    using map_type = phmap::flat_hash_map<key_type, mapped_type, hasher>;
 
 private:
     size_t current_mod_count = 1;
     mutable size_t sorted_pairs_mod_count = 0;
     mutable size_t total_count_mod_count = 0;
-    mutable std::vector<const std::pair<const item_type, mapped_type> *> cache_sorted_pairs;
+    mutable std::vector<const std::pair<const key_type, mapped_type> *> cache_sorted_pairs;
     mutable mapped_type cache_total_count = 0.0;
 
     map_type entries;
@@ -120,45 +115,30 @@ public:
      * @return
      */
     [[nodiscard]]
-    size_t count(const T &key) const {
-        if constexpr (is_hashable_v)
-            return entries.count(key);
-        else
-            return entries.count(&key);
+    size_t count(const key_type &key) const {
+        return entries.count(key);
     }
 
-    mapped_type erase(const T &key) {
+    mapped_type erase(const key_type &key) {
         auto key_count = get(key);
-        if constexpr (is_hashable_v)
-            entries.erase(key);
-        else
-            entries.erase(&key);
+        entries.erase(key);
         ++current_mod_count;
         return key_count;
     }
 
     [[nodiscard]]
-    mapped_type get(const T &key) const {
+    mapped_type get(const key_type &key) const {
         if (count(key) == 0) return 0.0;
         // We have to call unordered_map::at here as operator[] is non-const
-        if constexpr (is_hashable_v)
-            return entries.at(key);
-        else
-            return entries.at(&key);
+        return entries.at(key);
     }
 
-    template <typename ...Dummy, typename K = T>
-    void set(K &&key, mapped_type count) {
-        if constexpr (is_hashable_v)
-            entries[std::forward<K>(key)] = count;
-        else {
-            static_assert(std::is_lvalue_reference_v<K>, "Must pass lvalue when counted type is not hashable.");
-            entries[&key] = count;
-        }
+    void set(const key_type &key, mapped_type count) {
+        entries[key] = count;
         ++current_mod_count;
     }
 
-    void increment(const T &key, mapped_type count = 1) {
+    void increment(const key_type &key, mapped_type count = 1) {
         set(key, get(key) + count);
     }
 
@@ -225,10 +205,7 @@ private:
 public:
     [[nodiscard]]
     const key_type &arg_max() const {
-        if constexpr (is_hashable_v)
-            return entry_max().first;
-        else
-            return *entry_max().first;
+        return entry_max().first;
     }
 
     [[nodiscard]]
@@ -238,10 +215,7 @@ public:
 
     [[nodiscard]]
     const key_type &arg_min() const {
-        if constexpr (is_hashable_v)
-            return entry_min().first;
-        else
-            return *entry_min().first;
+        return entry_min().first;
     }
 
     [[nodiscard]]
@@ -263,10 +237,7 @@ public:
         }
 
         value_type operator*() const {
-            if constexpr (is_hashable_v)
-                return value_type { cur->first, cur->second };
-            else
-                return value_type { *cur->first, cur->second };
+            return value_type { cur->first, cur->second };
         }
 
         iterator &operator++() {
@@ -284,7 +255,7 @@ public:
 private:
     void sort_into_cache() const {
         if (current_mod_count != sorted_pairs_mod_count) {
-            std::vector<const std::pair<const item_type, mapped_type> *> vec(entries.size());
+            std::vector<const std::pair<const key_type, mapped_type> *> vec(entries.size());
             auto i = 0;
             for (const auto &p : entries) {
                 vec[i] = &p;
@@ -292,7 +263,7 @@ private:
             }
             cache_sorted_pairs = std::move(vec);
             std::sort(cache_sorted_pairs.begin(), cache_sorted_pairs.end(),
-                      ::compare<const item_type, mapped_type>);
+                      ::compare<const key_type, mapped_type>);
             sorted_pairs_mod_count = current_mod_count;
         }
     }
@@ -302,10 +273,7 @@ public:
         counter.sort_into_cache();
         out << "[";
         for (auto it = counter.cache_sorted_pairs.begin();;) {
-            if constexpr (is_hashable_v)
-                out << (*it)->first;
-            else
-                out << *(*it)->first;
+            out << (*it)->first;
             out << ":" << (*it)->second;
             ++it;
             if (it != counter.cache_sorted_pairs.end()) {

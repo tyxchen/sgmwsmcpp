@@ -20,5 +20,8 @@ add_executable(test
         "test/utils.container.Indexer.cpp"
         "test/utils.type_traits.cpp")
 
+target_include_directories(test PRIVATE "vendor")
+target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Threads::Threads)
+
 include_directories(sgmwsmc "src/")
 include_directories(test "src/" "test/")

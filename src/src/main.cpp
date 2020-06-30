@@ -1,12 +1,12 @@
 #include <iostream>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 #include <utility>
 
 #include <boost/filesystem.hpp>
 #include <cxxopts.hpp>
+#include <parallel_hashmap/phmap.h>
 
 #include "knot/data/EllipticalKnot.h"
 #include "knot/data/KnotDataReader.h"
@@ -17,7 +17,7 @@
 using namespace sgm;
 namespace fs = boost::filesystem;
 
-using datum_type = typename std::vector<std::pair<std::vector<std::set<std::shared_ptr<EllipticalKnot>>>,
+using datum_type = typename std::vector<std::pair<std::vector<phmap::flat_hash_set<std::shared_ptr<EllipticalKnot>>>,
     std::vector<std::shared_ptr<EllipticalKnot>>>>;
 
 std::vector<datum_type> unpack(std::vector<std::vector<KnotDataReader::Segment>> instances) {
@@ -25,7 +25,7 @@ std::vector<datum_type> unpack(std::vector<std::vector<KnotDataReader::Segment>>
     for (auto &instance : instances) {
         datum_type datum;
         for (auto &segment : instance) {
-            std::vector<std::set<std::shared_ptr<EllipticalKnot>>> edges;
+            std::vector<phmap::flat_hash_set<std::shared_ptr<EllipticalKnot>>> edges;
             for (auto &matching : segment.label_to_edge()) {
                 edges.emplace_back(std::move(matching.second));
             }

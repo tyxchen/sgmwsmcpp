@@ -21,11 +21,10 @@
 #define SGMWSMCPP_KNOTDATAREADERCONFIG_H
 
 #include <iostream>
-#include <map>
 #include <memory>
-#include <set>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include <parallel_hashmap/phmap.h>
 
 #include "knot/data/EllipticalKnot.h"
 
@@ -49,7 +48,8 @@ namespace KnotDataReader
 class Segment
 {
 public:
-    using map_type = typename std::map<int, std::set<std::shared_ptr<EllipticalKnot>>>;
+    using map_type = typename phmap::flat_hash_map<int, phmap::flat_hash_set<std::shared_ptr<EllipticalKnot>>>;
+
 private:
     int m_id;
     map_type m_label_to_edge;
