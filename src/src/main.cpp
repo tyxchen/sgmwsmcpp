@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     SupervisedLearningConfig::parallel = parallel;
     SupervisedLearningConfig::num_lbfgs_iters = max_lbfgs_iter;
 
-    std::cout << fs::current_path() << std::endl;
+    std::cout << "Current working dir: " << fs::current_path() << std::endl;
 
     auto training_instances = ExpUtils::read_test_boards(BOARDS, false);
     auto training_data = unpack(std::move(training_instances));

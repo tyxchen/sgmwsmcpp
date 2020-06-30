@@ -46,6 +46,8 @@ std::vector<Segment> KnotDataReader::read_segmented_test_board(const fs::path &f
 
     std::vector<Segment> segments;
     io::CSVReader<15> test_board(file.string());
+    // TODO: change to reading a header
+    test_board.next_line();
 
     int pidx;
     double x, y;
