@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <string>
+
 #include "utils/container/Counter.h"
 #include "knot/data/Knot.h"
 
@@ -54,6 +55,7 @@ public:
 
     friend std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot);
 };
+
 }
 
 #endif //SGMWSMC_ELLIPTICALKNOT_H

@@ -127,8 +127,8 @@ public:
     }
 
     [[nodiscard]]
-    mapped_type get(const key_type &key) const {
-        if (count(key) == 0) return 0.0;
+    mapped_type get(const key_type &key, mapped_type default_count = 0.0) const {
+        if (count(key) == 0) return default_count;
         // We have to call unordered_map::at here as operator[] is non-const
         return entries.at(key);
     }
@@ -224,33 +224,11 @@ public:
     }
 
 public:
-    class iterator
-    {
-        using map_iterator = typename map_type::const_iterator;
-        map_iterator cur;
+    using iterator = typename map_type::const_iterator;
 
-        explicit iterator(map_iterator &&cur) : cur { std::move(cur) } {}
+    iterator begin() const { return entries.cbegin(); }
 
-    public:
-        bool operator!=(const iterator &other) const {
-            return cur != other.cur;
-        }
-
-        value_type operator*() const {
-            return value_type { cur->first, cur->second };
-        }
-
-        iterator &operator++() {
-            ++cur;
-            return *this;
-        }
-
-        friend class Counter;
-    };
-
-    iterator begin() const { return iterator { entries.cbegin() }; }
-
-    iterator end() const { return iterator { entries.cend() }; }
+    iterator end() const { return entries.cend(); }
 
 private:
     void sort_into_cache() const {

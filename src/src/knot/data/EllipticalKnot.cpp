@@ -66,4 +66,5 @@ std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot) {
     out << "(" << knot.m_pidx << ", " << knot.m_idx << ")";
     return out;
 }
+
 }
