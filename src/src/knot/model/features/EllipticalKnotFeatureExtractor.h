@@ -40,7 +40,7 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<std::string, 
     Counter<std::string> m_mean;
     Counter<std::string> m_sd;
 
-public:
+protected:
     Counter<std::string> _extract_features(const node_type &node, const phmap::flat_hash_set<node_type> &decision) override;
 
     Counter<std::string> _extract_features(const phmap::flat_hash_set<node_type> &e) override;
@@ -49,7 +49,16 @@ public:
 
     int _dim() const override;
 
-    void _standardize(const Counter<std::string> &mean, const Counter<std::string> &sd) override;
+    void _standardize(Counter<std::string> mean, Counter<std::string> sd) override;
+
+public:
+    const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &distance_fe() const;
+
+    const AreaFeatureExtractor &area_fe() const;
+
+    const Counter<std::string> &mean() const;
+
+    const Counter<std::string> &sd() const;
 };
 }
 

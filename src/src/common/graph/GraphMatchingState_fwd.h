@@ -17,30 +17,12 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#include "catch.hpp"
-#include "utils/container/Counter.h"
-#include <iostream>
+#ifndef SGMWSMCPP_GRAPHMATCHINGSTATE_FWD_H
+#define SGMWSMCPP_GRAPHMATCHINGSTATE_FWD_H
 
-struct C {
-    int key;
-
-    explicit C (int key) : key { key } {}
-    C (const C &other) : key { other.key } {
-        std::cerr<< "copy cc" << std::endl;
-    }
-};
-
-std::ostream &operator<<(std::ostream &out, const C &c) {
-    out << c.key;
-    return out;
+namespace sgm
+{
+template <typename F, typename NodeType>
+class GraphMatchingState;
 }
-
-TEST_CASE("counter operations on a hashable type") {
-    sgm::Counter<int> counter;
-
-    SECTION("can store") {
-        counter.set(5, 0);
-        REQUIRE(counter.size() == 1);
-        REQUIRE(counter.get(5) == 0);
-    }
-}
+#endif //SGMWSMCPP_GRAPHMATCHINGSTATE_FWD_H

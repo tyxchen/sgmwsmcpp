@@ -31,24 +31,19 @@
 
 namespace sgm
 {
-struct AreaFeatureExtractorConsts
+namespace AreaFeatureExtractorConsts
 {
-    static constexpr int DIM = 2;
-    static const char *TWO_MATCHING_AREA_DIFF;
-    static const char *THREE_MATCHING_AREA_DIFF;
-    static constexpr double NORM_CONST = 1;
-    static constexpr double NORM_CONST2 = 500;
-    static constexpr double CONFIDENCE_LEVEL = 0.975;
-    static double SQRT_CRITICAL_VALUE;
-
-    static struct _init
-    {
-        _init() noexcept {
-            static_assert(0 <= CONFIDENCE_LEVEL && CONFIDENCE_LEVEL < 1, "Must choose confidence level in [0,1)");
-            boost::math::chi_squared_distribution<double> chi(2);
-            SQRT_CRITICAL_VALUE = boost::math::quantile(chi, CONFIDENCE_LEVEL);
-        }
-    } _initializer;
+constexpr int DIM = 2;
+const char* const TWO_MATCHING_AREA_DIFF = "TWO_MATCHING_AREA_DIFF";
+const char* const THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
+constexpr double NORM_CONST = 1;
+constexpr double NORM_CONST2 = 500;
+constexpr double CONFIDENCE_LEVEL = 0.975;
+const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
+    static_assert(0 <= CONFIDENCE_LEVEL && CONFIDENCE_LEVEL < 1, "Must choose confidence level in [0,1)");
+    boost::math::chi_squared_distribution<double> chi(2);
+    return std::sqrt(boost::math::quantile(chi, CONFIDENCE_LEVEL));
+}();
 };
 
 std::array<double, 2> compute_area(const EllipticalKnot &knot);

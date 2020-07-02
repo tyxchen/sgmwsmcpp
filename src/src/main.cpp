@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -5,6 +6,11 @@
 #include <utility>
 
 #include <boost/filesystem.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
 #include <cxxopts.hpp>
 #include <parallel_hashmap/phmap.h>
 
@@ -12,10 +18,13 @@
 #include "knot/data/KnotDataReader.h"
 #include "common/learning/SupervisedLearning.h"
 #include "utils/ExpUtils.h"
-#include "utils/container/Counter.h"
+#include "common/model/PairwiseMatchingModel.h"
+#include "knot/model/features/EllipticalKnotFeatureExtractor.h"
+#include "common/model/Command.h"
 
 using namespace sgm;
 namespace fs = boost::filesystem;
+namespace acc = boost::accumulators;
 
 using datum_type = typename std::vector<std::pair<std::vector<phmap::flat_hash_set<std::shared_ptr<EllipticalKnot>>>,
     std::vector<std::shared_ptr<EllipticalKnot>>>>;
@@ -117,6 +126,49 @@ int main(int argc, char** argv) {
 
     auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
     std::cout << test_instances.size() << std::endl;
+
+    PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
+    EllipticalKnotFeatureExtractor fe;
+    Command<std::string, EllipticalKnot> command(decision_model, fe);
+
+    // compute the features on each of these data points and standardization
+    std::vector<acc::accumulator_set<double,
+                                     acc::stats<acc::tag::count, acc::tag::mean, acc::tag::variance(acc::lazy)>>>
+        standardizations(fe.dim());
+
+    for (const auto &data : training_data) {
+        for (const auto &datum : data) {
+            for (const auto &e : datum.first) {
+                auto phi = fe.extract_features(e);
+                for (const auto &vals : phi) {
+                    standardizations[command.indexer().o2i(vals.first)](phi.get(vals.first));
+                }
+            }
+        }
+    }
+
+    Counter<std::string> mean;
+    Counter<std::string> sd;
+
+    for (int i = 0; i < fe.dim(); ++i) {
+        auto f = command.indexer().i2o(i);
+        auto n = static_cast<double>(acc::count(standardizations[i]));
+        mean.set(f, acc::mean(standardizations[i]));
+        sd.set(f, std::sqrt((n / (n - 1)) * acc::variance(standardizations[i])));
+    }
+
+    fe.standardize(std::move(mean), std::move(sd));
+
+    /*
+     * Train the model parameters and run SMC on test data
+     */
+    for (int i = 0; i < fe.dim(); ++i) {
+        auto f = command.indexer().i2o(i);
+        std::cout << "Feature " << i << ":" << std::endl;
+        std::cout << "  name: " << f << std::endl;
+        std::cout << "  mean: " << fe.mean().get(f) << std::endl;
+        std::cout << "  sd:   " << fe.sd().get(f) << std::endl;
+    }
 
     return 0;
 }

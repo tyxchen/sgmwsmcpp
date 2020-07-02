@@ -21,17 +21,12 @@
 #include <cmath>
 #include <iterator>
 #include <stdexcept>
-#include <utility>
-#include <boost/math/constants/constants.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
 using namespace sgm;
 
-const char *AreaFeatureExtractorConsts::TWO_MATCHING_AREA_DIFF = "TWO_MATCHING_AREA_DIFF";
-const char *AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
-double AreaFeatureExtractorConsts::SQRT_CRITICAL_VALUE = 0.0;
-AreaFeatureExtractorConsts::_init AreaFeatureExtractorConsts::_initializer;
+constexpr double PI = 3.141592653589793238462643383279502884;
 
 std::array<double, 2> sgm::compute_area(const EllipticalKnot &knot) {
     Eigen::Matrix2d S;
@@ -42,7 +37,7 @@ std::array<double, 2> sgm::compute_area(const EllipticalKnot &knot) {
     auto eigen = es.compute(S, true);
     auto lambdas = eigen.eigenvalues().real();
 
-    double area = boost::math::double_constants::pi * std::sqrt(lambdas(0)) *
+    double area = PI * std::sqrt(lambdas(0)) *
                   AreaFeatureExtractorConsts::SQRT_CRITICAL_VALUE * std::sqrt(lambdas(1)) *
                   AreaFeatureExtractorConsts::SQRT_CRITICAL_VALUE;
     // compute the rotation angle

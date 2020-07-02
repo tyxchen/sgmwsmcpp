@@ -18,29 +18,14 @@
 //
 
 #include "catch.hpp"
-#include "utils/container/Counter.h"
-#include <iostream>
+#include "utils/container/Indexer.h"
 
-struct C {
-    int key;
-
-    explicit C (int key) : key { key } {}
-    C (const C &other) : key { other.key } {
-        std::cerr<< "copy cc" << std::endl;
-    }
-};
-
-std::ostream &operator<<(std::ostream &out, const C &c) {
-    out << c.key;
-    return out;
-}
-
-TEST_CASE("counter operations on a hashable type") {
-    sgm::Counter<int> counter;
+TEST_CASE("indexer operations on a hashable type") {
+    sgm::Indexer<int> indexer{5};
 
     SECTION("can store") {
-        counter.set(5, 0);
-        REQUIRE(counter.size() == 1);
-        REQUIRE(counter.get(5) == 0);
+        REQUIRE(indexer.size() == 1);
+        REQUIRE(indexer.o2i(5) == 0);
+        REQUIRE(indexer.i2o(0) == 5);
     }
 }

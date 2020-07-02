@@ -70,26 +70,37 @@ public:
     using map_type = phmap::flat_hash_map<key_type, mapped_type, hasher>;
 
 private:
-    size_t current_mod_count = 1;
-    mutable size_t sorted_pairs_mod_count = 0;
-    mutable size_t total_count_mod_count = 0;
-    mutable std::vector<const std::pair<const key_type, mapped_type> *> cache_sorted_pairs;
-    mutable mapped_type cache_total_count = 0.0;
+    size_t m_current_mod_count = 1;
+    mutable size_t m_sorted_pairs_mod_count = 0;
+    mutable size_t m_total_count_mod_count = 0;
+    mutable std::vector<const std::pair<const key_type, mapped_type> *> m_cache_sorted_pairs;
+    mutable mapped_type m_cache_total_count = 0.0;
 
-    map_type entries;
+    map_type m_entries;
 
 public:
     Counter() = default;
 
-    Counter(std::initializer_list<typename map_type::value_type> init) : entries(init) {}
+    template <typename ForwardIterator>
+    Counter(ForwardIterator begin, ForwardIterator end) : m_entries(begin, end) {}
+
+    Counter(std::initializer_list<typename map_type::value_type> init) : m_entries(init) {}
+
+    template <typename InitList>
+    explicit Counter(const InitList &init) {
+        m_entries.reserve(init.size());
+        for (const auto &thing : init) {
+            m_entries[thing] = 0;
+        }
+    }
 
     /**
      * Clears the container.
      */
     void clear() {
-        current_mod_count = 1;
-        sorted_pairs_mod_count = 0;
-        entries.clear();
+        m_current_mod_count = 1;
+        m_sorted_pairs_mod_count = 0;
+        m_entries.clear();
     }
 
     /**
@@ -97,7 +108,7 @@ public:
      */
     [[nodiscard]]
     size_t size() const {
-        return entries.size();
+        return m_entries.size();
     }
 
     /**
@@ -105,7 +116,7 @@ public:
      */
     [[nodiscard]]
     bool empty() const {
-        return entries.empty();
+        return m_entries.empty();
     }
 
     /**
@@ -116,26 +127,26 @@ public:
      */
     [[nodiscard]]
     size_t count(const key_type &key) const {
-        return entries.count(key);
+        return m_entries.count(key);
     }
 
     mapped_type erase(const key_type &key) {
         auto key_count = get(key);
-        entries.erase(key);
-        ++current_mod_count;
+        m_entries.erase(key);
+        ++m_current_mod_count;
         return key_count;
     }
 
     [[nodiscard]]
-    mapped_type get(const key_type &key, mapped_type default_count = 0.0) const {
+    mapped_type get(const key_type &key, mapped_type default_count = 0) const {
         if (count(key) == 0) return default_count;
         // We have to call unordered_map::at here as operator[] is non-const
-        return entries.at(key);
+        return m_entries.at(key);
     }
 
     void set(const key_type &key, mapped_type count) {
-        entries[key] = count;
-        ++current_mod_count;
+        m_entries[key] = count;
+        ++m_current_mod_count;
     }
 
     void increment(const key_type &key, mapped_type count = 1) {
@@ -158,30 +169,30 @@ public:
 
     [[nodiscard]]
     mapped_type total_count() const {
-        if (current_mod_count != total_count_mod_count) {
+        if (m_current_mod_count != m_total_count_mod_count) {
             auto total = 0.0;
-            for (const auto &p : entries) {
+            for (const auto &p : m_entries) {
                 total += p.second;
             }
-            cache_total_count = total;
-            total_count_mod_count = current_mod_count;
+            m_cache_total_count = total;
+            m_total_count_mod_count = m_current_mod_count;
         }
-        return cache_total_count;
+        return m_cache_total_count;
     }
 
     void normalize() {
         auto count = total_count();
-        for (auto &p : entries) {
+        for (auto &p : m_entries) {
             p.second /= count;
         }
-        ++current_mod_count;
+        ++m_current_mod_count;
     }
 
 private:
     const typename map_type::value_type &entry_max() const {
         auto max_count = -std::numeric_limits<mapped_type>::infinity();
-        auto max_entry = entries.cbegin();
-        for (auto it = entries.cbegin(); it != entries.cend(); ++it) {
+        auto max_entry = m_entries.cbegin();
+        for (auto it = m_entries.cbegin(); it != m_entries.cend(); ++it) {
             if (it->second > max_count) {
                 max_entry = it;
                 max_count = it->second;
@@ -192,8 +203,8 @@ private:
 
     const typename map_type::value_type &entry_min() const {
         auto min_count = std::numeric_limits<mapped_type>::infinity();
-        auto min_entry = entries.cbegin();
-        for (auto it = entries.cbegin(); it != entries.cend(); ++it) {
+        auto min_entry = m_entries.cbegin();
+        for (auto it = m_entries.cbegin(); it != m_entries.cend(); ++it) {
             if (it->second < min_count) {
                 min_entry = it;
                 min_count = it->second;
@@ -226,23 +237,36 @@ public:
 public:
     using iterator = typename map_type::const_iterator;
 
-    iterator begin() const { return entries.cbegin(); }
+    iterator begin() const { return m_entries.cbegin(); }
 
-    iterator end() const { return entries.cend(); }
+    iterator end() const { return m_entries.cend(); }
+
+    /**
+     * Returns a vector of the
+     * @return
+     */
+    std::vector<key_type> keys() const {
+        std::vector<key_type> keys;
+        keys.reserve(m_entries.size());
+        for (const auto &p : m_entries) {
+            keys.emplace_back(p.first);
+        }
+        return keys;
+    }
 
 private:
     void sort_into_cache() const {
-        if (current_mod_count != sorted_pairs_mod_count) {
-            std::vector<const std::pair<const key_type, mapped_type> *> vec(entries.size());
+        if (m_current_mod_count != m_sorted_pairs_mod_count) {
+            std::vector<const std::pair<const key_type, mapped_type> *> vec(m_entries.size());
             auto i = 0;
-            for (const auto &p : entries) {
+            for (const auto &p : m_entries) {
                 vec[i] = &p;
                 ++i;
             }
-            cache_sorted_pairs = std::move(vec);
-            std::sort(cache_sorted_pairs.begin(), cache_sorted_pairs.end(),
+            m_cache_sorted_pairs = std::move(vec);
+            std::sort(m_cache_sorted_pairs.begin(), m_cache_sorted_pairs.end(),
                       ::compare<const key_type, mapped_type>);
-            sorted_pairs_mod_count = current_mod_count;
+            m_sorted_pairs_mod_count = m_current_mod_count;
         }
     }
 
@@ -250,11 +274,11 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const Counter<T, Count, Hash> &counter) {
         counter.sort_into_cache();
         out << "[";
-        for (auto it = counter.cache_sorted_pairs.begin();;) {
+        for (auto it = counter.m_cache_sorted_pairs.begin();;) {
             out << (*it)->first;
             out << ":" << (*it)->second;
             ++it;
-            if (it != counter.cache_sorted_pairs.end()) {
+            if (it != counter.m_cache_sorted_pairs.end()) {
                 out << ", ";
             } else {
                 break;

@@ -49,7 +49,7 @@ public:
         return _dim();
     }
 
-    void standardize(const Counter<F> &mean, const Counter<F> &sd) {
+    void standardize(Counter<F> mean, Counter<F> sd) {
         _standardize(mean, sd);
     }
 
@@ -63,7 +63,7 @@ protected:
 
     virtual inline int _dim() const = 0;
 
-    virtual void _standardize(const Counter<F> &mean, const Counter<F> &sd) {}
+    virtual void _standardize(Counter<F> mean, Counter<F> sd) {}
 };
 }
 
