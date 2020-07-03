@@ -25,7 +25,6 @@
 #include <iostream>
 #include <limits>
 #include <vector>
-#include <type_traits>
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
@@ -59,15 +58,14 @@ namespace sgm
 
 template<typename T,
          typename Count = double,
-         typename Hash = void>
+         typename Hash = boost::hash<T>>
 class Counter
 {
-    using hasher = std::conditional_t<std::is_void_v<Hash>, boost::hash<T>, Hash>;
 public:
     using key_type = T;
     using mapped_type = Count;
     using value_type = std::pair<const T &, mapped_type>;
-    using map_type = phmap::flat_hash_map<key_type, mapped_type, hasher>;
+    using map_type = phmap::flat_hash_map<key_type, mapped_type, Hash>;
 
 private:
     size_t m_current_mod_count = 1;

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(sgmwsmcpp VERSION 0.0.1 DESCRIPTION "Sequential graph matching with sequential Monte Carlo")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(Boost 1.67.0 COMPONENTS filesystem REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)

@@ -23,26 +23,22 @@
 #include <initializer_list>
 #include <iostream>
 #include <vector>
-#include <type_traits>
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
 #include <parallel_hashmap/phmap.h>
 
-#include "utils/type_traits.h"
-
 namespace sgm
 {
 
 template<typename T,
-         typename Hash = void>
+         typename Hash = boost::hash<T>>
 class Indexer
 {
-    using hasher = std::conditional_t<std::is_void_v<Hash>, boost::hash<T>, Hash>;
 public:
     using object_type = T;
     using index_type = size_t;
-    using map_type = phmap::flat_hash_map<object_type, index_type, hasher>;
+    using map_type = phmap::flat_hash_map<object_type, index_type, Hash>;
 
 private:
     std::vector<object_type> m_i2o;
