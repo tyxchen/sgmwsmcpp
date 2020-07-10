@@ -15,6 +15,8 @@ add_executable(sgmwsmc ${SOURCES})
 target_include_directories(sgmwsmc PRIVATE "vendor")
 target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)
 
+target_compile_definitions(sgmwsmc PUBLIC DEBUG=1)
+
 add_executable(test
         "test/test.cpp"
         "test/utils.container.Counter.cpp"

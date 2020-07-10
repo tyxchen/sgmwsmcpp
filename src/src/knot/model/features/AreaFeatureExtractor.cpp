@@ -85,7 +85,8 @@ void extract_features_3(const AreaFeatureExtractor::node_type &node1,
                         const AreaFeatureExtractor::node_type &node2,
                         const AreaFeatureExtractor::node_type &node3,
                         Counter<std::string> &features) {
-    // 3-matching -- compute area for each of the knots, then add up the two smaller ones and compare with the larger one
+    // 3-matching -- compute area for each of the knots, then compare the two largest knots
+    // TODO: this covariate can be improved
     auto largest = -1.0, middle = largest, smallest = largest;
     std::array<const AreaFeatureExtractor::node_type *, 3> nodes { &node1, &node2, &node3 };
 
@@ -104,31 +105,30 @@ void extract_features_3(const AreaFeatureExtractor::node_type &node1,
     }
 
     features.set(AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF,
-                 std::abs(largest - (middle + smallest)) / AreaFeatureExtractorConsts::NORM_CONST);
+                 std::abs(largest - middle) / AreaFeatureExtractorConsts::NORM_CONST);
 }
 
-Counter<std::string> AreaFeatureExtractor::_extract_features(const node_type &node,
-                                                             const phmap::flat_hash_set<node_type> &decision) {
+Counter<std::string> AreaFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision) {
     auto f = _default_parameters();
 
-    if (decision.size() == 1) {
-        extract_features_2(node, *decision.begin(), f);
-    } else if (decision.size() == 2) {
-        auto begin = decision.begin();
+    if (decision->size() == 1) {
+        extract_features_2(node, *decision->begin(), f);
+    } else if (decision->size() == 2) {
+        auto begin = decision->begin();
         extract_features_3(node, *begin, *std::next(begin), f);
     }
 
     return f;
 }
 
-Counter<std::string> AreaFeatureExtractor::_extract_features(const phmap::flat_hash_set<node_type> &e) {
+Counter<std::string> AreaFeatureExtractor::_extract_features(const edge_type &e) {
     auto f = _default_parameters();
 
-    if (e.size() == 2) {
-        auto begin = e.begin();
+    if (e->size() == 2) {
+        auto begin = e->begin();
         extract_features_2(*begin, *std::next(begin), f);
-    } else if (e.size() == 3) {
-        auto begin = e.begin();
+    } else if (e->size() == 3) {
+        auto begin = e->begin();
         extract_features_3(*begin, *std::next(begin), *std::next(begin, 2), f);
     }
 

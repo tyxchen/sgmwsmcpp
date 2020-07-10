@@ -26,6 +26,7 @@
 #include <boost/filesystem.hpp>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
 
 namespace fs = boost::filesystem;
@@ -48,21 +49,23 @@ namespace KnotDataReader
 class Segment
 {
 public:
-    using map_type = typename phmap::flat_hash_map<int, phmap::flat_hash_set<std::shared_ptr<EllipticalKnot>>>;
+    using node_type = node_type_base<EllipticalKnot>;
+    using edge_type = edge_type_base<EllipticalKnot>;
+    using map_type = typename phmap::flat_hash_map<int, edge_type>;
 
 private:
     int m_id;
     map_type m_label_to_edge;
-    std::vector<std::shared_ptr<EllipticalKnot>> m_knots;
+    std::vector<node_type> m_knots;
 
 public:
     explicit Segment(int id);
     int id() const;
     map_type &label_to_edge();
     const map_type &label_to_edge() const;
-    std::vector<std::shared_ptr<EllipticalKnot>> &knots();
-    const std::vector<std::shared_ptr<EllipticalKnot>> &knots() const;
-    void add_node(int label, const std::shared_ptr<EllipticalKnot>& knot);
+    std::vector<node_type> &knots();
+    const std::vector<node_type> &knots() const;
+    void add_node(int label, const node_type& knot);
 };
 
 std::vector<Segment> read_segmented_test_board(const fs::path &file);

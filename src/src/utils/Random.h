@@ -17,15 +17,24 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#include "common/learning/SupervisedLearning.h"
+#ifndef SGMWSMCPP_RANDOM_H
+#define SGMWSMCPP_RANDOM_H
 
-#include <cmath>
+#include <random>
 
-using namespace sgm;
-
-bool SupervisedLearningConfig::parallel = true;
-int SupervisedLearningConfig::num_lbfgs_iters = 100;
-
-bool SupervisedLearning::check_convergence(double old_nllk, double new_nllk, double tolerance) {
-    return std::abs(old_nllk - new_nllk) < tolerance;
+namespace sgm
+{
+class Random
+{
+    std::minstd_rand m_rng;
+public:
+    explicit Random(int seed);
+    const std::minstd_rand &rng() const;
+    std::minstd_rand::result_type next(size_t bits);
+    int next_int(int bound);
+    double next_double();
+};
 }
+
+
+#endif //SGMWSMCPP_RANDOM_H

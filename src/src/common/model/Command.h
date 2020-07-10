@@ -20,16 +20,17 @@
 #ifndef SGMWSMCPP_COMMAND_H
 #define SGMWSMCPP_COMMAND_H
 
+#include <memory>
 #include <vector>
-#include <random>
-#include <stack>
 #include <utility>
 
+#include "utils/Random.h"
 #include "utils/container/Counter.h"
 #include "utils/container/Indexer.h"
 #include "common/graph/GraphMatchingState_fwd.h"
 #include "common/model/DecisionModel.h"
 #include "common/model/GraphFeatureExtractor.h"
+#include "common/model/MultinomialLogisticModel.h"
 
 namespace sgm
 {
@@ -48,6 +49,24 @@ public:
 
     Indexer<F> &indexer() {
         return m_indexer;
+    }
+
+    void sample_next(Random &random,
+        GraphMatchingState<F, NodeType> &state,
+        bool use_sequential_sampling,
+        bool use_exact_sampling) {
+        state.sample_next_state(random, *this, use_sequential_sampling, use_exact_sampling);
+    }
+
+    const DecisionModel<F, NodeType> &decision_model() const {
+        return m_decision_model;
+    }
+    DecisionModel<F, NodeType> &decision_model() {
+        return m_decision_model;
+    }
+
+    MultinomialLogisticModel<F, NodeType> current_model() {
+        return MultinomialLogisticModel<F, NodeType>(m_fe, m_params);
     }
 };
 }

@@ -30,17 +30,16 @@
 
 #include <parallel_hashmap/phmap.h>
 
-namespace
+namespace sgm
+{
+
+namespace detail
 {
 template<typename T, typename V>
 bool compare(const std::pair<T, V> *lhs, const std::pair<T, V> *rhs) {
     return lhs->second > rhs->second;
 }
-
 }
-
-namespace sgm
-{
 
 /**
  * A map from objects to doubles. Includes convenience methods for getting,
@@ -263,7 +262,7 @@ private:
             }
             m_cache_sorted_pairs = std::move(vec);
             std::sort(m_cache_sorted_pairs.begin(), m_cache_sorted_pairs.end(),
-                      ::compare<const key_type, mapped_type>);
+                      detail::compare<const key_type, mapped_type>);
             m_sorted_pairs_mod_count = m_current_mod_count;
         }
     }

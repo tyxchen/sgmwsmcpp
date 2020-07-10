@@ -22,8 +22,7 @@
 using namespace sgm;
 
 Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const node_type &node,
-                                                                       const phmap::flat_hash_set<node_type>
-                                                                       &decision) {
+                                                                       const edge_type &decision) {
     Counter<std::string> f;
 
     auto distance_features = m_distance_fe.extract_features(node, decision);
@@ -44,7 +43,7 @@ Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const nod
     return f;
 }
 
-Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const phmap::flat_hash_set<node_type> &e) {
+Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) {
     auto f = m_distance_fe.extract_features(e);
 
     f.increment_all(m_area_fe.extract_features(e));

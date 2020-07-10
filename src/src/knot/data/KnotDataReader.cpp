@@ -33,12 +33,15 @@ int Segment::id() const { return m_id; }
 Segment::map_type &Segment::label_to_edge() { return m_label_to_edge; }
 const Segment::map_type &Segment::label_to_edge() const { return m_label_to_edge; }
 
-std::vector<std::shared_ptr<EllipticalKnot>> &Segment::knots() { return m_knots; }
-const std::vector<std::shared_ptr<EllipticalKnot>> &Segment::knots() const { return m_knots; }
+std::vector<Segment::node_type> &Segment::knots() { return m_knots; }
+const std::vector<Segment::node_type> &Segment::knots() const { return m_knots; }
 
-void Segment::add_node(int label, const std::shared_ptr<EllipticalKnot> &knot) {
+void Segment::add_node(int label, const node_type &knot) {
     m_knots.push_back(knot);
-    m_label_to_edge[label].insert(knot);
+    if (!m_label_to_edge.count(label)) {
+        m_label_to_edge.emplace(label, std::make_shared<typename edge_type::element_type>());
+    }
+    m_label_to_edge[label]->insert(knot);
 }
 
 std::vector<Segment> KnotDataReader::read_segmented_test_board(const fs::path &file) {

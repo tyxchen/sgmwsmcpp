@@ -41,9 +41,9 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<std::string, 
     Counter<std::string> m_sd;
 
 protected:
-    Counter<std::string> _extract_features(const node_type &node, const phmap::flat_hash_set<node_type> &decision) override;
+    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
 
-    Counter<std::string> _extract_features(const phmap::flat_hash_set<node_type> &e) override;
+    Counter<std::string> _extract_features(const edge_type &e) override;
 
     Counter<std::string> _default_parameters() const override;
 

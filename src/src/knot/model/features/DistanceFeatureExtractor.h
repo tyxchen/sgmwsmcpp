@@ -39,6 +39,18 @@ const char* const TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
 const char* const TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
 }
 
+template <typename NodeType>
+double compute_distance(const NodeType &node, const NodeType &other) {
+    auto node_f = node.node_features();
+    auto other_f = other.node_features();
+
+    auto diffX = std::pow(node_f.get("x") - other_f.get("x"), 2);
+    auto diffY = std::pow(node_f.get("y") - other_f.get("y"), 2);
+    auto diffZ = std::pow(node_f.get("z") - other_f.get("z"), 2);
+
+    return std::sqrt(diffX + diffY + diffZ);
+}
+
 template <typename KnotType>
 void compute_distance(const KnotType &node, const KnotType &other, Counter <std::string> &features) {
     auto node_f = node.node_features();
@@ -64,29 +76,29 @@ class DistanceFeatureExtractor : public GraphFeatureExtractor<std::string, KnotT
 {
 public:
     using node_type = typename GraphFeatureExtractor<std::string, KnotType>::node_type;
+    using edge_type = typename GraphFeatureExtractor<std::string, KnotType>::edge_type;
 
 protected:
-    Counter<std::string> _extract_features(const node_type &node,
-                                           const phmap::flat_hash_set<node_type> &decision) override {
-        if (decision.size() != 1) {
-            throw std::runtime_error("Expected two-matching, received " + std::to_string(decision.size() - 1) +
+    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override {
+        if (decision->size() != 1) {
+            throw std::runtime_error("Expected two-matching, received " + std::to_string(decision->size() - 1) +
                                      "-matching.");
         }
 
         auto f = _default_parameters();
 
-        compute_distance(*node, **decision.begin(), f);
+        compute_distance(*node, **decision->begin(), f);
 
         return f;
     }
 
-    Counter<std::string> _extract_features(const phmap::flat_hash_set<node_type> &e) override {
-        if (e.size() != 2) {
-            throw std::runtime_error("Expected two-matching, received " + std::to_string(e.size()) + "-matching.");
+    Counter<std::string> _extract_features(const edge_type &e) override {
+        if (e->size() != 2) {
+            throw std::runtime_error("Expected two-matching, received " + std::to_string(e->size()) + "-matching.");
         }
 
         auto f = _default_parameters();
-        auto begin = e.begin();
+        auto begin = e->begin();
 
         compute_distance(**begin, **std::next(begin), f);
 

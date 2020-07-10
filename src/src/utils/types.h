@@ -17,15 +17,18 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#include "common/learning/SupervisedLearning.h"
+#ifndef SGMWSMCPP_TYPES_H
+#define SGMWSMCPP_TYPES_H
 
-#include <cmath>
+#include <memory>
+#include <parallel_hashmap/phmap_fwd_decl.h>
 
-using namespace sgm;
+namespace sgm
+{
+template <typename NodeType>
+using node_type_base = typename std::shared_ptr<NodeType>;
 
-bool SupervisedLearningConfig::parallel = true;
-int SupervisedLearningConfig::num_lbfgs_iters = 100;
-
-bool SupervisedLearning::check_convergence(double old_nllk, double new_nllk, double tolerance) {
-    return std::abs(old_nllk - new_nllk) < tolerance;
+template <typename NodeType>
+using edge_type_base = typename std::shared_ptr<phmap::flat_hash_set<node_type_base<NodeType>>>;
 }
+#endif //SGMWSMCPP_TYPES_H

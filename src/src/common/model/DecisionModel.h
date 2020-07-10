@@ -24,7 +24,8 @@
 #include <vector>
 #include <parallel_hashmap/phmap.h>
 
-#include "common/graph/GraphMatchingState.h"
+#include "utils/types.h"
+#include "common/graph/GraphMatchingState_fwd.h"
 
 namespace sgm
 {
@@ -32,23 +33,20 @@ template <typename F, typename NodeType>
 class DecisionModel
 {
 public:
-    using node_type = typename std::shared_ptr<NodeType>;
+    using node_type = node_type_base<NodeType>;
+    using edge_type = edge_type_base<NodeType>;
 
-    std::vector<phmap::flat_hash_set<node_type>> get_decisions(const node_type &node,
-                                                               const GraphMatchingState<F, NodeType>
-                                                               &state) {
-        return _get_decisions(node, state);
+    std::vector<edge_type> decisions(const node_type &node,
+                                     const GraphMatchingState<F, NodeType> &state) {
+        return _decisions(node, state);
     }
 
-    std::vector<phmap::flat_hash_set<node_type>> get_decisions(const node_type &node,
-                                                               const std::vector<node_type> &candidate_nodes,
-                                                               const phmap::flat_hash_set<node_type> &covered_nodes,
-                                                               const std::vector<
-                                                                   phmap::flat_hash_set<node_type>> &matching,
-                                                               const phmap::flat_hash_map<node_type,
-                                                                                          phmap::flat_hash_set<
-                                                                                              node_type>> &node_to_edge) {
-        return _get_decisions(node, candidate_nodes, covered_nodes, matching, node_to_edge);
+    std::vector<edge_type> decisions(const node_type &node,
+                                     const std::vector<node_type> &candidate_nodes,
+                                     const phmap::flat_hash_set<node_type> &covered_nodes,
+                                     const std::vector<edge_type> &matching,
+                                     const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) {
+        return _decisions(node, candidate_nodes, covered_nodes, matching, node_to_edge);
     }
 
     bool in_support(const GraphMatchingState<F, NodeType> &state) {
@@ -64,21 +62,17 @@ public:
         return _num_parents(cur_latent);
     }
 
-protected:
-    virtual std::vector<phmap::flat_hash_set<node_type>> _get_decisions(const node_type &node,
-                                                                        const GraphMatchingState<F, NodeType>
-                                                                        &state) = 0;
+    virtual ~DecisionModel() = default;
 
-    virtual std::vector<phmap::flat_hash_set<node_type>> _get_decisions(const node_type &node,
-                                                                        const std::vector<node_type> &candidate_nodes,
-                                                                        const phmap::flat_hash_set<node_type>
-                                                                        &covered_nodes,
-                                                                        const std::vector<
-                                                                            phmap::flat_hash_set<node_type>> &matching,
-                                                                        const phmap::flat_hash_map<node_type,
-                                                                                                   phmap::flat_hash_set<
-                                                                                                       node_type>>
-                                                                        &node_to_edge) = 0;
+protected:
+    virtual std::vector<edge_type> _decisions(const node_type &node,
+                                              const GraphMatchingState<F, NodeType> &state) = 0;
+
+    virtual std::vector<edge_type> _decisions(const node_type &node,
+                                              const std::vector<node_type> &candidate_nodes,
+                                              const phmap::flat_hash_set<node_type> &covered_nodes,
+                                              const std::vector<edge_type> &matching,
+                                              const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) = 0;
 
     virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;
 

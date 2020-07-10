@@ -53,10 +53,9 @@ bool shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2);
 class AreaFeatureExtractor : public GraphFeatureExtractor<std::string, EllipticalKnot>
 {
 protected:
-    Counter<std::string> _extract_features(const node_type &node,
-                                           const phmap::flat_hash_set<node_type> &decision) override;
+    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
 
-    Counter<std::string> _extract_features(const phmap::flat_hash_set<node_type> &e) override;
+    Counter<std::string> _extract_features(const edge_type &e) override;
 
     Counter<std::string> _default_parameters() const override;
 

@@ -17,15 +17,13 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#include "common/learning/SupervisedLearning.h"
+#ifndef SGMWSMCPP_DECISIONMODEL_FWD_H
+#define SGMWSMCPP_DECISIONMODEL_FWD_H
 
-#include <cmath>
-
-using namespace sgm;
-
-bool SupervisedLearningConfig::parallel = true;
-int SupervisedLearningConfig::num_lbfgs_iters = 100;
-
-bool SupervisedLearning::check_convergence(double old_nllk, double new_nllk, double tolerance) {
-    return std::abs(old_nllk - new_nllk) < tolerance;
+namespace sgm
+{
+template <typename F, typename NodeType>
+class DecisionModel;
 }
+
+#endif //SGMWSMCPP_DECISIONMODEL_FWD_H
