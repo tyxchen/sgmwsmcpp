@@ -17,25 +17,38 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_RANDOM_H
-#define SGMWSMCPP_RANDOM_H
+#ifndef SGMWSMCPP_PERMUTATIONSTREAM_H
+#define SGMWSMCPP_PERMUTATIONSTREAM_H
 
-#include <random>
+#include <vector>
+
+#include "utils/Random.h"
 
 namespace sgm
 {
-class Random
+namespace smc
 {
-    std::minstd_rand m_rng;
+
+class PermutationStream
+{
+    int m_num_calls = 0;
+    int m_size;
+    std::vector<int> m_indices;
+    Random &m_random;
+
+    void reshuffle();
+
 public:
-    explicit Random(int seed);
-    const std::minstd_rand &rng() const;
-    std::minstd_rand &rng();
-    std::minstd_rand::result_type next(size_t bits);
-    int next_int(int bound);
-    double next_double();
+    PermutationStream(int size, Random &random);
+
+    int index();
+
+    int size() const;
+
+    int num_calls() const;
 };
+
+}
 }
 
-
-#endif //SGMWSMCPP_RANDOM_H
+#endif //SGMWSMCPP_PERMUTATIONSTREAM_H

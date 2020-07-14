@@ -29,6 +29,7 @@
 #include <parallel_hashmap/btree.h>
 
 #include "utils/types.h"
+#include "utils/NumericalUtils.h"
 #include "utils/Random.h"
 #include "utils/container/Counter.h"
 #include "common/model/Command_fwd.h"
@@ -45,7 +46,7 @@ public:
     using edge_type = edge_type_base<NodeType>;
 
 private:
-    phmap::flat_hash_set<edge_type> m_matching;
+    phmap::flat_hash_set<edge_type> m_matchings;
     phmap::flat_hash_set<node_type> m_covered_nodes;
     std::vector<node_type> m_visited_nodes;
     std::vector<node_type> m_unvisited_nodes;
@@ -62,7 +63,7 @@ private:
                                               const node_type &node,
                                               bool use_exact_sampling) {
         auto decisions = decision_model.decisions(node, *this);
-        auto decisions_size = decisions->size();
+        auto decisions_size = decisions.size();
         auto idx = 0;
         auto log_prob = 0.0;
         auto log_norm = 0.0;
@@ -71,10 +72,9 @@ private:
             std::vector<double> log_probs(decisions_size);
             for (auto i = 0; i < decisions_size; ++i) {
                 log_probs[i] = model.log_prob(node, decisions[i]).first;
-                log_norm += std::exp(log_probs[i]);
             }
 
-            log_norm = std::log(log_norm);
+            log_norm = NumericalUtils::log_add(log_probs.begin(), log_probs.end());
 
             // normalize
             auto probs = log_probs;
@@ -111,23 +111,23 @@ private:
 
         auto edge = decisions[idx];
 
-        if (edge.size() == 0) {
+        if (edge->size() == 0) {
             // this is do nothing decision, which means to either form a singleton or the node already belongs to an edge
             // in the latter case, we need to get the edge that this node belongs to
             if (m_node_to_matching.count(node)) {
                 edge = m_node_to_matching[node];
             }
-        } else if (m_matching.count(edge)) {
-            auto edge_removed = m_matching.erase(edge);
+        } else if (m_matchings.count(edge)) {
+            auto edge_removed = m_matchings.erase(edge);
             if (!edge_removed)
                 throw std::runtime_error("Edge failed to be removed");
         }
 
-        auto new_edge = std::make_shared(*edge);
+        auto new_edge = std::make_shared<typename edge_type::element_type>(*edge);
         new_edge->insert(node);
 
-        m_matching.insert(new_edge);
-        for (const auto &n : new_edge) {
+        m_matchings.insert(new_edge);
+        for (const auto &n : *new_edge) {
             m_covered_nodes.insert(n);
             m_node_to_matching[n] = new_edge;
         }
@@ -165,9 +165,10 @@ public:
         }
 
         auto node = std::move(m_unvisited_nodes[idx]);
-        m_unvisited_nodes.erase(idx);
+        m_unvisited_nodes.erase(m_unvisited_nodes.begin() + idx);
 
-        auto sample = sample_decision(random, command.decision_model(), command.current_model(), node,
+        auto cur_model = command.current_model();
+        auto sample = sample_decision(random, command.decision_model(), cur_model, node,
                                       use_exact_sampling);
         auto log_prob = sample.first;
         m_log_density += log_prob - sample.second;
@@ -176,21 +177,26 @@ public:
     }
 
     const std::vector<node_type> &unvisited_nodes() const {
+        return m_unvisited_nodes;
     }
 
     const std::vector<node_type> &visited_nodes() const {
+        return m_visited_nodes;
     }
 
     phmap::flat_hash_set<node_type> visited_nodes_as_set() const {
     }
 
     const phmap::flat_hash_set<node_type> &covered_nodes() const {
+        return m_covered_nodes;
     }
 
     const std::vector<edge_type> &decisions() const {
+        return m_decisions;
     }
 
-    const std::vector<edge_type> &matchings() const {
+    const phmap::flat_hash_set<edge_type> &matchings() const {
+        return m_matchings;
     }
 
     bool covers(NodeType node) const {
@@ -200,6 +206,7 @@ public:
 //    }
 
     const phmap::flat_hash_map<node_type, edge_type> &node_to_edge_view() const {
+        return m_node_to_matching;
     }
 
 //    std::vector<GraphMatchingState<F, NodeType>> generate_descendants(

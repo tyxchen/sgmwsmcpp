@@ -17,25 +17,37 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_RANDOM_H
-#define SGMWSMCPP_RANDOM_H
+#ifndef SGMWSMCPP_COMPACTPOPULATION_H
+#define SGMWSMCPP_COMPACTPOPULATION_H
 
-#include <random>
+#include <limits>
 
 namespace sgm
 {
-class Random
+namespace smc
 {
-    std::minstd_rand m_rng;
+
+class CompactPopulation
+{
+    int m_num_particles = 0;
+    double m_log_sum = -std::numeric_limits<double>::infinity();
+    double m_log_sum_of_squares = -std::numeric_limits<double>::infinity();
+
 public:
-    explicit Random(int seed);
-    const std::minstd_rand &rng() const;
-    std::minstd_rand &rng();
-    std::minstd_rand::result_type next(size_t bits);
-    int next_int(int bound);
-    double next_double();
+    int num_particles() const;
+
+    double log_sum() const;
+
+    double log_sum_of_squares() const;
+
+    void insert_log_weight(double log_weight);
+
+    double ess() const;
+
+    double logZ_estimate() const;
 };
+
+}
 }
 
-
-#endif //SGMWSMCPP_RANDOM_H
+#endif //SGMWSMCPP_COMPACTPOPULATION_H

@@ -74,5 +74,5 @@ std::vector<Segment> KnotDataReader::read_segmented_test_board(const fs::path &f
                                                               yaxis, zaxis, area_over_axis));
     }
 
-    return std::move(segments);
+    return segments;
 }

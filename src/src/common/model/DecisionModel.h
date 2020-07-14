@@ -71,7 +71,7 @@ protected:
     virtual std::vector<edge_type> _decisions(const node_type &node,
                                               const std::vector<node_type> &candidate_nodes,
                                               const phmap::flat_hash_set<node_type> &covered_nodes,
-                                              const std::vector<edge_type> &matching,
+                                              const phmap::flat_hash_set<edge_type> &matching,
                                               const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) = 0;
 
     virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;

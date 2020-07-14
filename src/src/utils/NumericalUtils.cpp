@@ -17,25 +17,25 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_RANDOM_H
-#define SGMWSMCPP_RANDOM_H
+#include "utils/NumericalUtils.h"
 
-#include <random>
+#include <utility>
 
-namespace sgm
-{
-class Random
-{
-    std::minstd_rand m_rng;
-public:
-    explicit Random(int seed);
-    const std::minstd_rand &rng() const;
-    std::minstd_rand &rng();
-    std::minstd_rand::result_type next(size_t bits);
-    int next_int(int bound);
-    double next_double();
-};
+using namespace sgm;
+
+double NumericalUtils::log_add(double x, double y) {
+    // make x the max
+    if (y > x) {
+        std::swap(x, y);
+    }
+    // now x is bigger
+    if (x == -std::numeric_limits<double>::infinity()) {
+        return x;
+    }
+    auto neg_diff = y - x;
+    if (neg_diff < -20) {
+        return x;
+    }
+    return x + std::log(1.0 + std::exp(neg_diff));
 }
 
-
-#endif //SGMWSMCPP_RANDOM_H

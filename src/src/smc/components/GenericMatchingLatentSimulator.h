@@ -22,11 +22,15 @@
 
 #include <memory>
 
+#include "utils/Random.h"
 #include "common/model/Command.h"
 #include "common/graph/GraphMatchingState.h"
 
 namespace sgm
 {
+namespace smc
+{
+
 template <typename F, typename NodeType>
 class GenericMatchingLatentSimulator
 {
@@ -36,28 +40,28 @@ class GenericMatchingLatentSimulator
     bool m_use_exact_sampling = true;
 
 public:
-    GenericMatchingLatentSimulator(Command<F, NodeType> command,
-                                   GraphMatchingState<F, NodeType> initial,
+    GenericMatchingLatentSimulator(Command<F, NodeType> &command,
+                                   GraphMatchingState<F, NodeType> &initial,
                                    bool use_sequential_sampling,
                                    bool use_exact_sampling)
         : m_command(command), m_initial(initial), m_use_sequential_sampling(use_sequential_sampling),
           m_use_exact_sampling(use_exact_sampling) {}
 
-    template <typename Random>
     GraphMatchingState<F, NodeType> sample_initial(Random &random) {
-        return sample_forward_transition(random, *m_initial);
+        return sample_forward_transition(random, m_initial);
     }
 
-    template <typename Random>
     GraphMatchingState<F, NodeType> sample_forward_transition(Random &random, GraphMatchingState<F, NodeType> &state) {
-        m_command->sample_next(random, state, m_use_sequential_sampling, m_use_exact_sampling);
+        m_command.sample_next(random, state, m_use_sequential_sampling, m_use_exact_sampling);
         return state;
     }
 
     size_t iterations() const {
-        return m_initial->unvisited_nodes().size();
+        return m_initial.unvisited_nodes().size();
     }
 };
+
+}
 }
 
 #endif //SGMWSMCPP_GENERICMATCHINGLATENTSIMULATOR_H

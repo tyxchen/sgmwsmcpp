@@ -39,6 +39,6 @@ std::vector<std::vector<KnotDataReader::Segment>> ExpUtils::read_test_boards(con
         instances.emplace_back(KnotDataReader::read_segmented_test_board(board));
         ++idx;
     }
-    return std::move(instances);
+    return instances;
 }
 

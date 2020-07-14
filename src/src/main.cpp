@@ -19,6 +19,7 @@
 #include "knot/data/KnotDataReader.h"
 #include "common/learning/SupervisedLearning.h"
 #include "utils/ExpUtils.h"
+#include "utils/Random.h"
 #include "common/model/PairwiseMatchingModel.h"
 #include "knot/model/features/EllipticalKnotFeatureExtractor.h"
 #include "common/model/Command.h"
@@ -30,22 +31,6 @@ namespace acc = boost::accumulators;
 using node_type = node_type_base<EllipticalKnot>;
 using edge_type = edge_type_base<EllipticalKnot>;
 using datum_type = typename std::vector<std::pair<std::vector<edge_type>, std::vector<node_type>>>;
-
-std::vector<datum_type> unpack(std::vector<std::vector<KnotDataReader::Segment>> instances) {
-    std::vector<datum_type> data;
-    for (auto &instance : instances) {
-        datum_type datum;
-        for (auto &segment : instance) {
-            std::vector<edge_type> edges;
-            for (auto &matching : segment.label_to_edge()) {
-                edges.emplace_back(std::move(matching.second));
-            }
-            datum.emplace_back(std::move(edges), std::move(segment.knots()));
-        }
-        data.emplace_back(std::move(datum));
-    }
-    return std::move(data);
-}
 
 int main(int argc, char** argv) {
     cxxopts::Options options("sgmwsmc", "Description");
@@ -78,7 +63,7 @@ int main(int argc, char** argv) {
     auto max_em_iter = args["max-em-iter"].as<int>();
     auto parallel = args["parallel"].as<bool>();
     auto max_lbfgs_iter = args["max-lbfgs-iter"].as<int>();
-    auto seed = args["seed"].as<int>();
+    auto random = Random(args["seed"].as<int>());
     auto tol = args["tol"].as<double>();
     auto exact_sampling = args["exact-sampling"].as<bool>();
     auto sequential_matching = args["sequential-matching"].as<bool>();
@@ -124,7 +109,7 @@ int main(int argc, char** argv) {
     std::cout << "Current working dir: " << fs::current_path() << std::endl;
 
     auto training_instances = ExpUtils::read_test_boards(BOARDS, false);
-    auto training_data = unpack(std::move(training_instances));
+    auto training_data = ExpUtils::unpack<EllipticalKnot>(training_instances);
 
     auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
     std::cout << test_instances.size() << std::endl;
@@ -174,6 +159,11 @@ int main(int argc, char** argv) {
         std::cout << "  mean: " << fe_mean.get(f) << std::endl;
         std::cout << "  sd:   " << fe_sd.get(f) << std::endl;
     }
+
+    auto initial = Eigen::VectorXd::Zero(fe_dim);
+    auto instances = ExpUtils::pack<EllipticalKnot>(training_data);
+    SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
+        max_implicit_particles, initial, tol, use_spf);
 
     return 0;
 }

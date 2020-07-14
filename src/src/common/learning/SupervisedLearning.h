@@ -30,6 +30,9 @@
 #include "common/model/Command.h"
 #include "common/graph/GraphMatchingState.h"
 #include "smc/components/GenericMatchingLatentSimulator.h"
+#include "smc/components/PruningObservationDensity.h"
+#include "smc/components/SequentialGraphMatchingSampler.h"
+#include "smc/StreamingParticleFilter.h"
 
 namespace sgm
 {
@@ -64,30 +67,34 @@ public:
 
 namespace detail
 {
-template <typename F, typename NodeType, typename Random, typename Instance>
-std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> generate_samples(
+template <typename F, typename NodeType, typename Random>
+std::vector<GraphMatchingState<F, NodeType>> generate_samples(
     Random &random,
-    const Instance &instance,
-    const std::vector<std::shared_ptr<NodeType>> &emissions,
-    const GraphMatchingState<F, NodeType> &initial,
-    const Command<F, NodeType> &command,
+    const std::pair<std::vector<edge_type_base<NodeType>>, std::vector<node_type_base<NodeType>>> &instance,
+    const std::vector<node_type_base<NodeType>> &emissions,
+    GraphMatchingState<F, NodeType> &initial,
+    Command<F, NodeType> &command,
     int num_concrete_particles,
     int max_virtual_particles,
     bool use_SPF
 ) {
-    GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
+    smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
+    smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
+    smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, emissions, use_SPF);
+    smc.sample(random, num_concrete_particles, max_virtual_particles);
+    return std::move(smc.samples());
 }
 }
 
 bool check_convergence(double old_nllk, double new_nllk, double tolerance);
 
 template <typename F, typename NodeType, typename Random>
-std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
+/*std::pair<double, Eigen::VectorXd>*/ void MAP_via_MCEM(
     Random &random,
     int rep_id,
-    const Command<F, NodeType> &command,
-    const std::vector<std::pair<std::vector<edge_type_base<NodeType>>,
-                                std::vector<node_type_base<NodeType>>>> &instances,
+    Command<F, NodeType> &command,
+    std::vector<std::pair<std::vector<edge_type_base<NodeType>>,
+                          std::vector<node_type_base<NodeType>>>> &instances,
     int max_iter,
     int num_concrete_particles,
     int num_implicit_particles,
@@ -101,7 +108,7 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     emissions_list.reserve(instances.size());
     initial_states.reserve(instances.size());
 
-    for (const auto &instance : instances) {
+    for (auto &instance : instances) {
         emissions_list.emplace_back(&instance.second, [](auto *) {});
         initial_states.emplace_back(instance.second);
     }
@@ -127,8 +134,13 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     while (!converged && iter < max_iter) {
         ObjectiveFunction<F, NodeType> objective(command, initial.size());
         std::vector<ObjectiveFunction<F, NodeType>> objs;
+        auto instances_size = instances.size();
 
-
+        for (auto i = 0; i < instances_size; ++i) {
+            auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
+                                                    command, num_concrete_particles, num_implicit_particles, use_spf);
+            converged = true;
+        }
     }
 }
 }

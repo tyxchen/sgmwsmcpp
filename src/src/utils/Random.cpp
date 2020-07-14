@@ -29,11 +29,15 @@ const std::minstd_rand & Random::rng() const {
     return m_rng;
 }
 
+std::minstd_rand & Random::rng() {
+    return m_rng;
+}
+
 std::minstd_rand::result_type Random::next(size_t bits) {
     return m_rng() >> (RNG_BITS - bits);
 }
 
-int Random::next_int(int bound = 31) {
+int Random::next_int(int bound) {
     // Use the "Java algorithm" to generate bounded random integers from an unbounded result
     if ((bound & -bound) == bound)  // bound is a power of 2, so we can simply bitmask the lower bits
         return static_cast<int>(bound * static_cast<long long>(next(31)) >> 31);
