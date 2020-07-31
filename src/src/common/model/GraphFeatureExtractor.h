@@ -52,19 +52,19 @@ public:
     }
 
     void standardize(Counter<F> mean, Counter<F> sd) {
-        _standardize(mean, sd);
+        _standardize(std::move(mean), std::move(sd));
     }
 
     virtual ~GraphFeatureExtractor() = default;
 
-protected:
+private:
     virtual Counter<F> _extract_features(const node_type &node, const edge_type &decision) = 0;
 
     virtual Counter<F> _extract_features(const edge_type &e) = 0;
 
     virtual Counter<F> _default_parameters() const = 0;
 
-    virtual inline int _dim() const = 0;
+    virtual int _dim() const = 0;
 
     virtual void _standardize(Counter<F> mean, Counter<F> sd) {}
 };

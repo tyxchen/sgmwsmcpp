@@ -25,8 +25,6 @@
 #include <limits>
 #include <stdexcept>
 #include <vector>
-#include <parallel_hashmap/phmap.h>
-#include <parallel_hashmap/btree.h>
 
 #include "utils/types.h"
 #include "utils/NumericalUtils.h"
@@ -46,11 +44,11 @@ public:
     using edge_type = edge_type_base<NodeType>;
 
 private:
-    phmap::flat_hash_set<edge_type> m_matchings;
-    phmap::flat_hash_set<node_type> m_covered_nodes;
+    set_t<edge_type> m_matchings;
+    set_t<node_type> m_covered_nodes;
     std::vector<node_type> m_visited_nodes;
     std::vector<node_type> m_unvisited_nodes;
-    phmap::flat_hash_map<node_type, edge_type> m_node_to_matching;
+    map_t<node_type, edge_type> m_node_to_matching;
     std::vector<edge_type> m_decisions;
 
     double m_log_density = 0.0;
@@ -77,6 +75,7 @@ private:
             log_norm = NumericalUtils::log_add(log_probs.begin(), log_probs.end());
 
             // normalize
+            auto sum = 0.0;
             auto probs = log_probs;
             auto max_prob = -std::numeric_limits<double>::infinity();
             for (auto prob : probs) {
@@ -84,11 +83,15 @@ private:
             }
             for (auto &prob : probs) {
                 prob = std::exp(prob - max_prob);
+                sum += prob;
+            }
+            for (auto &prob : probs) {
+                prob /= sum;
             }
 
             // sample
             auto v = random.next_double();
-            auto sum = 0.0;
+            sum = 0.0;
             for (auto prob : probs) {
                 sum += prob;
                 if (v < sum) break;
@@ -144,7 +147,7 @@ public:
 //    std::vector<GraphMatchingState<F, NodeType>> execute_move(
 //        const sgm::MultinomialLogisticModel<F, NodeType> &model,
 //        const sgm::DecisionModel<F, NodeType> &decision_model,
-//        const phmap::flat_hash_map<node_type, phmap::flat_hash_set<node_type>> &final_state) {
+//        const map_t<node_type, set_t<node_type>> &final_state) {
 //    }
 
     double log_density() const {
@@ -168,8 +171,7 @@ public:
         m_unvisited_nodes.erase(m_unvisited_nodes.begin() + idx);
 
         auto cur_model = command.current_model();
-        auto sample = sample_decision(random, command.decision_model(), cur_model, node,
-                                      use_exact_sampling);
+        auto sample = sample_decision(random, command.decision_model(), cur_model, node, use_exact_sampling);
         auto log_prob = sample.first;
         m_log_density += log_prob - sample.second;
         m_visited_nodes.emplace_back(std::move(node));
@@ -184,10 +186,10 @@ public:
         return m_visited_nodes;
     }
 
-    phmap::flat_hash_set<node_type> visited_nodes_as_set() const {
+    set_t<node_type> visited_nodes_as_set() const {
     }
 
-    const phmap::flat_hash_set<node_type> &covered_nodes() const {
+    const set_t<node_type> &covered_nodes() const {
         return m_covered_nodes;
     }
 
@@ -195,7 +197,7 @@ public:
         return m_decisions;
     }
 
-    const phmap::flat_hash_set<edge_type> &matchings() const {
+    const set_t<edge_type> &matchings() const {
         return m_matchings;
     }
 
@@ -205,7 +207,7 @@ public:
 //    void shuffle_nodes(Random random) {
 //    }
 
-    const phmap::flat_hash_map<node_type, edge_type> &node_to_edge_view() const {
+    const map_t<node_type, edge_type> &node_to_edge_view() const {
         return m_node_to_matching;
     }
 

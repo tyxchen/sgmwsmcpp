@@ -140,6 +140,8 @@ template <typename F, typename NodeType, typename Random>
             auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
                                                     command, num_concrete_particles, num_implicit_particles, use_spf);
             converged = true;
+            /* DEBUG */
+            return;
         }
     }
 }

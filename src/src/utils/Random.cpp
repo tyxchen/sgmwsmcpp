@@ -21,7 +21,6 @@
 
 using namespace sgm;
 
-constexpr ptrdiff_t RNG_BITS = sizeof(std::minstd_rand::result_type) * 8;
 
 Random::Random(int seed) : m_rng(seed) {}
 
@@ -34,20 +33,23 @@ std::minstd_rand & Random::rng() {
 }
 
 std::minstd_rand::result_type Random::next(size_t bits) {
-    return m_rng() >> (RNG_BITS - bits);
+    return m_rng() >> (32 - bits);
+}
+
+std::minstd_rand::result_type Random::operator()() {
+    return m_rng();
 }
 
 int Random::next_int(int bound) {
     // Use the "Java algorithm" to generate bounded random integers from an unbounded result
-    if ((bound & -bound) == bound)  // bound is a power of 2, so we can simply bitmask the lower bits
-        return static_cast<int>(bound * static_cast<long long>(next(31)) >> 31);
-
-    int bits, val;
-    do {
-        bits = next(31);
-        val = bits % bound;
-    } while (val + (bound - 1) < bits);
-    return val;
+    auto r = next(31);
+    auto m = bound - 1;
+    if ((bound & m) == 0)  // bound is a power of 2, so we can simply bitmask the lower bits
+        r = static_cast<int>(bound * static_cast<long long>(r) >> 31);
+    else {
+        for (int u = r; u - (r = u % bound) + m < 0; u = next(31));
+    }
+    return r;
 }
 
 double Random::next_double() {

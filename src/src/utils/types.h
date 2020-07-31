@@ -21,14 +21,34 @@
 #define SGMWSMCPP_TYPES_H
 
 #include <memory>
-#include <parallel_hashmap/phmap_fwd_decl.h>
+
+#ifdef DEBUG
+#include <unordered_set>
+#include <unordered_map>
+#else
+#include <parallel_hashmap/phmap.h>
+#endif
 
 namespace sgm
 {
+template <typename T>
+#ifdef DEBUG
+using set_t = typename std::unordered_set<T>;
+#else
+using set_t = typename phmap::flat_hash_set<T>;
+#endif
+
+template <typename K, typename T>
+#ifdef DEBUG
+using map_t = typename std::unordered_map<K, T>;
+#else
+using map_t = typename phmap::flat_hash_map<K, T>;
+#endif
+
 template <typename NodeType>
 using node_type_base = typename std::shared_ptr<NodeType>;
 
 template <typename NodeType>
-using edge_type_base = typename std::shared_ptr<phmap::flat_hash_set<node_type_base<NodeType>>>;
+using edge_type_base = typename std::shared_ptr<set_t<node_type_base<NodeType>>>;
 }
 #endif //SGMWSMCPP_TYPES_H

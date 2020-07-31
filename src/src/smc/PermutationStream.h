@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_PERMUTATIONSTREAM_H
 #define SGMWSMCPP_PERMUTATIONSTREAM_H
 
+#include <functional>
 #include <vector>
 
 #include "utils/Random.h"
@@ -34,7 +35,7 @@ class PermutationStream
     int m_num_calls = 0;
     int m_size;
     std::vector<int> m_indices;
-    Random &m_random;
+    std::reference_wrapper<Random> m_random;
 
     void reshuffle();
 

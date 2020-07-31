@@ -75,7 +75,7 @@ void extract_features_2(const AreaFeatureExtractor::node_type &node1,
         throw std::runtime_error("Area is zero: either computation failed or knot detection failed.");
     }
 
-    if ((node1->partition_idx() % 2 == 0 && node2->partition_idx() % 2 == 0) || !shares_axis(*node1, *node2)) {
+    if ((node1->pidx() % 2 == 0 && node2->pidx() % 2 == 0) || !shares_axis(*node1, *node2)) {
         features.set(AreaFeatureExtractorConsts::TWO_MATCHING_AREA_DIFF,
                      std::abs(area1[0] - area2[0]) / AreaFeatureExtractorConsts::NORM_CONST);
     }
@@ -142,6 +142,6 @@ Counter<std::string> AreaFeatureExtractor::_default_parameters() const {
     };
 }
 
-inline int AreaFeatureExtractor::_dim() const {
+int AreaFeatureExtractor::_dim() const {
     return AreaFeatureExtractorConsts::DIM;
 }

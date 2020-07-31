@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_SEQUENTIALGRAPHMATCHINGSAMPLER_H
 #define SGMWSMCPP_SEQUENTIALGRAPHMATCHINGSAMPLER_H
 
+#include <functional>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -38,9 +39,9 @@ namespace smc
 template <typename F, typename NodeType>
 class SequentialGraphMatchingSampler
 {
-    GenericMatchingLatentSimulator<F, NodeType> &m_transition_density;
-    PruningObservationDensity<F, NodeType> &m_observation_density;
-    const std::vector<node_type_base<NodeType>> &m_emissions;
+    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<PruningObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<const std::vector<node_type_base<NodeType>>> m_emissions;
     std::vector<GraphMatchingState<F, NodeType>> m_samples;
 
     bool m_use_SPF = true;
@@ -59,7 +60,7 @@ public:
         double logZ = -std::numeric_limits<double>::infinity();
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
-                                                     Random(random.next(32)));
+                                                     Random(random()));
             auto &options = spf.options();
             options.num_concrete_particles = num_concrete_particles;
             options.max_virtual_particles = max_virtual_particles;

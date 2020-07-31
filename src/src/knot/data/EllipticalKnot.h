@@ -45,7 +45,7 @@ public:
 
     int idx() const override;
 
-    int partition_idx() const override;
+    int pidx() const override;
 
     const Counter<std::string> &node_features() const override;
 

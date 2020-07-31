@@ -24,7 +24,7 @@
 
 using namespace sgm;
 
-int smc::CompactPopulation::num_particles() const {
+size_t smc::CompactPopulation::num_particles() const {
     return m_num_particles;
 }
 

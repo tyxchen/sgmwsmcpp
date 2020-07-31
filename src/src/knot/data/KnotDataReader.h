@@ -24,7 +24,6 @@
 #include <memory>
 #include <vector>
 #include <boost/filesystem.hpp>
-#include <parallel_hashmap/phmap.h>
 
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
@@ -51,7 +50,7 @@ class Segment
 public:
     using node_type = node_type_base<EllipticalKnot>;
     using edge_type = edge_type_base<EllipticalKnot>;
-    using map_type = typename phmap::flat_hash_map<int, edge_type>;
+    using map_type = typename sgm::map_t<int, edge_type>;
 
 private:
     int m_id;

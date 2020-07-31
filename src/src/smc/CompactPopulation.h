@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_COMPACTPOPULATION_H
 #define SGMWSMCPP_COMPACTPOPULATION_H
 
+#include <cstddef>
 #include <limits>
 
 namespace sgm
@@ -29,12 +30,12 @@ namespace smc
 
 class CompactPopulation
 {
-    int m_num_particles = 0;
+    size_t m_num_particles = 0;
     double m_log_sum = -std::numeric_limits<double>::infinity();
     double m_log_sum_of_squares = -std::numeric_limits<double>::infinity();
 
 public:
-    int num_particles() const;
+    size_t num_particles() const;
 
     double log_sum() const;
 

@@ -34,8 +34,8 @@ namespace sgm
 namespace AreaFeatureExtractorConsts
 {
 constexpr int DIM = 2;
-const char* const TWO_MATCHING_AREA_DIFF = "TWO_MATCHING_AREA_DIFF";
-const char* const THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
+constexpr const char* TWO_MATCHING_AREA_DIFF = "TWO_MATCHING_AREA_DIFF";
+constexpr const char* THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
 constexpr double NORM_CONST = 1;
 constexpr double NORM_CONST2 = 500;
 constexpr double CONFIDENCE_LEVEL = 0.975;
@@ -44,7 +44,7 @@ const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
     boost::math::chi_squared_distribution<double> chi(2);
     return std::sqrt(boost::math::quantile(chi, CONFIDENCE_LEVEL));
 }();
-};
+}
 
 std::array<double, 2> compute_area(const EllipticalKnot &knot);
 
@@ -52,14 +52,13 @@ bool shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2);
 
 class AreaFeatureExtractor : public GraphFeatureExtractor<std::string, EllipticalKnot>
 {
-protected:
     Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
 
     Counter<std::string> _extract_features(const edge_type &e) override;
 
     Counter<std::string> _default_parameters() const override;
 
-    inline int _dim() const override;
+    int _dim() const override;
 
 };
 }

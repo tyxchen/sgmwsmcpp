@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_GENERICMATCHINGLATENTSIMULATOR_H
 #define SGMWSMCPP_GENERICMATCHINGLATENTSIMULATOR_H
 
+#include <functional>
 #include <memory>
 
 #include "utils/Random.h"
@@ -34,8 +35,8 @@ namespace smc
 template <typename F, typename NodeType>
 class GenericMatchingLatentSimulator
 {
-    Command<F, NodeType> &m_command;
-    GraphMatchingState<F, NodeType> &m_initial;
+    std::reference_wrapper<Command<F, NodeType>> m_command;
+    std::reference_wrapper<GraphMatchingState<F, NodeType>> m_initial;
     bool m_use_sequential_sampling = true;
     bool m_use_exact_sampling = true;
 
@@ -51,13 +52,13 @@ public:
         return sample_forward_transition(random, m_initial);
     }
 
-    GraphMatchingState<F, NodeType> sample_forward_transition(Random &random, GraphMatchingState<F, NodeType> &state) {
-        m_command.sample_next(random, state, m_use_sequential_sampling, m_use_exact_sampling);
+    GraphMatchingState<F, NodeType> sample_forward_transition(Random &random, GraphMatchingState<F, NodeType> state) {
+        m_command.get().sample_next(random, state, m_use_sequential_sampling, m_use_exact_sampling);
         return state;
     }
 
     size_t iterations() const {
-        return m_initial.unvisited_nodes().size();
+        return m_initial.get().unvisited_nodes().size();
     }
 };
 

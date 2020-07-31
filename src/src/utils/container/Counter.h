@@ -28,7 +28,11 @@
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
+#ifdef DEBUG
+#include <unordered_map>
+#else
 #include <parallel_hashmap/phmap.h>
+#endif
 
 namespace sgm
 {
@@ -64,7 +68,11 @@ public:
     using key_type = T;
     using mapped_type = Count;
     using value_type = std::pair<const T &, mapped_type>;
+#ifdef DEBUG
+    using map_type = std::unordered_map<key_type, mapped_type, Hash>;
+#else
     using map_type = phmap::flat_hash_map<key_type, mapped_type, Hash>;
+#endif
 
 private:
     size_t m_current_mod_count = 1;

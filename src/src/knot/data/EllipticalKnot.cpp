@@ -46,7 +46,7 @@ int EllipticalKnot::idx() const {
     return m_idx;
 }
 
-int EllipticalKnot::partition_idx() const {
+int EllipticalKnot::pidx() const {
     return m_pidx;
 }
 

@@ -20,6 +20,8 @@
 #ifndef SGMWSMCPP_STREAMINGPARTICLEFILTER_H
 #define SGMWSMCPP_STREAMINGPARTICLEFILTER_H
 
+#include <functional>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -49,20 +51,20 @@ class StreamingBootstrapProposal : public Proposal<GraphMatchingState<F, NodeTyp
 
     emissions_type m_cur_emission;
     emissions_type m_old_emission;
-    std::shared_ptr<std::vector<latent_type>> m_old_latents;
+    std::shared_ptr<const std::vector<latent_type>> m_old_latents;
 
-    GenericMatchingLatentSimulator<F, NodeType> &m_transition_density;
-    PruningObservationDensity<F, NodeType> &m_observation_density;
+    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<PruningObservationDensity<F, NodeType>> m_observation_density;
 
 public:
     StreamingBootstrapProposal(int seed,
                                emissions_type cur_emission,
                                emissions_type old_emission,
-                               std::shared_ptr<std::vector<latent_type>> old_latents,
+                               std::shared_ptr<const std::vector<latent_type>> old_latents,
                                GenericMatchingLatentSimulator<F, NodeType> &transition_density,
                                PruningObservationDensity<F, NodeType> &observation_density)
         : m_seed(seed), m_random(seed * 171),
-          m_permutation_stream(old_latents.get() ? old_latents->size() : 0, m_random),
+          m_permutation_stream(old_latents.get() != nullptr ? old_latents->size() : 0, m_random),
           m_cur_emission(std::move(cur_emission)), m_old_emission(std::move(old_emission)),
           m_old_latents(std::move(old_latents)),
           m_transition_density(transition_density), m_observation_density(observation_density) {}
@@ -70,28 +72,32 @@ public:
     StreamingBootstrapProposal(int seed, emissions_type cur_emission,
                                GenericMatchingLatentSimulator<F, NodeType> &transition_density,
                                PruningObservationDensity<F, NodeType> &observation_density)
-        : StreamingBootstrapProposal(seed, cur_emission, nullptr, nullptr, transition_density, observation_density) {}
+        : StreamingBootstrapProposal(seed, std::move(cur_emission), nullptr, nullptr, transition_density,
+            observation_density) {}
 
 private:
     bool is_initial() const {
-        return m_old_emission.get() == nullptr;
+        return m_old_latents.get() == nullptr;
     }
 
-    latent_type &sample_old_latent() {
-        return (*m_old_latents)[m_permutation_stream.index()];
+    const latent_type &sample_old_latent() {
+        auto idx = m_permutation_stream.index();
+        std::cout << " $" << idx << "$ ";
+        return (*m_old_latents)[idx];
     }
 
-public:
     std::pair<double, latent_type> _next_log_weight_sample_pair() override {
-        latent_type *old_latent = is_initial() ? nullptr : &sample_old_latent();
+        auto *old_latent = is_initial() ? nullptr : &sample_old_latent();
+        // FIXME: something is off with how cur_latent is regenerated on a resample
         auto cur_latent = is_initial()
-                          ? m_transition_density.sample_initial(m_random)
-                          : m_transition_density.sample_forward_transition(m_random, *old_latent);
+                          ? m_transition_density.get().sample_initial(m_random)
+                          : m_transition_density.get().sample_forward_transition(m_random, *old_latent);
 
-        auto log_weight = m_observation_density.log_density(cur_latent, m_cur_emission);
+        auto log_weight = m_observation_density.get().log_density(cur_latent, m_cur_emission);
 
         if (old_latent != nullptr) {
-            log_weight -= m_observation_density.log_density(*old_latent, m_old_emission);
+            auto old_weight = m_observation_density.get().log_density(*old_latent, m_old_emission);
+            log_weight -= old_weight;
 //            log_weight += m_observation_density.log_weight_correction(cur_latent, old_latent);
         }
 
@@ -110,9 +116,9 @@ class StreamingParticleFilter
     using latent_type = GraphMatchingState<F, NodeType>;
     using emissions_type = node_type_base<NodeType>;
 
-    GenericMatchingLatentSimulator<F, NodeType> &m_transition_density;
-    PruningObservationDensity<F, NodeType> &m_observation_density;
-    const std::vector<emissions_type> &m_emissions;
+    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<PruningObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<const std::vector<emissions_type>> m_emissions;
     Random m_random { 1 };
 
     std::pair<CompactPopulation, std::vector<latent_type>> m_results;
@@ -133,13 +139,13 @@ public:
 private:
     StreamingBootstrapProposal<F, NodeType> initial_distribution_proposal() {
         return StreamingBootstrapProposal<F, NodeType>(
-            m_random.next(32), m_emissions[0], m_transition_density, m_observation_density
+            m_random(), m_emissions.get()[0], m_transition_density, m_observation_density
         );
     }
 
 public:
     double sample() {
-        auto proposal = initial_distribution_proposal();
+//        auto proposal = initial_distribution_proposal();
         StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> propagator(
             initial_distribution_proposal(),
             m_options
@@ -149,16 +155,19 @@ public:
         auto logZ = m_results.first.logZ_estimate();
 
         // recursive
-        for (auto i = 0; i < m_transition_density.iterations(); ++i) {
+        for (auto i = 1; i < m_transition_density.get().iterations(); ++i) {
             StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> rec_propagator(
-                StreamingBootstrapProposal<F, NodeType>(m_random.next(32), m_emissions[i], m_emissions[i - 1],
-                                                        std::shared_ptr<std::vector<latent_type>>(&m_results.second,
-                                                                                                  [](auto *) {}),
+                StreamingBootstrapProposal<F, NodeType>(m_random(), m_emissions.get()[i], m_emissions.get()[i - 1],
+                                                        std::shared_ptr<const std::vector<latent_type>>(
+                                                            &m_results.second,
+                                                            [](auto *) {}
+                                                        ),
                                                         m_transition_density, m_observation_density),
                 m_options
             );
-            m_results = rec_propagator.execute();
-            logZ += m_results.first.logZ_estimate();
+            auto results = rec_propagator.execute();
+            logZ += results.first.logZ_estimate();
+            m_results = std::move(results);
         }
 
         return logZ;

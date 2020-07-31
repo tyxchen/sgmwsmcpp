@@ -6,11 +6,6 @@
 #include <utility>
 
 #include <boost/filesystem.hpp>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/count.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/variance.hpp>
 #include <cxxopts.hpp>
 #include <parallel_hashmap/phmap.h>
 
@@ -26,7 +21,6 @@
 
 using namespace sgm;
 namespace fs = boost::filesystem;
-namespace acc = boost::accumulators;
 
 using node_type = node_type_base<EllipticalKnot>;
 using edge_type = edge_type_base<EllipticalKnot>;
@@ -87,6 +81,10 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             BOARDS.emplace_back(path / board);
         }
+#ifdef DEBUG
+        // Sort for compatibility with reference impl
+        std::sort(BOARDS.begin(), BOARDS.end());
+#endif
     }
 
     for (const auto &dir : test_data_directories) {
@@ -101,6 +99,10 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             TEST_BOARDS.emplace_back(path / board);
         }
+#ifdef DEBUG
+        // Sort for compatibility with reference impl
+        std::sort(TEST_BOARDS.begin(), TEST_BOARDS.end());
+#endif
     }
 
     SupervisedLearningConfig::parallel = parallel;
@@ -120,16 +122,14 @@ int main(int argc, char** argv) {
     Command<std::string, EllipticalKnot> command(decision_model, fe);
 
     // compute the features on each of these data points and standardization
-    std::vector<acc::accumulator_set<double,
-                                     acc::stats<acc::tag::count, acc::tag::mean, acc::tag::variance(acc::lazy)>>>
-        standardizations(fe_dim);
+    std::vector<std::vector<double>> standardizations(fe_dim);
 
     for (const auto &data : training_data) {
         for (const auto &datum : data) {
             for (const auto &e : datum.first) {
                 auto phi = fe.extract_features(e);
                 for (const auto &vals : phi) {
-                    standardizations[command.indexer().o2i(vals.first)](phi.get(vals.first));
+                    standardizations[command.indexer().o2i(vals.first)].push_back(phi.get(vals.first));
                 }
             }
         }
@@ -140,9 +140,24 @@ int main(int argc, char** argv) {
 
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
-        auto n = static_cast<double>(acc::count(standardizations[i]));
-        mean.set(f, acc::mean(standardizations[i]));
-        sd.set(f, std::sqrt((n / (n - 1)) * acc::variance(standardizations[i])));
+        auto &standardization = standardizations[i];
+        auto n = static_cast<double>(standardization.size());
+
+        // calculate mean
+        auto m = 0.0;
+        for (auto s : standardization) {
+            m += s;
+        }
+        m /= n;
+
+        // calculate variance
+        auto var = 0.0;
+        for (auto s : standardization) {
+            var += (s - m) * (s - m);
+        }
+
+        mean.set(f, m);
+        sd.set(f, std::sqrt(var / (n - 1)));
     }
 
     fe.standardize(std::move(mean), std::move(sd));

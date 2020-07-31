@@ -22,7 +22,6 @@
 
 #include <memory>
 #include <vector>
-#include <parallel_hashmap/phmap.h>
 
 #include "utils/types.h"
 #include "common/graph/GraphMatchingState_fwd.h"
@@ -43,9 +42,9 @@ public:
 
     std::vector<edge_type> decisions(const node_type &node,
                                      const std::vector<node_type> &candidate_nodes,
-                                     const phmap::flat_hash_set<node_type> &covered_nodes,
+                                     const set_t<node_type> &covered_nodes,
                                      const std::vector<edge_type> &matching,
-                                     const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) {
+                                     const map_t<node_type, edge_type> &node_to_edge) {
         return _decisions(node, candidate_nodes, covered_nodes, matching, node_to_edge);
     }
 
@@ -54,7 +53,7 @@ public:
     }
 
     bool path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-                     const phmap::flat_hash_map<node_type, phmap::flat_hash_set<node_type>> &final_state) {
+                     const map_t<node_type, set_t<node_type>> &final_state) {
         return _path_exists(cur_state, final_state);
     }
 
@@ -64,20 +63,20 @@ public:
 
     virtual ~DecisionModel() = default;
 
-protected:
+private:
     virtual std::vector<edge_type> _decisions(const node_type &node,
                                               const GraphMatchingState<F, NodeType> &state) = 0;
 
     virtual std::vector<edge_type> _decisions(const node_type &node,
                                               const std::vector<node_type> &candidate_nodes,
-                                              const phmap::flat_hash_set<node_type> &covered_nodes,
-                                              const phmap::flat_hash_set<edge_type> &matching,
-                                              const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) = 0;
+                                              const set_t<node_type> &covered_nodes,
+                                              const set_t<edge_type> &matching,
+                                              const map_t<node_type, edge_type> &node_to_edge) = 0;
 
     virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;
 
     virtual bool _path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-                              const phmap::flat_hash_map<node_type, phmap::flat_hash_set<node_type>> &final_state) = 0;
+                              const map_t<node_type, set_t<node_type>> &final_state) = 0;
 
     virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
 };

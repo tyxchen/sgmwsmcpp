@@ -22,7 +22,6 @@
 
 #include <limits>
 #include <vector>
-#include <parallel_hashmap/phmap.h>
 
 #include "utils/types.h"
 #include "common/graph/GraphMatchingState.h"
@@ -38,8 +37,9 @@ namespace detail
 template <typename State>
 bool in_support(const State &subset, const State &superset) {
     for (const auto &v : subset) {
+        auto superset_ref = superset.at(v.first);
         for (const auto &w : *v.second) {
-            if (!superset.at(v.first)->count(w)) {
+            if (!superset_ref->count(w)) {
                 return false;
             }
         }
@@ -56,7 +56,7 @@ public:
     using edge_type = edge_type_base<NodeType>;
 
 private:
-    phmap::flat_hash_map<node_type, edge_type> m_target_state;
+    map_t<node_type, edge_type> m_target_state;
 
 public:
     explicit PruningObservationDensity(const std::vector<edge_type> &matching) {

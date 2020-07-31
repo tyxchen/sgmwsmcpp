@@ -55,6 +55,8 @@ public:
         return _has_next_log_weight_sample_pair();
     }
 
+    virtual ~Proposal() = default;
+
 private:
     virtual std::pair<double, S> _next_log_weight_sample_pair() = 0;
     virtual double _next_log_weight() {

@@ -29,7 +29,7 @@ class GraphNode
 {
 public:
     virtual int idx() const = 0;
-    virtual int partition_idx() const = 0;
+    virtual int pidx() const = 0;
     virtual const Counter<F> &node_features() const = 0;
 
     virtual bool operator<(const GraphNode<F> &other) const = 0;

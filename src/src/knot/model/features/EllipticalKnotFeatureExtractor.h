@@ -40,7 +40,6 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<std::string, 
     Counter<std::string> m_mean;
     Counter<std::string> m_sd;
 
-protected:
     Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
 
     Counter<std::string> _extract_features(const edge_type &e) override;

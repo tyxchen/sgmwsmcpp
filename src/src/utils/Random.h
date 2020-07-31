@@ -32,6 +32,7 @@ public:
     const std::minstd_rand &rng() const;
     std::minstd_rand &rng();
     std::minstd_rand::result_type next(size_t bits);
+    std::minstd_rand::result_type operator()();
     int next_int(int bound);
     double next_double();
 };

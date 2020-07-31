@@ -35,10 +35,10 @@ namespace sgm
 namespace ThreeMatchingDistanceFeatureExtractorConsts
 {
 constexpr int DIM = 4;
-const char *const TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
-const char *const TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
-const char *const THREE_MATCHING_DISTANCE_1 = "THREE_MATCHING_DISTANCE_1";
-const char *const THREE_MATCHING_DISTANCE_2 = "THREE_MATCHING_DISTANCE_2";
+constexpr const char* TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
+constexpr const char* TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
+constexpr const char* THREE_MATCHING_DISTANCE_1 = "THREE_MATCHING_DISTANCE_1";
+constexpr const char* THREE_MATCHING_DISTANCE_2 = "THREE_MATCHING_DISTANCE_2";
 
 constexpr double NORM_CONST = 1; // TODO: Do this in R as a pre-processing step and remove this constant
 }
@@ -81,7 +81,7 @@ public:
     using node_type = typename GraphFeatureExtractor<std::string, KnotType>::node_type;
     using edge_type = typename GraphFeatureExtractor<std::string, KnotType>::edge_type;
 
-protected:
+private:
     Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override {
         using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
         auto f = _default_parameters();
@@ -129,7 +129,7 @@ protected:
         };
     }
 
-    inline int _dim() const override {
+    int _dim() const override {
         return ThreeMatchingDistanceFeatureExtractorConsts::DIM;
     }
 };

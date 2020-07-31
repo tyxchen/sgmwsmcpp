@@ -22,8 +22,8 @@
 
 #include <memory>
 #include <utility>
-#include <parallel_hashmap/phmap.h>
 
+#include "utils/types.h"
 #include "common/model/DecisionModel.h"
 
 namespace sgm
@@ -32,9 +32,9 @@ namespace sgm
 namespace detail
 {
 template <typename NodeType>
-bool is_candidate_edge(const NodeType &node, const phmap::flat_hash_set<NodeType> &edge) {
+bool is_candidate_edge(const NodeType &node, const set_t<NodeType> &edge) {
     for (const auto &v : edge) {
-        if (v->partition_idx() == node->partition_idx()) {
+        if (v->pidx() == node->pidx()) {
             return false;
         }
     }
@@ -50,6 +50,7 @@ public:
     using edge_type = typename DecisionModel<F, NodeType>::edge_type;
     constexpr static int H_SPAN = 100;
 
+private:
     std::vector<edge_type> _decisions(const node_type &node,
                                       const GraphMatchingState <F, NodeType> &state)
     override {
@@ -59,9 +60,9 @@ public:
 
     std::vector<edge_type> _decisions(const node_type &node,
                                       const std::vector<node_type> &candidate_nodes,
-                                      const phmap::flat_hash_set<node_type> &covered_nodes,
-                                      const phmap::flat_hash_set<edge_type> &matching,
-                                      const phmap::flat_hash_map<node_type, edge_type> &node_to_edge) override {
+                                      const set_t<node_type> &covered_nodes,
+                                      const set_t<edge_type> &matching,
+                                      const map_t<node_type, edge_type> &node_to_edge) override {
         std::vector<edge_type> decisions;
 
         if (covered_nodes.count(node)) {
@@ -80,7 +81,7 @@ public:
 
         for (const auto &other_node : candidate_nodes) {
             if (covered_nodes.count(other_node)) continue;
-            if (node->partition_idx() == other_node->partition_idx()) continue;
+            if (node->pidx() == other_node->pidx()) continue;
 
             decisions.emplace_back(std::make_shared<typename edge_type::element_type>
                                        (std::initializer_list<node_type>({ other_node })));
@@ -95,7 +96,7 @@ public:
     }
 
     bool _path_exists(const GraphMatchingState <F, NodeType> &cur_state,
-                      const phmap::flat_hash_map<node_type, phmap::flat_hash_set<node_type>> &final_state)
+                      const map_t<node_type, set_t<node_type>> &final_state)
     override {
         return false;
     }

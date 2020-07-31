@@ -17,7 +17,7 @@ target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::
 
 set($ENV{CPLUS_INCLUDE_PATH} "${Boost_INCLUDE_DIRS}:vendor")
 
-target_compile_options(sgmwsmc PRIVATE -Wall -Wpessimizing-move -Wredundant-move)
+#target_compile_options(sgmwsmc PRIVATE -Wall -Wpessimizing-move -Wredundant-move)
 target_compile_definitions(sgmwsmc PUBLIC DEBUG=1)
 
 add_executable(test

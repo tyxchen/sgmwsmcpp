@@ -26,7 +26,11 @@
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
+#ifdef DEBUG
+#include <unordered_map>
+#else
 #include <parallel_hashmap/phmap.h>
+#endif
 
 namespace sgm
 {
@@ -38,7 +42,11 @@ class Indexer
 public:
     using object_type = T;
     using index_type = size_t;
+#ifdef DEBUG
+    using map_type = std::unordered_map<object_type, index_type, Hash>;
+#else
     using map_type = phmap::flat_hash_map<object_type, index_type, Hash>;
+#endif
 
 private:
     std::vector<object_type> m_i2o;
@@ -59,7 +67,7 @@ public:
     Indexer(std::initializer_list<object_type> init) : Indexer(init.begin(), init.end()) {}
 
     template <typename InitList>
-    explicit Indexer(const InitList &init) : Indexer(init.begin(), init.end()) {}
+    explicit Indexer(InitList &&init) : Indexer(init.begin(), init.end()) {}
 
     Indexer(std::initializer_list<typename map_type::value_type> init): m_o2i(init), m_i2o(init.size()) {
         auto i = 0;

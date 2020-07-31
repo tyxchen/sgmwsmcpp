@@ -35,8 +35,8 @@ namespace sgm
 namespace DistanceFeatureExtractorConsts
 {
 constexpr int DIM = 2;
-const char* const TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
-const char* const TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
+constexpr const char* TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
+constexpr const char* TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
 }
 
 template <typename NodeType>
@@ -55,8 +55,8 @@ template <typename KnotType>
 void compute_distance(const KnotType &node, const KnotType &other, Counter <std::string> &features) {
     auto node_f = node.node_features();
     auto other_f = other.node_features();
-    auto ind1 = node.partition_idx() % 2;
-    auto ind2 = other.partition_idx() % 2;
+    auto ind1 = node.pidx() % 2;
+    auto ind2 = other.pidx() % 2;
 
     auto diffX = std::pow(node_f.get("x") - other_f.get("x"), 2);
     auto diffY = std::pow(node_f.get("y") - other_f.get("y"), 2);
@@ -78,7 +78,7 @@ public:
     using node_type = typename GraphFeatureExtractor<std::string, KnotType>::node_type;
     using edge_type = typename GraphFeatureExtractor<std::string, KnotType>::edge_type;
 
-protected:
+private:
     Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override {
         if (decision->size() != 1) {
             throw std::runtime_error("Expected two-matching, received " + std::to_string(decision->size() - 1) +
@@ -112,7 +112,7 @@ protected:
         };
     }
 
-    inline int _dim() const override {
+    int _dim() const override {
         return DistanceFeatureExtractorConsts::DIM;
     }
 };
