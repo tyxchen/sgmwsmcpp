@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "utils/NumericalUtils.h"
 #include "utils/Random.h"
@@ -219,6 +220,20 @@ public:
     double log_forward_proposal() const {
         return m_log_forward_proposal;
     }
+
+#ifdef DEBUG
+    friend std::ostream &operator<<(std::ostream &out, const GraphMatchingState<F, NodeType> &state) {
+        out << "matchings:" << "\n  " << print_wrapper(state.m_matchings) << "\n";
+        out << "covered nodes:" << "\n  " << print_wrapper(state.m_covered_nodes) << "\n";
+        out << "visited nodes:" << "\n  " << print_wrapper(state.m_visited_nodes) << "\n";
+        out << "unvisited nodes:" << "\n  " << print_wrapper(state.m_unvisited_nodes) << "\n";
+        out << "node to edge view:" << "\n  " << print_wrapper(state.m_node_to_matching, ",\n   ") << "\n";
+        out << "decisions:" << "\n  " << print_wrapper(state.m_decisions) << "\n";
+        out << "log density: " << state.m_log_density << "\n";
+        out << "log forward proposal: " << state.m_log_forward_proposal << "\n";
+        return out;
+    }
+#endif
 };
 }
 

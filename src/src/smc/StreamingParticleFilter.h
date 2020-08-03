@@ -21,10 +21,10 @@
 #define SGMWSMCPP_STREAMINGPARTICLEFILTER_H
 
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <vector>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "common/graph/GraphMatchingState_fwd.h"
 #include "smc/Proposal.h"
@@ -82,16 +82,22 @@ private:
 
     const latent_type &sample_old_latent() {
         auto idx = m_permutation_stream.index();
-        std::cout << " $" << idx << "$ ";
+        sgm::logger <= idx <= "\n" <= (*m_old_latents)[idx];
         return (*m_old_latents)[idx];
     }
 
     std::pair<double, latent_type> _next_log_weight_sample_pair() override {
         auto *old_latent = is_initial() ? nullptr : &sample_old_latent();
-        // FIXME: something is off with how cur_latent is regenerated on a resample
+        // FIXME: something is off with how old_latent is regenerated on a resample
         auto cur_latent = is_initial()
                           ? m_transition_density.get().sample_initial(m_random)
                           : m_transition_density.get().sample_forward_transition(m_random, *old_latent);
+
+#ifdef DEBUG
+        if (old_latent) {
+//            sgm::logger <= "\n" <= *old_latent;
+        }
+#endif
 
         auto log_weight = m_observation_density.get().log_density(cur_latent, m_cur_emission);
 
@@ -151,6 +157,10 @@ public:
             m_options
         );
 
+#ifdef DEBUG
+        sgm::logger << "=== RUN 0 ===\n";
+#endif
+
         m_results = propagator.execute();
         auto logZ = m_results.first.logZ_estimate();
 
@@ -165,9 +175,14 @@ public:
                                                         m_transition_density, m_observation_density),
                 m_options
             );
+#ifdef DEBUG
+            sgm::logger << "=== RUN " << i << " ===\n";
+#endif
             auto results = rec_propagator.execute();
             logZ += results.first.logZ_estimate();
             m_results = std::move(results);
+            /* FIXME: DEBUG */
+            break;
         }
 
         return logZ;

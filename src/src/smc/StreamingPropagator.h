@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+#include "utils/debug.h"
 #include "utils/Random.h"
 #include "smc/CompactPopulation.h"
 #include "smc/Proposal.h"
@@ -68,11 +69,11 @@ private:
             auto weight = m_proposal.next_log_weight();
             pop.insert_log_weight(weight);
 #ifdef DEBUG
-            std::cout << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", ";
-            std::cout << pop.ess() << ", " << weight << '\n';
+            sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
+                        << pop.ess() << ", " << weight << '\n';
 #endif
         }
-        std::cout << "proposed: " << pop.num_particles() << std::endl;
+        sgm::logger << "proposed: " << pop.num_particles() << std::endl;
     }
 
     std::vector<double> extract_sorted_cumulative_probabilites() {
@@ -121,10 +122,10 @@ private:
                 normalized_partial_sum += std::exp(weight - log_sum);
                 sanity_check.insert_log_weight(weight);
 #ifdef DEBUG
-                std::cout << sanity_check.num_particles() << ": " << sanity_check.log_sum() << ", ";
-                std::cout << sanity_check.log_sum_of_squares() << ", ";
-                std::cout << sanity_check.ess() << ", " << weight << "; ";
-                std::cout << next_cumulative_probability << ", " << normalized_partial_sum << '\n';
+                sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
+                            <= sanity_check.log_sum_of_squares() <= ", "
+                            <= sanity_check.ess() <= ", " <= weight <= "; "
+                            <= next_cumulative_probability <= ", " <= normalized_partial_sum <= '\n';
 #endif
             }
             // we have found one particle that survived the collapse
@@ -133,7 +134,7 @@ private:
             // candidates.pop_back();
         }
 
-        std::cerr << "resample: " << proposal.num_calls() << ", " << sanity_check.num_particles() << '\n';
+        sgm::logger <= "resample: " <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
 
         // replay the last few calls of the proposal sequence to make sure things were indeed behaving deterministically
         for (auto i = proposal.num_calls(); i < num_particles; i++) {
@@ -141,16 +142,16 @@ private:
 
             sanity_check.insert_log_weight(weight);
 #ifdef DEBUG
-            std::cout << sanity_check.num_particles() << ": " << sanity_check.log_sum() << ", ";
-            std::cout << sanity_check.log_sum_of_squares() << ", ";
-            std::cout << sanity_check.ess() << ", " << weight<< '\n';
+            sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
+                        <= sanity_check.log_sum_of_squares() <= ", "
+                        <= sanity_check.ess() <= ", " <= weight <= '\n';
 #endif
         }
 
-        std::cerr << "resample: " << proposal.num_calls() << ", " << sanity_check.num_particles() << '\n';
+        sgm::logger <= "resample: " <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
 
         if (sanity_check.log_sum() != log_sum || sanity_check.log_sum_of_squares() != population.log_sum_of_squares()) {
-            throw std::runtime_error(
+            throw sgm::runtime_error(
                 "The provided proposal does not behave deterministically: " +
                 std::to_string(sanity_check.log_sum()) +
                 " vs " +
@@ -180,12 +181,16 @@ public:
 #ifndef DEBUG
         if (m_options.verbose) {
 #endif
-        std::cout << "nVirtual=" << population.num_particles() << ", "
-                  << "nConcrete=" << m_options.num_concrete_particles << ", "
-                  << "relative_ess=" << (population.ess() / m_options.num_concrete_particles)
-                  << std::endl;
+        sgm::logger << "nVirtual=" << population.num_particles() << ", "
+                    << "nConcrete=" << m_options.num_concrete_particles << ", "
+                    << "relative_ess=" << (population.ess() / m_options.num_concrete_particles)
+                    << std::endl;
 #ifndef DEBUG
         }
+#endif
+
+#ifdef DEBUG
+        sgm::logger << "--- RESAMPLE ---\n";
 #endif
 
         auto sorted_cumulative_probabilities_for_final_resampling = extract_sorted_cumulative_probabilites();

@@ -17,33 +17,14 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#include <string>
-#include <utility>
-#include <boost/container_hash/hash.hpp>
-#include "catch.hpp"
-#include "utils/type_traits.h"
+#ifndef SGMWSMCPP_DEBUG_MACROS_H
+#define SGMWSMCPP_DEBUG_MACROS_H
 
+#define DECLARE_PRINT_OVERLOAD(...) \
+    std::ostream &print(std::ostream &, const __VA_ARGS__ &, const std::string & = ", ")
+#define DECLARE_PRINT_OVERLOAD_WITH_SEP(sep, ...) \
+    std::ostream &print(std::ostream &, const __VA_ARGS__ &, const std::string & = sep)
+#define DEFINE_PRINT_OVERLOAD(name, ...) \
+    std::ostream &print(std::ostream &out, const __VA_ARGS__ &name, const std::string &sep)
 
-struct C {
-    int key;
-};
-
-std::size_t hash_value(const C &c) {
-    boost::hash<int> hasher;
-    return hasher(c.key);
-}
-
-TEST_CASE("is_hashable") {
-    SECTION("with standard types") {
-        REQUIRE(sgm::is_hashable_v<int>);
-        REQUIRE(sgm::is_hashable_v<std::string>);
-    }
-
-    SECTION("with types hashable via boost::hash") {
-        REQUIRE(sgm::is_hashable_v<std::pair<int, int>>);
-    }
-
-    SECTION("using custom hash") {
-        REQUIRE(sgm::is_hashable_v<C>);
-    }
-}
+#endif //SGMWSMCPP_DEBUG_MACROS_H
