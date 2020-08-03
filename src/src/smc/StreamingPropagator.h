@@ -134,7 +134,8 @@ private:
             // candidates.pop_back();
         }
 
-        sgm::logger <= "resample: " <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
+        sgm::logger <= "resample before replay: "
+                    <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
 
         // replay the last few calls of the proposal sequence to make sure things were indeed behaving deterministically
         for (auto i = proposal.num_calls(); i < num_particles; i++) {
@@ -148,7 +149,8 @@ private:
 #endif
         }
 
-        sgm::logger <= "resample: " <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
+        sgm::logger <= "resample after replay: "
+                    <= proposal.num_calls() <= ", " <= sanity_check.num_particles() <= '\n';
 
         if (sanity_check.log_sum() != log_sum || sanity_check.log_sum_of_squares() != population.log_sum_of_squares()) {
             throw sgm::runtime_error(
@@ -190,7 +192,7 @@ public:
 #endif
 
 #ifdef DEBUG
-        sgm::logger << "--- RESAMPLE ---\n";
+        sgm::logger <= "--- RESAMPLE ---\n";
 #endif
 
         auto sorted_cumulative_probabilities_for_final_resampling = extract_sorted_cumulative_probabilites();

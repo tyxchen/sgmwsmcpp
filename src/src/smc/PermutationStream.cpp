@@ -23,12 +23,13 @@
 
 using namespace sgm;
 
-smc::PermutationStream::PermutationStream(int size, Random &random) : m_size(size), m_indices(size), m_random(random) {
+smc::PermutationStream::PermutationStream(int size, const Random &random)
+    : m_size(size), m_indices(size), m_random(random) {
     std::iota(m_indices.begin(), m_indices.end(), 0);
 }
 
 void smc::PermutationStream::reshuffle() {
-    std::shuffle(m_indices.begin(), m_indices.end(), m_random.get().rng());
+    std::shuffle(m_indices.begin(), m_indices.end(), m_random);
 }
 
 int smc::PermutationStream::index() {

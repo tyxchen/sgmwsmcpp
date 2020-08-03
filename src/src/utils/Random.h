@@ -26,15 +26,37 @@ namespace sgm
 {
 class Random
 {
-    std::minstd_rand m_rng;
+public:
+    using device = std::minstd_rand;
+    using result_type = device::result_type;
+
+private:
+    device m_rng;
+
 public:
     explicit Random(int seed);
-    const std::minstd_rand &rng() const;
-    std::minstd_rand &rng();
-    std::minstd_rand::result_type next(size_t bits);
-    std::minstd_rand::result_type operator()();
+    const device &rng() const;
+    device &rng();
+    result_type next(size_t bits);
+    result_type operator()();
     int next_int(int bound);
     double next_double();
+
+    static constexpr result_type min() {
+        return Random::device::min();
+    }
+
+    static constexpr result_type max() {
+        return Random::device::max();
+    }
+
+#ifdef DEBUG
+private:
+    size_t m_num_calls = 0;
+
+public:
+    size_t num_calls() const;
+#endif
 };
 }
 

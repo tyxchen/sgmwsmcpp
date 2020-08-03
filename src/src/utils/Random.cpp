@@ -24,19 +24,25 @@ using namespace sgm;
 
 Random::Random(int seed) : m_rng(seed) {}
 
-const std::minstd_rand & Random::rng() const {
+const Random::device & Random::rng() const {
     return m_rng;
 }
 
-std::minstd_rand & Random::rng() {
+Random::device & Random::rng() {
     return m_rng;
 }
 
-std::minstd_rand::result_type Random::next(size_t bits) {
+Random::result_type Random::next(size_t bits) {
+#ifdef DEBUG
+    ++m_num_calls;
+#endif
     return m_rng() >> (32 - bits);
 }
 
-std::minstd_rand::result_type Random::operator()() {
+Random::result_type Random::operator()() {
+#ifdef DEBUG
+    ++m_num_calls;
+#endif
     return m_rng();
 }
 
@@ -56,3 +62,7 @@ double Random::next_double() {
     // Again uses the "Java algorithm" to generate random doubles
     return ((static_cast<long long>(next(26)) << 27) + next(27)) / static_cast<double>(1ULL << 53);
 }
+
+#ifdef DEBUG
+size_t Random::num_calls() const { return m_num_calls; }
+#endif
