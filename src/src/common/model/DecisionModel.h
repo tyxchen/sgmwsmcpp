@@ -73,12 +73,12 @@ private:
                                               const set_t<edge_type> &matching,
                                               const map_t<node_type, edge_type> &node_to_edge) = 0;
 
-    virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;
-
-    virtual bool _path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-                              const map_t<node_type, set_t<node_type>> &final_state) = 0;
-
-    virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
+//    virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;
+//
+//    virtual bool _path_exists(const GraphMatchingState<F, NodeType> &cur_state,
+//                              const map_t<node_type, set_t<node_type>> &final_state) = 0;
+//
+//    virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
 };
 }
 

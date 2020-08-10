@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_COMMAND_H
 #define SGMWSMCPP_COMMAND_H
 
+#include <functional>
 #include <memory>
 #include <vector>
 #include <utility>
@@ -37,8 +38,8 @@ namespace sgm
 template <typename F, typename NodeType>
 class Command
 {
-    DecisionModel<F, NodeType> &m_decision_model;
-    GraphFeatureExtractor<F, NodeType> &m_fe;
+    std::reference_wrapper<DecisionModel<F, NodeType>> m_decision_model;
+    std::reference_wrapper<GraphFeatureExtractor<F, NodeType>> m_fe;
     Counter<F> m_params;
     Indexer<F> m_indexer;
 
@@ -61,12 +62,17 @@ public:
     const DecisionModel<F, NodeType> &decision_model() const {
         return m_decision_model;
     }
+
     DecisionModel<F, NodeType> &decision_model() {
         return m_decision_model;
     }
 
     MultinomialLogisticModel<F, NodeType> current_model() {
-        return MultinomialLogisticModel<F, NodeType>(m_fe, m_params);
+        return MultinomialLogisticModel<F, NodeType>(m_fe.get(), m_params);
+    }
+
+    GraphFeatureExtractor<F, NodeType> &feature_extractor() {
+        return m_fe;
     }
 };
 }

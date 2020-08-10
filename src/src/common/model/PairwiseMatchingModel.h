@@ -29,26 +29,12 @@
 namespace sgm
 {
 
-namespace detail
-{
-template <typename NodeType>
-bool is_candidate_edge(const NodeType &node, const set_t<NodeType> &edge) {
-    for (const auto &v : edge) {
-        if (v->pidx() == node->pidx()) {
-            return false;
-        }
-    }
-    return true;
-}
-}
-
 template <typename F, typename NodeType>
 class PairwiseMatchingModel : public DecisionModel<F, NodeType>
 {
 public:
     using node_type = typename DecisionModel<F, NodeType>::node_type;
     using edge_type = typename DecisionModel<F, NodeType>::edge_type;
-    constexpr static int H_SPAN = 100;
 
 private:
     std::vector<edge_type> _decisions(const node_type &node,
@@ -63,17 +49,19 @@ private:
                                       const set_t<node_type> &covered_nodes,
                                       const set_t<edge_type> &matching,
                                       const map_t<node_type, edge_type> &node_to_edge) override {
+        using edge_element_type = typename edge_type::element_type;
         std::vector<edge_type> decisions;
 
         if (covered_nodes.count(node)) {
             // if the node is already covered, then the only decision that is available is an empty decision for now
-            decisions.emplace_back(std::make_shared<typename edge_type::element_type>());
+            decisions.emplace_back(std::make_shared<edge_element_type>());
             return decisions;
         } else {
             // this node is not yet covered so consider all existing edges as long as the edge does contain a node from the same partition as the node being considered
             for (const auto &edge : matching) {
-                if (edge->size() >= 3) continue;
-                if (detail::is_candidate_edge(node, *edge)) {
+                if (edge->size() >= 3 || edge->size() == 0) continue;
+                else if (node->pidx() != (*edge->begin())->pidx() &&
+                         (edge->size() == 2 && node->pidx() != (*(++edge->begin()))->pidx())) {  // loop unrolling
                     decisions.emplace_back(edge);
                 }
             }
@@ -83,27 +71,27 @@ private:
             if (covered_nodes.count(other_node)) continue;
             if (node->pidx() == other_node->pidx()) continue;
 
-            decisions.emplace_back(std::make_shared<typename edge_type::element_type>
-                                       (std::initializer_list<node_type>({ other_node })));
+            decisions.emplace_back(
+                std::make_shared<edge_element_type>(std::initializer_list<node_type>({ other_node }))
+            );
         }
 
         return decisions;
     }
 
-    // TODO: implement
-    bool _in_support(const GraphMatchingState <F, NodeType> &state) override {
-        return true;
-    }
-
-    bool _path_exists(const GraphMatchingState <F, NodeType> &cur_state,
-                      const map_t<node_type, set_t<node_type>> &final_state)
-    override {
-        return false;
-    }
-
-    int _num_parents(const GraphMatchingState <F, NodeType> &cur_latent) override {
-        return 1;
-    }
+//    bool _in_support(const GraphMatchingState <F, NodeType> &state) override {
+//        return true;
+//    }
+//
+//    bool _path_exists(const GraphMatchingState <F, NodeType> &cur_state,
+//                      const map_t<node_type, set_t<node_type>> &final_state)
+//    override {
+//        return false;
+//    }
+//
+//    int _num_parents(const GraphMatchingState <F, NodeType> &cur_latent) override {
+//        return 1;
+//    }
 };
 
 }

@@ -173,6 +173,13 @@ public:
             );
             sgm::logger <= "=== RUN " <= i <= " ===\n";
             auto results = rec_propagator.execute();
+
+            // FIXME: This is a workaround for when the results give no new matchings
+            // If we were to continue, we'd find all the matching states are the same, which doesn't make sense
+            if (results.first.log_sum() == -std::numeric_limits<double>::infinity()) {
+                break;
+            }
+
             logZ += results.first.logZ_estimate();
             m_results = std::move(results);
         }

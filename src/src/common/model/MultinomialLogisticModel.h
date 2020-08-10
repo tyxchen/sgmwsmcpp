@@ -20,11 +20,13 @@
 #ifndef SGMWSMCPP_MULTINOMIALLOGISTICMODEL_H
 #define SGMWSMCPP_MULTINOMIALLOGISTICMODEL_H
 
+#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "utils/container/Counter.h"
 #include "common/graph/GraphMatchingState_fwd.h"
@@ -41,28 +43,32 @@ public:
     using edge_type = edge_type_base<NodeType>;
 
 private:
-    GraphFeatureExtractor<F, NodeType> &m_fe;
-    Counter<F> &m_params;
+    std::reference_wrapper<GraphFeatureExtractor<F, NodeType>> m_fe;
+    std::reference_wrapper<Counter<F>> m_params;
 
 public:
     MultinomialLogisticModel(GraphFeatureExtractor<F, NodeType> &fe, Counter<F> &params)
         : m_fe{fe}, m_params{params} {
-        if (m_fe.dim() != m_params.size()) {
+        if (m_fe.get().dim() != m_params.get().size()) {
             throw std::runtime_error("Feature and parameter dimensions do not match.");
         }
     }
 
     std::pair<double, Counter<F>> log_prob(const node_type &node, const edge_type &decision) {
-        auto features = m_fe.extract_features(node, decision);
+        auto features = m_fe.get().extract_features(node, decision);
         auto prob = 0.0;
         for (const auto &f : features) {
-            prob += f.second * m_params.get(f.first);
+            prob += f.second * m_params.get().get(f.first);
+#ifdef DEBUG
+            std::cerr << "MLM::log_prob " << sgm::count << "\n";
+            if (std::isnan(prob)) throw std::runtime_error("");
+#endif
         }
         return std::make_pair(prob, std::move(features));
     }
 
     int num_variables() const {
-        return m_fe.dim();
+        return m_fe.get().dim();
     }
 };
 }

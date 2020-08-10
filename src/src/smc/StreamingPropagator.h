@@ -73,7 +73,7 @@ private:
                         << pop.ess() << ", " << weight << '\n';
 #endif
         }
-        sgm::logger << "proposed: " << pop.num_particles() << std::endl;
+        sgm::logger <= "proposed: " <= pop.num_particles() <= std::endl;
     }
 
     std::vector<double> extract_sorted_cumulative_probabilites() {

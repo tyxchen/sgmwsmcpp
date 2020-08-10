@@ -25,6 +25,8 @@
 
 using namespace sgm;
 
+int sgm::count = 0;
+
 debugstream::debugstream(std::ostream &tty, const std::string &filename)
     : tty(tty), log_file(filename, std::ofstream::trunc) {
     auto t = std::time(nullptr);

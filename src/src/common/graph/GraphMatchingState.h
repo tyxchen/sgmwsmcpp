@@ -35,6 +35,10 @@
 #include "common/model/DecisionModel_fwd.h"
 #include "common/model/MultinomialLogisticModel.h"
 
+#ifdef DEBUG
+static int count = 0;
+#endif
+
 namespace sgm
 {
 template <typename F, typename NodeType>
@@ -61,6 +65,7 @@ private:
                                               MultinomialLogisticModel<F, NodeType> &model,
                                               const node_type &node,
                                               bool use_exact_sampling) {
+        // TODO: make sure this works correctly
         auto decisions = decision_model.decisions(node, *this);
         auto decisions_size = decisions.size();
         auto idx = 0;
@@ -151,10 +156,119 @@ public:
 //        const map_t<node_type, set_t<node_type>> &final_state) {
 //    }
 
+    void evaluate_decision(edge_type &decision, DecisionModel<F, NodeType> &decision_model,
+                           MultinomialLogisticModel<F, NodeType> &model) {
+        auto log_norm = -std::numeric_limits<double>::infinity();
+        Counter<F> suff;
+        Counter<F> features;
+
+        // NOTE: Supposed to be from the front, however that's horribly inefficient. So we go from the back instead.
+        auto node = m_unvisited_nodes.back();
+        m_unvisited_nodes.pop_back();
+        m_visited_nodes.push_back(node);
+
+        auto decision_set = decision_model.decisions(node, *this);
+        auto decision_is_subset = [&decision](const edge_type &superset) -> bool {
+            for (auto &d : *decision) {
+                if (!superset->count(d)) return false;
+            }
+            return true;
+        };
+
+        // FIXME: sometimes decision_set will be empty. This is a workaround to just give a log_norm of 0.
+        if (decision_set.size() == 0) {
+            log_norm = 0.0;
+        }
+
+        for (auto &d : decision_set) {
+#ifdef DEBUG
+            /* DEBUG */
+            ++::count;
+#endif
+            // compute the quantities needed for evaluating the log-likelihood and gradient of log-likelihood
+            auto ret = model.log_prob(node, d);
+#ifdef DEBUG
+            std::cerr << "GMS::eval_decision " << sgm::count << "\n";
+            if (std::isnan(ret.first)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
+#endif
+            log_norm = NumericalUtils::log_add(log_norm, ret.first);
+#ifdef DEBUG
+            if (std::isnan(log_norm)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
+#endif
+            for (auto &f : ret.second) {
+                suff.increment(f.first, std::exp(ret.first) * ret.second.get(f.first));
+#ifdef DEBUG
+                if (std::isnan(ret.second.get(f.first))) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
+#endif
+            }
+
+            auto e = m_node_to_matching.count(node)
+                ? m_node_to_matching[node]
+                : edge_type(nullptr);
+            auto new_edge = std::make_shared<typename edge_type::element_type>(*d);
+
+            new_edge->emplace(node);
+
+            if (e) {
+                new_edge->insert(e->begin(), e->end());
+            }
+
+            if (decision_is_subset(d)) {
+                if (e) {
+                    m_matchings.erase(e);
+                }
+
+                for (auto &n : *new_edge) {
+                    m_covered_nodes.emplace(n);
+                    m_node_to_matching[n] = new_edge;
+                }
+
+                m_matchings.erase(d);
+                m_matchings.emplace(new_edge);
+                m_log_density += ret.first;
+#ifdef DEBUG
+                if (std::isnan(m_log_density)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
+#endif
+                // TODO: could be a move
+                features = ret.second;
+            }
+        }
+
+        m_log_density -= log_norm;
+        for (auto &f : suff) {
+            auto val = features.get(f.first) - f.second / std::exp(log_norm);
+//            if (std::isnan(val)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
+            // FIXME: This is an attempt to fail gracefully on a nan result.
+            if (std::isnan(val)) {
+                sgm::logger << "Feature " << f.first << " resulted in nan increment to log gradient\n";
+                auto fallback = 0.0;
+                if (std::abs(f.second) == std::numeric_limits<double>::infinity()) {
+                    // case 1: f.second is infinity --> -f.second
+                    fallback = -f.second;
+                    m_log_gradient.set(f.first, fallback);
+                } else {
+                    // case 2: f.second is finite --> 0
+                    fallback = features.get(f.first);
+                    m_log_gradient.increment(f.first, fallback);
+                }
+            } else {
+                m_log_gradient.increment(f.first, val);
+            }
+        }
+
+//        return std::make_pair(m_log_density, m_log_gradient);
+    }
+
     double log_density() const {
+        return m_log_density;
     }
 
     const Counter<F> &log_gradient() const {
+        return m_log_gradient;
+    }
+
+    Counter<F> &log_gradient() {
+        return m_log_gradient;
     }
 
     const node_type &example_node() {
@@ -185,9 +299,6 @@ public:
 
     const std::vector<node_type> &visited_nodes() const {
         return m_visited_nodes;
-    }
-
-    set_t<node_type> visited_nodes_as_set() const {
     }
 
     const set_t<node_type> &covered_nodes() const {
@@ -221,19 +332,37 @@ public:
         return m_log_forward_proposal;
     }
 
-#ifdef DEBUG
     friend std::ostream &operator<<(std::ostream &out, const GraphMatchingState<F, NodeType> &state) {
-        out << "matchings:" << "\n  " << print_wrapper(state.m_matchings) << "\n";
+        std::vector<std::vector<node_type>> sorted_matchings;
+        sorted_matchings.reserve(state.m_matchings.size());
+
+        for (const auto &m : state.m_matchings) {
+            std::vector<node_type> sorted_matching(m->begin(), m->end());
+            std::sort(sorted_matching.begin(), sorted_matching.end(), [](const auto &lhs, const auto &rhs) {
+//                return lhs->pidx() < rhs->pidx() || (lhs->pidx() == rhs->pidx() && lhs->idx() < rhs->idx());
+                return *lhs < *rhs;
+            });
+            sorted_matchings.emplace_back(std::move(sorted_matching));
+        }
+
+        std::sort(sorted_matchings.begin(), sorted_matchings.end(), [](const auto &lhs, const auto &rhs) {
+            auto &min_lhs = *std::min_element(lhs.begin(), lhs.end());
+            auto &min_rhs = *std::min_element(rhs.begin(), rhs.end());
+//            return min_lhs->pidx() < min_rhs->pidx() ||
+//                (min_lhs->pidx() == min_rhs->pidx() && min_lhs->idx() < min_rhs->idx());
+            return *min_lhs < *min_rhs;
+        });
+
+        out << "matchings:" << "\n  " << print_wrapper(sorted_matchings) << "\n";
         out << "covered nodes:" << "\n  " << print_wrapper(state.m_covered_nodes) << "\n";
         out << "visited nodes:" << "\n  " << print_wrapper(state.m_visited_nodes) << "\n";
         out << "unvisited nodes:" << "\n  " << print_wrapper(state.m_unvisited_nodes) << "\n";
         out << "node to edge view:" << "\n  " << print_wrapper(state.m_node_to_matching, ",\n   ") << "\n";
         out << "decisions:" << "\n  " << print_wrapper(state.m_decisions) << "\n";
         out << "log density: " << state.m_log_density << "\n";
-        out << "log forward proposal: " << state.m_log_forward_proposal << "\n";
+        out << "log forward proposal: " << state.m_log_forward_proposal;
         return out;
     }
-#endif
 };
 }
 

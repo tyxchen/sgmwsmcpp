@@ -9,6 +9,7 @@
 #include <cxxopts.hpp>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
 #include "knot/data/KnotDataReader.h"
@@ -72,8 +73,7 @@ int main(int argc, char** argv) {
     for (const auto &dir : data_directories) {
         auto path = fs::path(dir);
         if (!fs::is_directory(path)) {
-            std::cerr << "Error: Data directory `" << dir << "` is not a directory." << std::endl;
-            return 1;
+            throw sgm::runtime_error("Error: Data directory `" + dir + "` is not a directory.");
         }
         auto dir_iter = fs::directory_iterator(path);
         for (const auto &dir_item : dir_iter) {
@@ -90,8 +90,7 @@ int main(int argc, char** argv) {
     for (const auto &dir : test_data_directories) {
         auto path = fs::path(dir);
         if (!fs::is_directory(path)) {
-            std::cerr << "Error: Test data directory `" << dir << "` is not a directory." << std::endl;
-            return 1;
+            throw sgm::runtime_error("Error: Test data directory `" + dir + "` is not a directory.");
         }
         auto dir_iter = fs::directory_iterator(path);
         for (const auto &dir_item : dir_iter) {
@@ -178,7 +177,7 @@ int main(int argc, char** argv) {
     auto initial = Eigen::VectorXd::Zero(fe_dim);
     auto instances = ExpUtils::pack<EllipticalKnot>(training_data);
     SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
-        max_implicit_particles, initial, tol, use_spf);
+        max_implicit_particles, initial, tol, false, use_spf);
 
     return 0;
 }

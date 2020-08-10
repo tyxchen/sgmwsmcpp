@@ -34,6 +34,8 @@
 namespace sgm
 {
 
+extern int count;
+
 class debugstream
 {
     std::ostream &tty;
