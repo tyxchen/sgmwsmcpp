@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
+#include <Eigen/Core>
 
 #include "utils/types.h"
 #include "utils/debug_macros.h"
@@ -40,8 +41,10 @@ class debugstream
 {
     std::ostream &tty;
     std::ofstream log_file;
+    int precision;
+
 public:
-    debugstream(std::ostream &tty, const std::string &filename);
+    debugstream(std::ostream &tty, const std::string &filename, int precision = 8);
 
     template <typename T>
     debugstream &operator<<(const T &thing) {
@@ -72,11 +75,17 @@ struct runtime_error : public std::runtime_error
 template <typename T>
 DECLARE_PRINT_OVERLOAD(sgm::edge_type_base<T>);
 
+template <typename U, typename T>
+DECLARE_PRINT_OVERLOAD(std::pair<U, T>);
+
 template <typename T>
 DECLARE_PRINT_OVERLOAD(std::vector<T>);
 
 template <typename T>
 DECLARE_PRINT_OVERLOAD(sgm::set_t<T>);
+
+template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+DECLARE_PRINT_OVERLOAD(Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>);
 
 template <typename K, typename T>
 DECLARE_PRINT_OVERLOAD_WITH_SEP(",\n ", sgm::map_t<K, T>);
@@ -117,6 +126,12 @@ DEFINE_PRINT_OVERLOAD(edge, sgm::edge_type_base<T>) {
     return print(out, *edge, sep);
 }
 
+template <typename U, typename T>
+DEFINE_PRINT_OVERLOAD(pair, std::pair<U, T>) {
+    out << "(" << pair.first << sep << pair.second << ")";
+    return out;
+}
+
 template <typename T>
 DEFINE_PRINT_OVERLOAD(set, std::vector<T>) {
     auto i = 0u, s = set.size();
@@ -141,6 +156,12 @@ DEFINE_PRINT_OVERLOAD(set, sgm::set_t<T>) {
     }
     out << "}";
     return out;
+}
+
+template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+DEFINE_PRINT_OVERLOAD(matrix, Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>) {
+    auto fmt = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, " ", sep, "", "", "[", "]");
+    out << matrix.format(fmt);
 }
 
 template <typename K, typename T>
@@ -204,6 +225,12 @@ std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> 
 template <typename T, typename CharT, typename Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> &out, const sgm::set_t<T> &set) {
     out << sgm::print_wrapper(set);
+    return out;
+}
+
+template <typename CharT, typename Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> &out, const Eigen::VectorXd &vec) {
+    out << sgm::print_wrapper(vec);
     return out;
 }
 

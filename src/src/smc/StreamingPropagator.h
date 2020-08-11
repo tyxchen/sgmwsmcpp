@@ -69,8 +69,8 @@ private:
             auto weight = m_proposal.next_log_weight();
             pop.insert_log_weight(weight);
 #ifdef DEBUG
-            sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
-                        << pop.ess() << ", " << weight << '\n';
+//            sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
+//                        << pop.ess() << ", " << weight << '\n';
 #endif
         }
         sgm::logger <= "proposed: " <= pop.num_particles() <= std::endl;
@@ -122,10 +122,10 @@ private:
                 normalized_partial_sum += std::exp(weight - log_sum);
                 sanity_check.insert_log_weight(weight);
 #ifdef DEBUG
-                sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
-                            <= sanity_check.log_sum_of_squares() <= ", "
-                            <= sanity_check.ess() <= ", " <= weight <= "; "
-                            <= next_cumulative_probability <= ", " <= normalized_partial_sum <= '\n';
+//                sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
+//                            <= sanity_check.log_sum_of_squares() <= ", "
+//                            <= sanity_check.ess() <= ", " <= weight <= "; "
+//                            <= next_cumulative_probability <= ", " <= normalized_partial_sum <= '\n';
 #endif
             }
             // we have found one particle that survived the collapse
@@ -143,9 +143,9 @@ private:
 
             sanity_check.insert_log_weight(weight);
 #ifdef DEBUG
-            sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
-                        <= sanity_check.log_sum_of_squares() <= ", "
-                        <= sanity_check.ess() <= ", " <= weight <= '\n';
+//            sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
+//                        <= sanity_check.log_sum_of_squares() <= ", "
+//                        <= sanity_check.ess() <= ", " <= weight <= '\n';
 #endif
         }
 

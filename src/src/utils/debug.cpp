@@ -27,8 +27,8 @@ using namespace sgm;
 
 int sgm::count = 0;
 
-debugstream::debugstream(std::ostream &tty, const std::string &filename)
-    : tty(tty), log_file(filename, std::ofstream::trunc) {
+debugstream::debugstream(std::ostream &tty, const std::string &filename, int precision)
+    : tty(tty), log_file(filename, std::ofstream::trunc), precision(precision) {
     auto t = std::time(nullptr);
     auto time = std::localtime(&t);
 
@@ -36,6 +36,9 @@ debugstream::debugstream(std::ostream &tty, const std::string &filename)
         log_file << "Started at " << std::put_time(time, "%c") << "\n\n";
     else
         throw std::runtime_error("could not open log file " + filename);
+
+    tty << std::setprecision(precision);
+    log_file << std::setprecision(precision);
 }
 
 debugstream &debugstream::operator<<(std::ostream &(*func)(std::ostream &)) {

@@ -35,10 +35,6 @@
 #include "common/model/DecisionModel_fwd.h"
 #include "common/model/MultinomialLogisticModel.h"
 
-#ifdef DEBUG
-static int count = 0;
-#endif
-
 namespace sgm
 {
 template <typename F, typename NodeType>
@@ -181,25 +177,11 @@ public:
         }
 
         for (auto &d : decision_set) {
-#ifdef DEBUG
-            /* DEBUG */
-            ++::count;
-#endif
             // compute the quantities needed for evaluating the log-likelihood and gradient of log-likelihood
             auto ret = model.log_prob(node, d);
-#ifdef DEBUG
-            std::cerr << "GMS::eval_decision " << sgm::count << "\n";
-            if (std::isnan(ret.first)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
-#endif
             log_norm = NumericalUtils::log_add(log_norm, ret.first);
-#ifdef DEBUG
-            if (std::isnan(log_norm)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
-#endif
             for (auto &f : ret.second) {
                 suff.increment(f.first, std::exp(ret.first) * ret.second.get(f.first));
-#ifdef DEBUG
-                if (std::isnan(ret.second.get(f.first))) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
-#endif
             }
 
             auto e = m_node_to_matching.count(node)
@@ -226,9 +208,6 @@ public:
                 m_matchings.erase(d);
                 m_matchings.emplace(new_edge);
                 m_log_density += ret.first;
-#ifdef DEBUG
-                if (std::isnan(m_log_density)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
-#endif
                 // TODO: could be a move
                 features = ret.second;
             }
@@ -236,25 +215,43 @@ public:
 
         m_log_density -= log_norm;
         for (auto &f : suff) {
-            auto val = features.get(f.first) - f.second / std::exp(log_norm);
-//            if (std::isnan(val)) throw sgm::runtime_error(std::to_string(::count) + " " + std::to_string(sgm::count));
-            // FIXME: This is an attempt to fail gracefully on a nan result.
+            m_log_gradient.increment(f.first, features.get(f.first) - f.second / std::exp(log_norm));
+        }
+
+
+        /* This code is here as an attempted correction for when log_norm is too large in magnitude, resulting in
+         * us storing a nan inside m_log_gradient. However, applying these corrections breaks the optimization step.
+         * Why is the algorithm happier with a counter full of nan's than a counter full of actual numerical values?
+         * Who knows.
+
+        // log_norm may be large, causing exp(log_norm) to be too big to store in a double, causing a nan as we may
+        // divide it by infinity
+        // workaround: here, we clamp log_norm to be within double range
+        auto log_norm_exp = std::exp(log_norm);
+        if (log_norm_exp == std::numeric_limits<double>::infinity()) {
+            sgm::logger << "log_norm exceeded double limit\n";
+            log_norm_exp = std::numeric_limits<double>::max();
+        }
+
+        for (auto &f : suff) {
+            auto val = features.get(f.first) - f.second / log_norm_exp;
+            // This is an attempt to fail gracefully on a nan result. Root cause is log_norm's magnitude being too big
             if (std::isnan(val)) {
-                sgm::logger << "Feature " << f.first << " resulted in nan increment to log gradient\n";
+                sgm::logger << "log_norm is negative and large\n";
                 auto fallback = 0.0;
-                if (std::abs(f.second) == std::numeric_limits<double>::infinity()) {
-                    // case 1: f.second is infinity --> -f.second
-                    fallback = -f.second;
-                    m_log_gradient.set(f.first, fallback);
-                } else {
-                    // case 2: f.second is finite --> 0
+                if (f.second == 0) {
+                    // case 1: f.second is 0 --> 0
                     fallback = features.get(f.first);
                     m_log_gradient.increment(f.first, fallback);
+                } else {
+                    // case 2: f.second is infinity --> -f.second
+                    fallback = -1 * f.second;
+                    m_log_gradient.set(f.first, fallback);
                 }
             } else {
                 m_log_gradient.increment(f.first, val);
             }
-        }
+        }*/
 
 //        return std::make_pair(m_log_density, m_log_gradient);
     }

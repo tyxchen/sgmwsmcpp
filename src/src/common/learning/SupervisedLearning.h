@@ -31,6 +31,7 @@
 #include <LBFGS.h>
 
 #include "utils/types.h"
+#include "utils/opt/LBFGSMinimizer.h"
 #include "utils/NumericalUtils.h"
 #include "utils/Random.h"
 #include "common/model/Command.h"
@@ -68,9 +69,6 @@ std::pair<double, Counter<F>> evaluate(Command<F, NodeType> &command, Counter<F>
 
     for (auto &decision : decisions) {
         state.evaluate_decision(decision, decision_model, model);
-#ifdef DEBUG
-        if (std::isnan(state.log_density())) throw sgm::runtime_error(std::to_string(sgm::count));
-#endif
     }
 
     return std::make_pair(state.log_density(), std::move(state.log_gradient()));
@@ -91,7 +89,6 @@ class ObjectiveFunction
     Counter<F> m_log_gradient;
 
     Eigen::VectorXd m_curr_x;
-    double m_lambda = 0.0;
 
 public:
     explicit ObjectiveFunction(Command<F, NodeType> &command) : m_command(command) {}
@@ -104,7 +101,7 @@ public:
     }
 
     double value_at(const Eigen::VectorXd &x) {
-        if (!requires_computation(x)) return -m_log_density;
+        if (!requires_computation(x)) return -1 * m_log_density;
 
         if (m_curr_x.rows() == 0 || std::isnan(x(0)))
             m_curr_x = x;
@@ -117,52 +114,27 @@ public:
         }
 
         // TODO: implement parallelization
-        // FIXME: m_log_density ending up as nan because params is nan...probably because x is uninitialized
-        std::cerr << "evaluating...\n";
         for (auto &instance : m_latent_decisions) {
-#ifdef DEBUG
-            for (auto &thing : params) {
-                if (std::isnan(thing.second)) throw sgm::runtime_error(std::to_string(sgm::count));
-            }
-#endif
             auto ret = detail::evaluate(m_command.get(), params, instance);
-#ifdef DEBUG
-            for (auto &thing : ret.second) {
-                if (std::isnan(thing.second)) throw sgm::runtime_error(std::to_string(sgm::count));
-            }
-#endif
             m_log_density += ret.first;
             m_log_gradient.increment_all(ret.second);
-//            std::cerr << "ev";
-        }
-        std::cerr << "done evaluating...\n";
-
-        auto regularization = 0.0;
-        for (auto j = 0, dim = m_command.get().feature_extractor().dim(); j < dim; ++j) {
-            regularization += x(j) * x(j);
         }
 
-        m_log_density -= regularization * m_lambda / 2.0;
-        return m_log_density;
+        return -1 * m_log_density;
     }
 
-    // FIXME: I think this returns nan
     Eigen::VectorXd derivative_at(const Eigen::VectorXd &x) {
-        ++sgm::count;
-        std::cerr << "SL: " << sgm::count << std::endl;
         if (requires_computation(x)) {
             value_at(x);
         }
 
-        Eigen::VectorXd ret(x.rows());
+        auto ret = Eigen::VectorXd(x.rows());
+        auto &indexer = m_command.get().indexer();
 
         for (auto j = 0l, r = x.rows(); j < r; ++j) {
-            ret(j) = m_log_gradient.get(m_command.get().indexer().i2o(j));
-            ret(j) -= m_lambda * x(j);
+            ret(j) = m_log_gradient.get(indexer.i2o(j));
             ret(j) *= -1;
         }
-
-        if (std::isnan(ret(0))) throw sgm::runtime_error(std::to_string(sgm::count));
 
         return ret;
     }
@@ -170,13 +142,17 @@ public:
     double operator()(const Eigen::VectorXd &x, Eigen::VectorXd &grad) {
         grad = derivative_at(x);
         std::cerr << m_log_density << "\n";
-        return m_log_density;
+        return -m_log_density;
     }
 
     void add_instances(const std::vector<GraphMatchingState<F, NodeType>> &samples) {
         for (const auto &sample : samples) {
             m_latent_decisions.emplace_back(sample.decisions(), sample.visited_nodes());
         }
+    }
+
+    int dim() {
+        return m_command.get().feature_extractor().dim();
     }
 };
 
@@ -260,11 +236,7 @@ template <typename F, typename NodeType>
     auto iter = 0;
     auto converged = false;
 
-    LBFGSpp::LBFGSParam<double> param;
-    param.epsilon = tolerance;
-    param.max_iterations = SupervisedLearningConfig::num_lbfgs_iters;
-
-    LBFGSpp::LBFGSSolver<double> minimizer(param);
+    LBFGSMinimizer minimizer(SupervisedLearningConfig::num_lbfgs_iters, true);
 
     auto w = initial;
     auto nllk = 0.0;
@@ -283,11 +255,11 @@ template <typename F, typename NodeType>
         std::vector<ObjectiveFunction<F, NodeType>> objs;
         auto instances_size = instances.size();
 
+        // TODO: can this be parallelized?
         for (auto i = 0; i < instances_size; ++i) {
             auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
                                                     command, num_concrete_particles, num_implicit_particles, use_spf);
             ObjectiveFunction<F, NodeType> obj2(command);
-            sgm::logger <= print_wrapper(samples, "\n---\n") <= std::endl;
 
             objective.add_instances(samples);
             obj2.add_instances(samples);
@@ -307,22 +279,20 @@ template <typename F, typename NodeType>
 
         sgm::logger << "done random vector" << std::endl;
 
-        double nllk_new;
-        minimizer.minimize(objective, w, nllk_new);
-        auto test_nllk_new = objective.value_at(w);
+        auto w_new = minimizer.minimize(objective, w, tolerance);
+        auto nllk_new = objective.value_at(w_new);
 
         sgm::logger << "done minimizing" << std::endl;
 
-        if (nllk_new != test_nllk_new) {
-            throw sgm::runtime_error("nllk_new (" + std::to_string(nllk_new) + ") != test_nllk_new (" +
-            std::to_string(test_nllk_new) + ")");
-        }
-
         sgm::logger << "curr nllk: " << nllk_new << "\n";
-        sgm::logger << "new w:" << "\n";
-        for (auto i = 0l, dim = w.rows(); i < dim; ++i) {
-            sgm::logger << w(i) << "\n";
-        }
+        sgm::logger << "new w: " << w_new << "\n";
+
+        converged = check_convergence(nllk, nllk_new, tolerance);
+        w = w_new;
+        nllk = nllk_new;
+
+        iter++;
+        break;
     }
 }
 }
