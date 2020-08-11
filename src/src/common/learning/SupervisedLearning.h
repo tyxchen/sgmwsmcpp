@@ -175,7 +175,16 @@ std::vector<GraphMatchingState<F, NodeType>> generate_samples(
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
     smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, emissions, use_SPF);
     smc.sample(random, num_concrete_particles, max_virtual_particles);
-    return std::move(smc.samples());
+    auto &samples = smc.samples();
+
+    // FIXME: Because of C++'s lack of a universal hash function and how we hash edges by their memory address,
+    //  duplicates will appear in each samples' matchings. Until we manage to figure out a hash specialization, we
+    //  will have to accept the performance penalty here.
+    for (auto &sample : samples) {
+        sample.remove_match_duplicates();
+    }
+
+    return std::move(samples);
 }
 
 template <typename F, typename NodeType>

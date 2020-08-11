@@ -268,8 +268,8 @@ public:
         return m_log_gradient;
     }
 
-    const node_type &example_node() {
-    }
+//    const node_type &example_node() {
+//    }
 
     double sample_next_state(Random &random,
                              Command<F, NodeType> &command,
@@ -310,8 +310,8 @@ public:
         return m_matchings;
     }
 
-    bool covers(NodeType node) const {
-    }
+//    bool covers(NodeType node) const {
+//    }
 
 //    void shuffle_nodes(Random random) {
 //    }
@@ -327,6 +327,14 @@ public:
 
     double log_forward_proposal() const {
         return m_log_forward_proposal;
+    }
+
+    void remove_match_duplicates() {
+        set_t<edge_type> unique_matchings(m_matchings.size());
+        for (auto &pairing : m_node_to_matching) {
+            unique_matchings.emplace(pairing.second);
+        }
+        m_matchings = std::move(unique_matchings);
     }
 
     friend std::ostream &operator<<(std::ostream &out, const GraphMatchingState<F, NodeType> &state) {
