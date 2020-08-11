@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             BOARDS.emplace_back(path / board);
         }
-#ifdef DEBUG
+#ifndef NDEBUG
         // Sort for compatibility with reference impl
         std::sort(BOARDS.begin(), BOARDS.end());
 #endif
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             TEST_BOARDS.emplace_back(path / board);
         }
-#ifdef DEBUG
+#ifndef NDEBUG
         // Sort for compatibility with reference impl
         std::sort(TEST_BOARDS.begin(), TEST_BOARDS.end());
 #endif
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
         sd.set(f, std::sqrt(var / (n - 1)));
     }
 
-    fe.standardize(std::move(mean), std::move(sd));
+    fe.standardize(mean, sd);
 
     /*
      * Train the model parameters and run SMC on test data

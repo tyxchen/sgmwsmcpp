@@ -64,13 +64,13 @@ private:
         // TODO: make sure this works correctly
         auto decisions = decision_model.decisions(node, *this);
         auto decisions_size = decisions.size();
-        auto idx = 0;
+        auto idx = 0u;
         auto log_prob = 0.0;
         auto log_norm = 0.0;
 
         if (use_exact_sampling) {
             std::vector<double> log_probs(decisions_size);
-            for (auto i = 0; i < decisions_size; ++i) {
+            for (auto i = 0u; i < decisions_size; ++i) {
                 log_probs[i] = model.log_prob(node, decisions[i]).first;
             }
 

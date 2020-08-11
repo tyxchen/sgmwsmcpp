@@ -50,7 +50,7 @@ public:
         return Random::device::max();
     }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 private:
     size_t m_num_calls = 0;
 

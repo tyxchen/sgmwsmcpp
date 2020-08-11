@@ -74,7 +74,7 @@ Eigen::VectorXd LBFGSMinimizer::implicit_multiply(const Eigen::VectorXd &initial
     auto left = static_cast<Eigen::VectorXd>(initial_inverse_hessian_diagonal.cwiseProduct(right));
 
     // loop forwards
-    for (auto i = 0; i < size; ++i) {
+    for (auto i = 0u; i < size; ++i) {
         auto input_difference = input_difference_vector_list[i];
         auto gradient_difference = gradient_difference_vector_list[i];
         auto beta = gradient_difference.dot(left) / rho[i];

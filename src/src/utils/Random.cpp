@@ -33,14 +33,14 @@ Random::device & Random::rng() {
 }
 
 Random::result_type Random::next(size_t bits) {
-#ifdef DEBUG
+#ifndef NDEBUG
     ++m_num_calls;
 #endif
     return m_rng() >> (32 - bits);
 }
 
 Random::result_type Random::operator()() {
-#ifdef DEBUG
+#ifndef NDEBUG
     ++m_num_calls;
 #endif
     return m_rng();
@@ -63,6 +63,6 @@ double Random::next_double() {
     return ((static_cast<long long>(next(26)) << 27) + next(27)) / static_cast<double>(1ULL << 53);
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 size_t Random::num_calls() const { return m_num_calls; }
 #endif

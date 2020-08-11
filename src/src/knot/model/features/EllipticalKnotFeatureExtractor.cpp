@@ -63,9 +63,9 @@ int EllipticalKnotFeatureExtractor::_dim() const {
     return m_distance_fe.dim() + m_area_fe.dim();
 }
 
-void EllipticalKnotFeatureExtractor::_standardize(Counter<std::string> mean, Counter<std::string> sd) {
-    m_mean = std::move(mean);
-    m_sd = std::move(sd);
+void EllipticalKnotFeatureExtractor::_standardize(const Counter<std::string> &mean, const Counter<std::string> &sd) {
+    m_mean = mean;
+    m_sd = sd;
 }
 
 const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &EllipticalKnotFeatureExtractor::distance_fe() const {

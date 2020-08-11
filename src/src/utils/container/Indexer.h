@@ -26,10 +26,10 @@
 #include <utility>
 #include <boost/container_hash/hash.hpp>
 
-#ifdef DEBUG
-#include <unordered_map>
-#else
+#ifdef NDEBUG
 #include <parallel_hashmap/phmap.h>
+#else
+#include <unordered_map>
 #endif
 
 namespace sgm
@@ -42,10 +42,10 @@ class Indexer
 public:
     using object_type = T;
     using index_type = size_t;
-#ifdef DEBUG
-    using map_type = std::unordered_map<object_type, index_type, Hash>;
-#else
+#ifdef NDEBUG
     using map_type = phmap::flat_hash_map<object_type, index_type, Hash>;
+#else
+    using map_type = std::unordered_map<object_type, index_type, Hash>;
 #endif
 
 private:

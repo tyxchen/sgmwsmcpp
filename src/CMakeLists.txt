@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(sgmwsmcpp VERSION 0.0.1 DESCRIPTION "Sequential graph matching with sequential Monte Carlo")
 
 set(CMAKE_CXX_STANDARD 14)
+set(default_build_type "Release")
 
 find_package(Boost 1.67.0 COMPONENTS filesystem REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -17,8 +18,19 @@ target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::
 
 set($ENV{CPLUS_INCLUDE_PATH} "${Boost_INCLUDE_DIRS}:vendor")
 
-#target_compile_options(sgmwsmc PRIVATE -Wall -Wpessimizing-move -Wredundant-move)
-target_compile_definitions(sgmwsmc PUBLIC DEBUG=1)
+target_compile_options(sgmwsmc PRIVATE -Wall)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "3.7")
+        message("Detected Clang >=3.7, using -Wpessimizing-move and -Wredundant-move")
+        target_compile_options(sgmwsmc PRIVATE -Wpessimizing-move -Wredundant-move)
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "9.0.0")
+        message("Detected GCC >=9, using -Wpessimizing-move and -Wredundant-move")
+        target_compile_options(sgmwsmc PRIVATE -Wpessimizing-move -Wredundant-move)
+    endif()
+endif()
 
 add_executable(test
         "test/test.cpp"

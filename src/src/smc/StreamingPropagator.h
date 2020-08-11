@@ -40,10 +40,10 @@ namespace smc
 
 struct PropagatorOptions
 {
-    static constexpr int DEFAULT_NUM_CONCRETE_PARTICLES = 1000;
+    static constexpr size_t DEFAULT_NUM_CONCRETE_PARTICLES = 1000;
     bool verbose = true;
-    int num_concrete_particles = DEFAULT_NUM_CONCRETE_PARTICLES;
-    int max_virtual_particles = 100000;
+    size_t num_concrete_particles = DEFAULT_NUM_CONCRETE_PARTICLES;
+    size_t max_virtual_particles = 100000;
     double targeted_relative_ess = 0.5;
     Random resampling_random { 1 };
 };
@@ -68,12 +68,14 @@ private:
                 pop.ess() / m_options.num_concrete_particles < m_options.targeted_relative_ess)) {
             auto weight = m_proposal.next_log_weight();
             pop.insert_log_weight(weight);
-#ifdef DEBUG
+#ifndef NDEBUG
 //            sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
 //                        << pop.ess() << ", " << weight << '\n';
 #endif
         }
+#ifndef NDEBUG
         sgm::logger <= "proposed: " <= pop.num_particles() <= std::endl;
+#endif
     }
 
     std::vector<double> extract_sorted_cumulative_probabilites() {
@@ -121,7 +123,7 @@ private:
                 }
                 normalized_partial_sum += std::exp(weight - log_sum);
                 sanity_check.insert_log_weight(weight);
-#ifdef DEBUG
+#ifndef NDEBUG
 //                sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
 //                            <= sanity_check.log_sum_of_squares() <= ", "
 //                            <= sanity_check.ess() <= ", " <= weight <= "; "
@@ -142,7 +144,7 @@ private:
             auto weight = proposal.next_log_weight();
 
             sanity_check.insert_log_weight(weight);
-#ifdef DEBUG
+#ifndef NDEBUG
 //            sgm::logger <= sanity_check.num_particles() <= ": " <= sanity_check.log_sum() <= ", "
 //                        <= sanity_check.log_sum_of_squares() <= ", "
 //                        <= sanity_check.ess() <= ", " <= weight <= '\n';
@@ -180,18 +182,18 @@ public:
 
         propose(population);
 
-#ifndef DEBUG
+#ifdef NDEBUG
         if (m_options.verbose) {
 #endif
         sgm::logger << "nVirtual=" << population.num_particles() << ", "
                     << "nConcrete=" << m_options.num_concrete_particles << ", "
                     << "relative_ess=" << (population.ess() / m_options.num_concrete_particles)
                     << std::endl;
-#ifndef DEBUG
+#ifdef NDEBUG
         }
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
         sgm::logger <= "--- RESAMPLE ---\n";
 #endif
 

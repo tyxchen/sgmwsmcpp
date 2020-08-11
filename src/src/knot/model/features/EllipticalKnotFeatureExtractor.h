@@ -48,7 +48,7 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<std::string, 
 
     int _dim() const override;
 
-    void _standardize(Counter<std::string> mean, Counter<std::string> sd) override;
+    void _standardize(const Counter<std::string> &mean, const Counter<std::string> &sd) override;
 
 public:
     const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &distance_fe() const;

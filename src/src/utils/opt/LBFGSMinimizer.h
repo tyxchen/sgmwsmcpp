@@ -38,7 +38,7 @@ bool is_converged(double value, double next_value, double tolerance);
 class LBFGSMinimizer
 {
     int max_iterations = 20;
-    int max_history_size = 5;
+    size_t max_history_size = 5;
     std::deque<Eigen::VectorXd> input_difference_vector_list;
     std::deque<Eigen::VectorXd> gradient_difference_vector_list;
     bool verbose = false;
@@ -61,7 +61,7 @@ public:
         auto gradient = function.derivative_at(guess);
 
         for (auto iteration = 0; iteration < max_iterations; ++iteration) {
-#ifndef DEBUG
+#ifdef NDEBUG
             if (verbose)
 #endif
                 sgm::logger << "Value before iteration " << iteration << ": " << value << "\n";

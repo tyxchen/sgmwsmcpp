@@ -57,7 +57,7 @@ void extract_features_3(const node_type_base<NodeType> &node1,
     auto max_dist = 0.0, min_dist = std::numeric_limits<double>::infinity();
     std::array<const node_type_base<NodeType> *, N> nodes { &node1, &node2, &node3 };
 
-    for (auto i = 0; i < N; ++i) {
+    for (auto i = 0u; i < N; ++i) {
         for (auto j = i + 1; j < N; ++j) {
             auto ij = compute_distance(**nodes[i], **nodes[j]);
             if (ij > max_dist) {

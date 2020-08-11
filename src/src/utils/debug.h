@@ -134,7 +134,8 @@ DEFINE_PRINT_OVERLOAD(pair, std::pair<U, T>) {
 
 template <typename T>
 DEFINE_PRINT_OVERLOAD(set, std::vector<T>) {
-    auto i = 0u, s = set.size();
+    auto i = 0u;
+    auto s = set.size();
     out << "[";
     for (const auto &e : set) {
         use_print_if_exists(out, e);
@@ -147,7 +148,8 @@ DEFINE_PRINT_OVERLOAD(set, std::vector<T>) {
 
 template <typename T>
 DEFINE_PRINT_OVERLOAD(set, sgm::set_t<T>) {
-    auto i = 0u, s = set.size();
+    auto i = 0u;
+    auto s = set.size();
     out << "{";
     for (const auto &e : set) {
         use_print_if_exists(out, e);
@@ -166,7 +168,8 @@ DEFINE_PRINT_OVERLOAD(matrix, Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows
 
 template <typename K, typename T>
 DEFINE_PRINT_OVERLOAD(map, sgm::map_t<K, T>) {
-    auto i = 0u, s = map.size();
+    auto i = 0u;
+    auto s = map.size();
     out << "{";
     for (const auto &e : map) {
         use_print_if_exists(out, e.first);

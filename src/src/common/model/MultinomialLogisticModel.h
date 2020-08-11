@@ -59,7 +59,7 @@ public:
         auto prob = 0.0;
         for (const auto &f : features) {
             prob += f.second * m_params.get().get(f.first);
-#ifdef DEBUG
+#ifndef NDEBUG
 //            std::cerr << "MLM::log_prob " << sgm::count << "\n";
             if (std::isnan(prob)) throw std::runtime_error("");
 #endif

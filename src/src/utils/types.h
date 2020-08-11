@@ -22,27 +22,27 @@
 
 #include <memory>
 
-#ifdef DEBUG
+#ifdef NDEBUG
+#include <parallel_hashmap/phmap.h>
+#else
 #include <unordered_set>
 #include <unordered_map>
-#else
-#include <parallel_hashmap/phmap.h>
 #endif
 
 namespace sgm
 {
 template <typename T>
-#ifdef DEBUG
-using set_t = typename std::unordered_set<T>;
-#else
+#ifdef NDEBUG
 using set_t = typename phmap::flat_hash_set<T>;
+#else
+using set_t = typename std::unordered_set<T>;
 #endif
 
 template <typename K, typename T>
-#ifdef DEBUG
-using map_t = typename std::unordered_map<K, T>;
-#else
+#ifdef NDEBUG
 using map_t = typename phmap::flat_hash_map<K, T>;
+#else
+using map_t = typename std::unordered_map<K, T>;
 #endif
 
 template <typename NodeType>

@@ -30,6 +30,7 @@
 #include <parallel_hashmap/phmap.h>
 #include <LBFGS.h>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "utils/opt/LBFGSMinimizer.h"
 #include "utils/NumericalUtils.h"
@@ -242,7 +243,7 @@ template <typename F, typename NodeType>
     auto nllk = 0.0;
 
     // Track MCEM diagnostics when debugging
-#ifdef DEBUG
+#ifndef NDEBUG
     std::vector<Eigen::VectorXd> param_trajectory;
     std::vector<double> vars;
     std::vector<double> means;
@@ -256,7 +257,7 @@ template <typename F, typename NodeType>
         auto instances_size = instances.size();
 
         // TODO: can this be parallelized?
-        for (auto i = 0; i < instances_size; ++i) {
+        for (auto i = 0u; i < instances_size; ++i) {
             auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
                                                     command, num_concrete_particles, num_implicit_particles, use_spf);
             ObjectiveFunction<F, NodeType> obj2(command);
@@ -285,7 +286,7 @@ template <typename F, typename NodeType>
         sgm::logger << "done minimizing" << std::endl;
 
         sgm::logger << "curr nllk: " << nllk_new << "\n";
-        sgm::logger << "new w: " << w_new << "\n";
+        sgm::logger << "new w:\n" << w_new << "\n";
 
         converged = check_convergence(nllk, nllk_new, tolerance);
         w = w_new;

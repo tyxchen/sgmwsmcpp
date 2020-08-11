@@ -91,12 +91,6 @@ private:
                           ? m_transition_density.get().sample_initial(m_random)
                           : m_transition_density.get().sample_forward_transition(m_random, *old_latent);
 
-#ifdef DEBUG
-        if (old_latent) {
-//            sgm::logger <= "\n" <= *old_latent;
-        }
-#endif
-
         auto log_weight = m_observation_density.get().log_density(cur_latent, m_cur_emission);
 
         if (old_latent != nullptr) {
@@ -161,7 +155,7 @@ public:
         auto logZ = m_results.first.logZ_estimate();
 
         // recursive
-        for (auto i = 1; i < m_transition_density.get().iterations(); ++i) {
+        for (auto i = 1u; i < m_transition_density.get().iterations(); ++i) {
             StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> rec_propagator(
                 StreamingBootstrapProposal<F, NodeType>(m_random(), m_emissions.get()[i], m_emissions.get()[i - 1],
                                                         std::shared_ptr<const std::vector<latent_type>>(
