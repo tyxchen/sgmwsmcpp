@@ -52,9 +52,11 @@ public:
         return sample_forward_transition(random, m_initial);
     }
 
-    GraphMatchingState<F, NodeType> sample_forward_transition(Random &random, GraphMatchingState<F, NodeType> state) {
-        m_command.get().sample_next(random, state, m_use_sequential_sampling, m_use_exact_sampling);
-        return state;
+    GraphMatchingState<F, NodeType> sample_forward_transition(Random &random,
+                                                              const GraphMatchingState<F, NodeType> &state) {
+        auto next = state;
+        m_command.get().sample_next(random, next, m_use_sequential_sampling, m_use_exact_sampling);
+        return next;
     }
 
     size_t iterations() const {

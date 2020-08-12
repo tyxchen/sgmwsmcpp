@@ -57,11 +57,14 @@ private:
             decisions.emplace_back(std::make_shared<edge_element_type>());
             return decisions;
         } else {
-            // this node is not yet covered so consider all existing edges as long as the edge does contain a node from the same partition as the node being considered
+            // this node is not yet covered so consider all existing edges as long as the edge does not contain a node
+            // from the same partition as the node being considered
             for (const auto &edge : matching) {
                 if (edge->size() >= 3 || edge->size() == 0) continue;
+                // the first node in the edge is not on the same partition as our chosen node, and either the edge is a
+                // singleton or the second node is also not on the same partition
                 else if (node->pidx() != (*edge->begin())->pidx() &&
-                         (edge->size() == 2 && node->pidx() != (*(++edge->begin()))->pidx())) {  // loop unrolling
+                         (edge->size() == 1 || node->pidx() != (*(++edge->begin()))->pidx())) {  // loop unrolling
                     decisions.emplace_back(edge);
                 }
             }
@@ -75,6 +78,10 @@ private:
             decisions.emplace_back(
                 std::make_shared<edge_element_type>(std::initializer_list<node_type>({ other_node }))
             );
+        }
+
+        if (decisions.empty()) {
+            decisions.emplace_back(std::make_shared<edge_element_type>());
         }
 
         return decisions;

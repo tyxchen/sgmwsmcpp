@@ -23,6 +23,7 @@
 #include <limits>
 #include <vector>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "common/graph/GraphMatchingState.h"
 
@@ -65,6 +66,7 @@ public:
                 m_target_state.emplace(v, edge);
             }
         }
+//        sgm::logger << "ObservationDensity::m_target_state\n" << m_target_state << "\n------------\n";
     }
 
     double log_density(const GraphMatchingState<F, NodeType> &latent, const node_type &emission) {

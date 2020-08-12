@@ -19,6 +19,8 @@
 
 #include "Random.h"
 
+#include <boost/random/uniform_smallint.hpp>
+
 using namespace sgm;
 
 
@@ -47,7 +49,7 @@ Random::result_type Random::operator()() {
 }
 
 int Random::next_int(int bound) {
-    // Use the "Java algorithm" to generate bounded random integers from an unbounded result
+   /* // Use the "Java algorithm" to generate bounded random integers from an unbounded result
     auto r = next(31);
     auto m = bound - 1;
     if ((bound & m) == 0)  // bound is a power of 2, so we can simply bitmask the lower bits
@@ -55,12 +57,15 @@ int Random::next_int(int bound) {
     else {
         for (int u = r; u - (r = u % bound) + m < 0; u = next(31));
     }
-    return r;
+    return r;*/
+   boost::uniform_smallint<int> rng(0, bound - 1);
+   return rng(m_rng);
 }
 
 double Random::next_double() {
     // Again uses the "Java algorithm" to generate random doubles
-    return ((static_cast<long long>(next(26)) << 27) + next(27)) / static_cast<double>(1ULL << 53);
+//    return ((static_cast<long long>(next(26)) << 27) + next(27)) / static_cast<double>(1ULL << 53);
+    return m_01rng(m_rng);
 }
 
 #ifndef NDEBUG

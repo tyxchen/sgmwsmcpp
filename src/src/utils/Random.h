@@ -21,6 +21,7 @@
 #define SGMWSMCPP_RANDOM_H
 
 #include <random>
+#include <boost/random/uniform_01.hpp>
 
 namespace sgm
 {
@@ -32,6 +33,7 @@ public:
 
 private:
     device m_rng;
+    boost::uniform_01<double> m_01rng;
 
 public:
     explicit Random(int seed);

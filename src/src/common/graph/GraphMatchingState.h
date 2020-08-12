@@ -76,7 +76,7 @@ private:
 
             log_norm = NumericalUtils::log_add(log_probs.begin(), log_probs.end());
 
-            // normalize
+            // exp normalize
             auto sum = 0.0;
             auto probs = log_probs;
             auto max_prob = -std::numeric_limits<double>::infinity();
@@ -85,19 +85,27 @@ private:
             }
             for (auto &prob : probs) {
                 prob = std::exp(prob - max_prob);
+            }
+
+            // normalize
+            for (auto prob : probs) {
                 sum += prob;
             }
-            for (auto &prob : probs) {
-                prob /= sum;
+            if (sum == 0) throw sgm::runtime_error("Normalization should be positive.");
+            if (sum != 1) {
+                for (auto &prob : probs) {
+                    prob /= sum;
+                }
             }
 
             // sample
             auto v = random.next_double();
             sum = 0.0;
-            for (auto prob : probs) {
-                sum += prob;
-                if (v < sum) break;
-                ++idx;
+            for (idx = 0; idx < probs.size(); ++idx) {
+                sum += probs[idx];
+                if (v < sum) {
+                    break;
+                }
             }
             if (idx == probs.size()) {
                 throw std::runtime_error("Could not sample.");
@@ -143,8 +151,8 @@ private:
 public:
     explicit GraphMatchingState(std::vector<node_type> nodes) : m_unvisited_nodes(std::move(nodes)) {}
 
-    bool has_next_step() {
-    }
+//    bool has_next_step() {
+//    }
 
 //    std::vector<GraphMatchingState<F, NodeType>> execute_move(
 //        const sgm::MultinomialLogisticModel<F, NodeType> &model,
@@ -170,11 +178,6 @@ public:
             }
             return true;
         };
-
-        // FIXME: sometimes decision_set will be empty. This is a workaround to just give a log_norm of 0.
-        if (decision_set.size() == 0) {
-            log_norm = 0.0;
-        }
 
         for (auto &d : decision_set) {
             // compute the quantities needed for evaluating the log-likelihood and gradient of log-likelihood
@@ -276,6 +279,7 @@ public:
                              bool use_sequential_sampling, bool use_exact_sampling) {
         auto idx = 0;
         if (!use_sequential_sampling) {
+            // TODO: is correct?
             idx = random.next_int(m_unvisited_nodes.size());
         }
 

@@ -93,6 +93,10 @@ private:
 
         auto log_weight = m_observation_density.get().log_density(cur_latent, m_cur_emission);
 
+//        if (old_latent)
+//            sgm::logger << "SBP::next_log_weight old_latent\n" << *old_latent << "\n----------------\n";
+//        sgm::logger << "SBP::next_log_weight cur_latent " << log_weight << "\n" << cur_latent << "\n+++++++++++++\n";
+
         if (old_latent != nullptr) {
             auto old_weight = m_observation_density.get().log_density(*old_latent, m_old_emission);
             log_weight -= old_weight;
@@ -168,10 +172,10 @@ public:
             sgm::logger <= "=== RUN " <= i <= " ===\n";
             auto results = rec_propagator.execute();
 
-            // FIXME: This is a workaround for when the results give no new matchings
-            // If we were to continue, we'd find all the matching states are the same, which doesn't make sense
+            // This is for if no new matchings were made in this iteration.
+            //  If we were to continue, we'd find all the matching states are the same, which doesn't make sense
             if (results.first.log_sum() == -std::numeric_limits<double>::infinity()) {
-                break;
+                throw sgm::runtime_error("Run " + std::to_string(i) + " gave no new matchings");
             }
 
             logZ += results.first.logZ_estimate();

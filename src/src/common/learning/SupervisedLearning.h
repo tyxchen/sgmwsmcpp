@@ -107,6 +107,8 @@ public:
         if (m_curr_x.rows() == 0 || std::isnan(x(0)))
             m_curr_x = x;
 
+        sgm::logger << x << "\n";
+
         m_log_density = 0.0;
         Counter<F> params;
         for (auto i = 0l, r = x.rows(); i < r; ++i) {
@@ -120,6 +122,10 @@ public:
             m_log_density += ret.first;
             m_log_gradient.increment_all(ret.second);
         }
+
+//        if (x == Eigen::VectorXd::Zero(x.rows())) {
+//            return 3013.677714723457;
+//        }
 
         return -1 * m_log_density;
     }
@@ -171,6 +177,7 @@ std::vector<GraphMatchingState<F, NodeType>> generate_samples(
     int max_virtual_particles,
     bool use_SPF
 ) {
+    sgm::logger << "generate_sample::instance.first\n" << instance.first << "\n------------\n";
     smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
     smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, emissions, use_SPF);
@@ -180,9 +187,9 @@ std::vector<GraphMatchingState<F, NodeType>> generate_samples(
     // FIXME: Because of C++'s lack of a universal hash function and how we hash edges by their memory address,
     //  duplicates will appear in each samples' matchings. Until we manage to figure out a hash specialization, we
     //  will have to accept the performance penalty here.
-    for (auto &sample : samples) {
-        sample.remove_match_duplicates();
-    }
+//    for (auto &sample : samples) {
+//        sample.remove_match_duplicates();
+//    }
 
     return std::move(samples);
 }
@@ -267,6 +274,8 @@ template <typename F, typename NodeType>
 
         // TODO: can this be parallelized?
         for (auto i = 0u; i < instances_size; ++i) {
+            sgm::logger << initial_states[i] << std::endl;
+
             auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
                                                     command, num_concrete_particles, num_implicit_particles, use_spf);
             ObjectiveFunction<F, NodeType> obj2(command);
@@ -274,6 +283,11 @@ template <typename F, typename NodeType>
             objective.add_instances(samples);
             obj2.add_instances(samples);
             objs.emplace_back(std::move(obj2));
+
+            sgm::logger << "Samples---\n";
+
+            sgm::logger << samples[i] << "\n===" << std::endl;
+
             /* DEBUG */
             break;
         }
