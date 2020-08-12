@@ -164,6 +164,7 @@ template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int Max
 DEFINE_PRINT_OVERLOAD(matrix, Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>) {
     auto fmt = Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, " ", sep, "", "", "[", "]");
     out << matrix.format(fmt);
+    return out;
 }
 
 template <typename K, typename T>

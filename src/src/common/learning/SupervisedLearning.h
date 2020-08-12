@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_SUPERVISEDLEARNING_H
 #define SGMWSMCPP_SUPERVISEDLEARNING_H
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -123,10 +124,6 @@ public:
             m_log_gradient.increment_all(ret.second);
         }
 
-//        if (x == Eigen::VectorXd::Zero(x.rows())) {
-//            return 3013.677714723457;
-//        }
-
         return -1 * m_log_density;
     }
 
@@ -154,7 +151,12 @@ public:
 
     void add_instances(const std::vector<GraphMatchingState<F, NodeType>> &samples) {
         for (const auto &sample : samples) {
-            m_latent_decisions.emplace_back(sample.decisions(), sample.visited_nodes());
+            // We reverse visited_nodes here so that they are presented in reverse visited order, which increases the
+            // efficiency that GraphMatchingState::evaluate_decision can traverse its nodes
+            auto visited_nodes = sample.visited_nodes();
+            std::reverse(visited_nodes.begin(), visited_nodes.end());
+
+            m_latent_decisions.emplace_back(sample.decisions(), std::move(visited_nodes));
         }
     }
 
@@ -286,7 +288,7 @@ template <typename F, typename NodeType>
 
             sgm::logger << "Samples---\n";
 
-            sgm::logger << samples[i] << "\n===" << std::endl;
+            sgm::logger << samples[0] << "\n===" << std::endl;
 
             /* DEBUG */
             break;

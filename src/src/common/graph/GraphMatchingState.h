@@ -166,7 +166,8 @@ public:
         Counter<F> suff;
         Counter<F> features;
 
-        // NOTE: Supposed to be from the front, however that's horribly inefficient. So we go from the back instead.
+        // NOTE: Supposed to be from the front, however that's horribly inefficient. So we go from the back instead,
+        // presuming that this state was initialized with reversed unvisited node order.
         auto node = m_unvisited_nodes.back();
         m_unvisited_nodes.pop_back();
         m_visited_nodes.push_back(node);
