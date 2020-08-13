@@ -69,8 +69,11 @@ std::pair<double, Counter<F>> evaluate(Command<F, NodeType> &command, Counter<F>
     auto &decisions = instance.first;
     GraphMatchingState<F, NodeType> state(permutation);
 
+    auto index = 0;
+
     for (auto &decision : decisions) {
-        state.evaluate_decision(decision, decision_model, model);
+        state.evaluate_decision(decision, decision_model, model, index);
+        ++index;
     }
 
     return std::make_pair(state.log_density(), std::move(state.log_gradient()));
@@ -151,12 +154,8 @@ public:
 
     void add_instances(const std::vector<GraphMatchingState<F, NodeType>> &samples) {
         for (const auto &sample : samples) {
-            // We reverse visited_nodes here so that they are presented in reverse visited order, which increases the
-            // efficiency that GraphMatchingState::evaluate_decision can traverse its nodes
-            auto visited_nodes = sample.visited_nodes();
-            std::reverse(visited_nodes.begin(), visited_nodes.end());
 
-            m_latent_decisions.emplace_back(sample.decisions(), std::move(visited_nodes));
+            m_latent_decisions.emplace_back(sample.decisions(), sample.visited_nodes());
         }
     }
 

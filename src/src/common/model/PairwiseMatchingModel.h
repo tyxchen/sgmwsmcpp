@@ -71,6 +71,7 @@ private:
         }
 
         for (const auto &other_node : candidate_nodes) {
+            if (other_node == nullptr) continue;
             if (covered_nodes.count(other_node)) continue;
             if (node->pidx() == other_node->pidx()) continue;
 

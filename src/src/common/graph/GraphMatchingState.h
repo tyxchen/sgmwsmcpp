@@ -47,6 +47,7 @@ public:
 private:
     set_t<edge_type> m_matchings;
     set_t<node_type> m_covered_nodes;
+    // TODO: implement a ptr_vector sparse container that preserves insertion order, and fast removal and insertion
     std::vector<node_type> m_visited_nodes;
     std::vector<node_type> m_unvisited_nodes;
     map_t<node_type, edge_type> m_node_to_matching;
@@ -161,15 +162,13 @@ public:
 //    }
 
     void evaluate_decision(edge_type &decision, DecisionModel<F, NodeType> &decision_model,
-                           MultinomialLogisticModel<F, NodeType> &model) {
+                           MultinomialLogisticModel<F, NodeType> &model, size_t unvisited_index) {
         auto log_norm = -std::numeric_limits<double>::infinity();
         Counter<F> suff;
         Counter<F> features;
 
-        // NOTE: Supposed to be from the front, however that's horribly inefficient. So we go from the back instead,
-        // presuming that this state was initialized with reversed unvisited node order.
-        auto node = m_unvisited_nodes.back();
-        m_unvisited_nodes.pop_back();
+        auto node = std::move(m_unvisited_nodes[unvisited_index]);
+        m_unvisited_nodes[unvisited_index] = nullptr;
         m_visited_nodes.push_back(node);
 
         auto decision_set = decision_model.decisions(node, *this);
