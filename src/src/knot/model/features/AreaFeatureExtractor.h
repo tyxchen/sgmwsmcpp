@@ -46,7 +46,7 @@ const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
 }();
 }
 
-std::array<double, 2> compute_area(const EllipticalKnot &knot);
+std::pair<double, double> compute_area(const EllipticalKnot &knot);
 
 bool shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2);
 

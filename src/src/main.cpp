@@ -107,13 +107,13 @@ int main(int argc, char** argv) {
     SupervisedLearningConfig::parallel = parallel;
     SupervisedLearningConfig::num_lbfgs_iters = max_lbfgs_iter;
 
-    std::cout << "Current working dir: " << fs::current_path() << std::endl;
+    sgm::logger << "Current working dir: " << fs::current_path() << std::endl;
 
     auto training_instances = ExpUtils::read_test_boards(BOARDS, false);
     auto training_data = ExpUtils::unpack<EllipticalKnot>(training_instances);
 
     auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
-    std::cout << test_instances.size() << std::endl;
+    sgm::logger << "Test instances size: " << test_instances.size() << std::endl;
 
     PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
     EllipticalKnotFeatureExtractor fe;
@@ -168,10 +168,10 @@ int main(int argc, char** argv) {
     const auto &fe_sd = fe.sd();
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
-        std::cout << "Feature " << i << ":" << std::endl;
-        std::cout << "  name: " << f << std::endl;
-        std::cout << "  mean: " << fe_mean.get(f) << std::endl;
-        std::cout << "  sd:   " << fe_sd.get(f) << std::endl;
+        sgm::logger << "Feature " << i << ":" << std::endl;
+        sgm::logger << "  name: " << f << std::endl;
+        sgm::logger << "  mean: " << fe_mean.get(f) << std::endl;
+        sgm::logger << "  sd:   " << fe_sd.get(f) << std::endl;
     }
 
     auto initial = Eigen::VectorXd::Zero(fe_dim);
