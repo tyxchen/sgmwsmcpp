@@ -35,8 +35,8 @@ namespace sgm
 namespace ThreeMatchingDistanceFeatureExtractorConsts
 {
 constexpr int DIM = 4;
-constexpr const char* TWO_MATCHING_DISTANCE_1 = "TWO_MATCHING_DISTANCE_1";
-constexpr const char* TWO_MATCHING_DISTANCE_2 = "TWO_MATCHING_DISTANCE_2";
+constexpr const char* TWO_MATCHING_DISTANCE_1 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1;
+constexpr const char* TWO_MATCHING_DISTANCE_2 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2;
 constexpr const char* THREE_MATCHING_DISTANCE_1 = "THREE_MATCHING_DISTANCE_1";
 constexpr const char* THREE_MATCHING_DISTANCE_2 = "THREE_MATCHING_DISTANCE_2";
 
@@ -96,6 +96,8 @@ private:
         } else if (decision->size() == 2) {
             auto begin = decision->begin();
             detail::extract_features_3<KnotType>(node, *begin, *std::next(begin), f);
+        } else {
+            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1, 10);
         }
 
         return f;
@@ -115,6 +117,8 @@ private:
         } else if (e->size() == 3) {
             auto begin = e->begin();
             detail::extract_features_3<KnotType>(*begin, *std::next(begin), *std::next(begin, 2), f);
+        } else {
+            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1, 10);
         }
 
         return f;
