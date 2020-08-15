@@ -19,8 +19,6 @@
 
 #include "Random.h"
 
-#include <boost/random/uniform_smallint.hpp>
-
 using namespace sgm;
 
 
@@ -58,7 +56,7 @@ int Random::next_int(int bound) {
         for (int u = r; u - (r = u % bound) + m < 0; u = next(31));
     }
     return r;*/
-   boost::uniform_smallint<int> rng(0, bound - 1);
+   std::uniform_int_distribution<int> rng(0, bound - 1);
    return rng(m_rng);
 }
 
