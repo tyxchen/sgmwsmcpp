@@ -1,4 +1,5 @@
 #include <cmath>
+#include <ctime>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -44,11 +45,34 @@ int main(int argc, char** argv) {
         ("tol", "", cxxopts::value<double>()->default_value("1e-10"))
         ("exact-sampling", "", cxxopts::value<bool>()->default_value("true"))
         ("sequential-matching", "", cxxopts::value<bool>()->default_value("true"))
+        ("trace", "", cxxopts::value<std::string>()->default_value(""))
         ("d,data-directories", "", cxxopts::value<std::vector<std::string>>())
         ("t,test-data-directories", "", cxxopts::value<std::vector<std::string>>())
         ("o,output-dir", "", cxxopts::value<std::string>());
 
     auto args = options.parse(argc, argv);
+
+    // Setup log file
+    {
+        auto log_file = args["trace"].as<std::string>();
+        if (log_file.empty()) {
+            auto time = std::time(nullptr);
+            char log_file_fmt[100];
+            std::strftime(log_file_fmt, sizeof(log_file_fmt) - 1, "%Y-%m-%d-%H-%M-%S.log", std::localtime(&time));
+            auto log_file_str = std::string(log_file_fmt);
+            sgm::logger.set_log_file("logs/" + log_file_str);
+
+            // make a symlink
+            try {
+                fs::remove("logs/latest.log");
+                fs::create_symlink(log_file_str, "logs/latest.log");
+            } catch (...) {
+                std::cerr << "Could not create a symlink to the latest log, maybe your system does not support it?\n";
+            }
+        } else {
+            sgm::logger.set_log_file(log_file);
+        }
+    }
 
     auto use_spf = args["use-spf"].as<bool>();
     auto target_ess = args["target-ess"].as<int>();

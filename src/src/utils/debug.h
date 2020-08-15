@@ -20,6 +20,7 @@
 #ifndef SGMWSMCPP_DEBUG_H
 #define SGMWSMCPP_DEBUG_H
 
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <fstream>
@@ -27,7 +28,11 @@
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
+#include <unordered_map>
 #include <Eigen/Core>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 
 #include "utils/types.h"
 #include "utils/debug_macros.h"
@@ -35,7 +40,50 @@
 namespace sgm
 {
 
+using performance_accumulator =
+    typename boost::accumulators::accumulator_set<long, boost::accumulators::stats<boost::accumulators::tag::mean>>;
+
 extern int count;
+
+class performance_timer
+{
+public:
+    using clock = std::chrono::high_resolution_clock;
+
+private:
+    clock::time_point m_start;
+    clock::time_point m_end;
+
+public:
+    explicit performance_timer(bool autostart = false);
+    void start();
+    void end();
+    clock::duration::rep elapsed() const;
+    clock::duration::rep diff() const;
+};
+
+namespace Timers
+{
+
+performance_timer &get_timer(const std::string &id);
+
+performance_accumulator &get_accumulator(const std::string &id);
+
+void start(const std::string &id);
+
+void end(const std::string &id);
+
+performance_timer::clock::duration::rep elapsed(const std::string &id);
+
+performance_timer::clock::duration::rep diff(const std::string &id);
+
+void save(const std::string &id);
+
+void reset(const std::string &id);
+
+double mean(const std::string &id);
+
+}
 
 class debugstream
 {
@@ -43,8 +91,12 @@ class debugstream
     std::ofstream log_file;
     int precision;
 
+    bool init_log();
+
 public:
     debugstream(std::ostream &tty, const std::string &filename, int precision = 8);
+
+    void set_log_file(const std::string &filename);
 
     template <typename T>
     debugstream &operator<<(const T &thing) {
