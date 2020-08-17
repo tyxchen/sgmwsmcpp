@@ -20,6 +20,9 @@
 #include "common/model/PairwiseMatchingModel.h"
 #include "knot/model/features/EllipticalKnotFeatureExtractor.h"
 #include "common/model/Command.h"
+#include "common/graph/GraphMatchingState.h"
+#include "smc/components/ExactProposalObservationDensity.h"
+#include "smc/components/GenericMatchingLatentSimulator.h"
 
 using namespace sgm;
 namespace fs = boost::filesystem;
@@ -140,6 +143,8 @@ int main(int argc, char** argv) {
     auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
     sgm::logger << "Test instances size: " << test_instances.size() << std::endl;
 
+    std::cout << training_data << "\n";
+
     PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
     EllipticalKnotFeatureExtractor fe;
     auto fe_dim = fe.dim();
@@ -206,13 +211,48 @@ int main(int argc, char** argv) {
 
     sgm::logger << ret.first << "\n" << ret.second << std::endl;
 
-//    command.update_model_parameters(ret.second);
-//
-//    for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
-//        auto segment = test_instances[j][0];
-//        GraphMatchingState<std::string, EllipticalKnot> initial_state(segment.knots());
-//
-//    }
+    command.update_model_parameters(ret.second);
+
+    for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
+        auto segment = test_instances[j][0];
+        GraphMatchingState<std::string, EllipticalKnot> initial_state(segment.knots());
+        smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot> transition_density(command, initial_state,
+                                                                                            false, true);
+        smc::ExactProposalObservationDensity<std::string, EllipticalKnot> observation_density(command);
+        auto emissions = std::vector<node_type>(segment.knots());
+
+        smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot> smc(transition_density, observation_density,
+                                                                             emissions, use_spf);
+
+        Timers::start("testing data");
+        smc.sample(random, target_ess, 1000);
+        Timers::end("testing data");
+
+        sgm::logger << "Run time: " << Timers::diff("testing data") << "ms\n";
+
+        auto &samples = smc.samples();
+        auto best_log_density = -std::numeric_limits<double>::infinity();
+        auto &best_sample = samples[0];
+
+        for (auto &sample : samples) {
+            if (sample.log_density() > best_log_density) {
+                best_log_density = sample.log_density();
+                best_sample = sample;
+            }
+        }
+
+        auto filename = TEST_BOARDS[j].filename();
+        auto output_filename = output_dir / filename;
+        std::ofstream output_csv(output_filename.string());
+        auto idx = 0;
+        for (auto &matching : best_sample.matchings()) {
+            for (auto &knot : *matching) {
+                output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
+            }
+            ++idx;
+        }
+        output_csv.close();
+    }
 
     return 0;
 }

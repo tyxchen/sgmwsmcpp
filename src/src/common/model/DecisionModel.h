@@ -48,14 +48,14 @@ public:
         return _decisions(node, candidate_nodes, covered_nodes, matching, node_to_edge);
     }
 
-    bool in_support(const GraphMatchingState<F, NodeType> &state) {
-        return _in_support(state);
-    }
-
-    bool path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-                     const map_t<node_type, set_t<node_type>> &final_state) {
-        return _path_exists(cur_state, final_state);
-    }
+//    bool in_support(const GraphMatchingState<F, NodeType> &state) {
+//        return _in_support(state);
+//    }
+//
+//    bool path_exists(const GraphMatchingState<F, NodeType> &cur_state,
+//                     const map_t<node_type, set_t<node_type>> &final_state) {
+//        return _path_exists(cur_state, final_state);
+//    }
 
     int num_parents(const GraphMatchingState<F, NodeType> &cur_latent) {
         return _num_parents(cur_latent);
@@ -78,7 +78,7 @@ private:
 //    virtual bool _path_exists(const GraphMatchingState<F, NodeType> &cur_state,
 //                              const map_t<node_type, set_t<node_type>> &final_state) = 0;
 //
-//    virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
+    virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
 };
 }
 

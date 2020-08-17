@@ -24,8 +24,8 @@
 #include <memory>
 
 #include "utils/Random.h"
-#include "common/model/Command.h"
-#include "common/graph/GraphMatchingState.h"
+#include "common/model/Command_fwd.h"
+#include "common/graph/GraphMatchingState_fwd.h"
 
 namespace sgm
 {

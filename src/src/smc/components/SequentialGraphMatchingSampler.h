@@ -28,7 +28,7 @@
 #include "utils/types.h"
 #include "utils/Random.h"
 #include "smc/components/GenericMatchingLatentSimulator.h"
-#include "smc/components/PruningObservationDensity.h"
+#include "smc/ObservationDensity.h"
 #include "smc/StreamingParticleFilter.h"
 
 namespace sgm
@@ -40,7 +40,7 @@ template <typename F, typename NodeType>
 class SequentialGraphMatchingSampler
 {
     std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
-    std::reference_wrapper<PruningObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
     std::reference_wrapper<const std::vector<node_type_base<NodeType>>> m_emissions;
     std::vector<GraphMatchingState<F, NodeType>> m_samples;
 
@@ -48,7 +48,7 @@ class SequentialGraphMatchingSampler
 
 public:
     SequentialGraphMatchingSampler(GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                                   PruningObservationDensity<F, NodeType> &observation_density,
+                                   ObservationDensity<F, NodeType> &observation_density,
                                    const std::vector<node_type_base<NodeType>> &emissions,
                                    bool use_SPF)
         : m_transition_density(transition_density),
@@ -64,7 +64,7 @@ public:
             auto &options = spf.options();
             options.num_concrete_particles = num_concrete_particles;
             options.max_virtual_particles = max_virtual_particles;
-            options.verbose = false;
+            options.verbose = true;
             options.targeted_relative_ess = 1.0;
 
             logZ = spf.sample();

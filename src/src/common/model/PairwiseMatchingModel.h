@@ -23,6 +23,7 @@
 #include <memory>
 #include <utility>
 
+#include "utils/debug.h"
 #include "utils/types.h"
 #include "common/model/DecisionModel.h"
 
@@ -98,9 +99,72 @@ private:
 //        return false;
 //    }
 //
-//    int _num_parents(const GraphMatchingState <F, NodeType> &cur_latent) override {
-//        return 1;
-//    }
+    int _num_parents(const GraphMatchingState <F, NodeType> &state) override {
+        auto num_p = 0;
+        auto num_singletons = 0;
+        for (auto &e : state.matchings()) {
+            if (e->size() == 1) {
+                ++num_singletons;
+            }
+        }
+
+        auto singleton_exists = num_singletons > 0;
+        num_p += num_singletons;
+
+        for (auto &e : state.matchings()) {
+            if (e->size() == 1) continue;
+
+            int num_visited = 0;
+            for (auto &node : *e) {
+                for (auto &vn : state.visited_nodes()) {
+                    if (vn == node) {
+                        ++num_visited;
+                        break;
+                    }
+                }
+            }
+
+            if (e->size() == 2) {
+                if (singleton_exists) {
+                    if (num_visited == 1) {
+                        return 1;
+                    } else if (num_visited == 2) {
+                        num_p += 2;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                } else {
+                    if (num_visited == 1) {
+                        num_p += 1;
+                    } else if (num_visited == 2) {
+                        num_p += 2;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                }
+            } else if (e->size() == 3) {
+                if (singleton_exists) {
+                    if (num_visited == 2) {
+                        return num_singletons;
+                    } else if (num_visited == 3) {
+                        num_p += 3;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                } else {
+                    if (num_visited == 2) {
+                        num_p += 2;
+                    } else if (num_visited == 3) {
+                        num_p += 6;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                }
+            }
+        }
+
+        return num_p;
+    }
 };
 
 }

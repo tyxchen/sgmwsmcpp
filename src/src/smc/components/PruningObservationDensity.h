@@ -25,6 +25,7 @@
 
 #include "utils/debug.h"
 #include "utils/types.h"
+#include "smc/ObservationDensity.h"
 #include "common/graph/GraphMatchingState.h"
 
 namespace sgm
@@ -50,11 +51,11 @@ bool in_support(const State &subset, const State &superset) {
 }
 
 template <typename F, typename NodeType>
-class PruningObservationDensity
+class PruningObservationDensity : public ObservationDensity<F, NodeType>
 {
 public:
-    using node_type = node_type_base<NodeType>;
-    using edge_type = edge_type_base<NodeType>;
+    using node_type = typename ObservationDensity<F, NodeType>::node_type;
+    using edge_type = typename ObservationDensity<F, NodeType>::edge_type;
 
 private:
     map_t<node_type, edge_type> m_target_state;
@@ -69,15 +70,15 @@ public:
 //        sgm::logger << "ObservationDensity::m_target_state\n" << m_target_state << "\n------------\n";
     }
 
-    double log_density(const GraphMatchingState<F, NodeType> &latent, const node_type &emission) {
+    double _log_density(const GraphMatchingState<F, NodeType> &latent, const node_type &emission) override {
         if (!detail::in_support(latent.node_to_edge_view(), m_target_state)) {
             return -std::numeric_limits<double>::infinity();
         }
         return 0;
     }
 
-    double log_weight_correction(const GraphMatchingState<F, NodeType> &cur_latent,
-        const GraphMatchingState<F, NodeType> &old_latent) {
+    double _log_weight_correction(const GraphMatchingState<F, NodeType> &cur_latent,
+                                  const GraphMatchingState<F, NodeType> &old_latent) override {
         /*
         auto num_parents = command.get_decision_model().num_parents(cur_latent);
         return -std::log(num_parents) - cur_latent.log_forward_proposal();
