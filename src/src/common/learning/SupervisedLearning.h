@@ -30,6 +30,7 @@
 #include <Eigen/Dense>
 #include <parallel_hashmap/phmap.h>
 #include <LBFGS.h>
+#include <boost/filesystem.hpp>
 
 #include "utils/debug.h"
 #include "utils/types.h"
@@ -146,10 +147,33 @@ public:
         return ret;
     }
 
-    double operator()(const Eigen::VectorXd &x, Eigen::VectorXd &grad) {
-        grad = derivative_at(x);
-        std::cerr << m_log_density << "\n";
-        return -m_log_density;
+//    double operator()(const Eigen::VectorXd &x, Eigen::VectorXd &grad) {
+//        grad = derivative_at(x);
+//        std::cerr << m_log_density << "\n";
+//        return -m_log_density;
+//    }
+
+    std::pair<double, double> compute_variance(Eigen::VectorXd &w) {
+        m_command.get().update_model_parameters(w);
+
+        std::vector<double> stats;
+
+        for (auto &instance : m_latent_decisions) {
+            auto ret = detail::evaluate(m_command.get(), m_command.get().model_parameters(), instance);
+            stats.push_back(ret.first);
+        }
+
+        auto m = 0.0;
+        auto var = 0.0;
+        for (auto s : stats) {
+            m += s;
+        }
+        m /= stats.size();
+        for (auto s : stats) {
+            var += (s - m) * (s - m);
+        }
+
+        return std::make_pair(m, var);
     }
 
     void add_instances(const std::vector<GraphMatchingState<F, NodeType>> &samples) {
@@ -226,7 +250,7 @@ void gradient_checker(ObjectiveFunction<F, NodeType> &objective, Eigen::VectorXd
 bool check_convergence(double old_nllk, double new_nllk, double tolerance);
 
 template <typename F, typename NodeType>
-/*std::pair<double, Eigen::VectorXd>*/ void MAP_via_MCEM(
+std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     Random &random,
     int rep_id,
     Command<F, NodeType> &command,
@@ -237,6 +261,7 @@ template <typename F, typename NodeType>
     int num_implicit_particles,
     const Eigen::VectorXd &initial,
     double tolerance,
+    const boost::filesystem::path &output_dir,
     bool check_gradient,
     bool use_spf
 ) {
@@ -316,9 +341,47 @@ template <typename F, typename NodeType>
         w = w_new;
         nllk = nllk_new;
 
+        command.update_model_parameters(w);
+
+#ifndef NDEBUG
+        param_trajectory.emplace_back(w);
+
+        auto sum_of_avg = 0.0;
+        auto sum_of_var = 0.0;
+        for (auto &obj : objs) {
+            auto mean_var = obj.compute_variance(w);
+            sum_of_avg += mean_var.first;
+            sum_of_var += mean_var.second;
+        }
+
+        means.push_back(sum_of_avg);
+        vars.push_back(sum_of_var);
+#endif
+
         iter++;
         break;
     }
+
+#ifndef NDEBUG
+    std::ofstream sum_of_means_output((output_dir / "sum_of_means.csv").string());
+    std::ofstream sum_of_vars_output((output_dir / "sum_of_vars.csv").string());
+    std::ofstream params_output((output_dir / "params.csv").string());
+    Eigen::IOFormat eigen_fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, "", ", ");
+
+    for (auto m : means) {
+        sum_of_means_output << m << "\n";
+    }
+
+    for (auto v : vars) {
+        sum_of_vars_output << v << "\n";
+    }
+
+    for (auto &p : param_trajectory) {
+        params_output << p.format(eigen_fmt) << "\n";
+    }
+#endif
+
+    return std::make_pair(nllk, w);
 }
 }
 }

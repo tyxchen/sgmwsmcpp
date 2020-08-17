@@ -24,6 +24,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
+#include <Eigen/Core>
 
 #include "utils/Random.h"
 #include "utils/container/Counter.h"
@@ -73,6 +74,16 @@ public:
 
     GraphFeatureExtractor<F, NodeType> &feature_extractor() {
         return m_fe;
+    }
+
+    Counter<F> &model_parameters() {
+        return m_params;
+    }
+
+    void update_model_parameters(const Eigen::VectorXd &w) {
+        for (auto i = 0l, r = w.rows(); i < r; ++i) {
+            m_params.set(m_indexer.i2o(i), w(i));
+        }
     }
 };
 }

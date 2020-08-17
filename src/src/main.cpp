@@ -53,26 +53,27 @@ int main(int argc, char** argv) {
     auto args = options.parse(argc, argv);
 
     // Setup log file
-    {
-        auto log_file = args["trace"].as<std::string>();
-        if (log_file.empty()) {
-            auto time = std::time(nullptr);
-            char log_file_fmt[100];
-            std::strftime(log_file_fmt, sizeof(log_file_fmt) - 1, "%Y-%m-%d-%H-%M-%S.log", std::localtime(&time));
-            auto log_file_str = std::string(log_file_fmt);
-            sgm::logger.set_log_file("logs/" + log_file_str);
+    auto log_dir = fs::path(args["trace"].as<std::string>());
 
-            // make a symlink
-            try {
-                fs::remove("logs/latest.log");
-                fs::create_symlink(log_file_str, "logs/latest.log");
-            } catch (...) {
-                std::cerr << "Could not create a symlink to the latest log, maybe your system does not support it?\n";
-            }
-        } else {
-            sgm::logger.set_log_file(log_file);
+    if (log_dir.empty()) {
+        auto time = std::time(nullptr);
+        char log_dir_fmt[100];
+        std::strftime(log_dir_fmt, sizeof(log_dir_fmt) - 1, "%Y-%m-%d-%H-%M-%S", std::localtime(&time));
+        log_dir = "results";
+        log_dir /= std::string(log_dir_fmt);
+        fs::create_directories(log_dir);
+
+        // make a symlink
+        try {
+            fs::remove("results/latest");
+            fs::create_symlink(std::string(log_dir_fmt), "results/latest");
+        } catch (...) {
+            std::cerr << "Could not create a symlink to the latest log, maybe your system does not support it?\n";
         }
     }
+
+    sgm::logger.set_log_file((log_dir / "stdout.log").string());
+//sgm::logger.set_log_file("log-comp-release.txt");
 
     auto use_spf = args["use-spf"].as<bool>();
     auto target_ess = args["target-ess"].as<int>();
@@ -200,8 +201,18 @@ int main(int argc, char** argv) {
 
     auto initial = Eigen::VectorXd::Zero(fe_dim);
     auto instances = ExpUtils::pack<EllipticalKnot>(training_data);
-    SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
-        max_implicit_particles, initial, tol, false, use_spf);
+    auto ret = SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
+        max_implicit_particles, initial, tol, log_dir, false, use_spf);
+
+    sgm::logger << ret.first << "\n" << ret.second << std::endl;
+
+//    command.update_model_parameters(ret.second);
+//
+//    for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
+//        auto segment = test_instances[j][0];
+//        GraphMatchingState<std::string, EllipticalKnot> initial_state(segment.knots());
+//
+//    }
 
     return 0;
 }
