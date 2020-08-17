@@ -22,48 +22,49 @@
 using namespace sgm;
 
 
-Random::Random(int seed) : m_rng(seed) {}
+Random::Random(seed_type seed) : m_rng(seed), m_state((seed ^ 0x5DEECE66Dull) & ((1ull << 48u) - 1)) {}
 
-const Random::device & Random::rng() const {
-    return m_rng;
-}
-
-Random::device & Random::rng() {
-    return m_rng;
-}
+//const Random::device & Random::rng() const {
+//    return m_rng;
+//}
+//
+//Random::device & Random::rng() {
+//    return m_rng;
+//}
 
 Random::result_type Random::next(size_t bits) {
 #ifndef NDEBUG
     ++m_num_calls;
 #endif
-    return m_rng() >> (32 - bits);
+    m_state = (m_state * 0x5DEECE66Dull + 0xBull) & ((1ull << 48u) - 1);
+    return static_cast<result_type>(m_state >> (48 - bits));
 }
 
 Random::result_type Random::operator()() {
 #ifndef NDEBUG
     ++m_num_calls;
 #endif
-    return m_rng();
+    return next(32);
 }
 
-int Random::next_int(int bound) {
-   /* // Use the "Java algorithm" to generate bounded random integers from an unbounded result
+Random::result_type Random::next_int(int bound) {
+    // Use the "Java algorithm" to generate bounded random integers from an unbounded result
     auto r = next(31);
-    auto m = bound - 1;
-    if ((bound & m) == 0)  // bound is a power of 2, so we can simply bitmask the lower bits
-        r = static_cast<int>(bound * static_cast<long long>(r) >> 31);
+    auto m = static_cast<seed_type>(bound - 1);
+    if ((static_cast<seed_type>(bound) & m) == 0)  // bound is a power of 2, so we can simply bitmask the lower bits
+        r = static_cast<int>((static_cast<seed_type>(bound) * static_cast<seed_type>(r)) >> 31u);
     else {
         for (int u = r; u - (r = u % bound) + m < 0; u = next(31));
     }
-    return r;*/
-   std::uniform_int_distribution<int> rng(0, bound - 1);
-   return rng(m_rng);
+    return r;
+//   std::uniform_int_distribution<int> rng(0, bound - 1);
+//   return rng(m_rng);
 }
 
-double Random::next_double() {
+long double Random::next_double() {
     // Again uses the "Java algorithm" to generate random doubles
-//    return ((static_cast<long long>(next(26)) << 27) + next(27)) / static_cast<double>(1ULL << 53);
-    return m_01rng(m_rng);
+    return ((static_cast<seed_type>(next(26)) << 27u) + next(27)) / static_cast<long double>(1ull << 53u);
+//    return m_01rng(m_rng);
 }
 
 #ifndef NDEBUG

@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
         ("max-em-iter", "", cxxopts::value<int>()->default_value("10"))
         ("parallel", "", cxxopts::value<bool>()->default_value("true"))
         ("max-lbfgs-iter", "", cxxopts::value<int>()->default_value("100"))
-        ("seed", "", cxxopts::value<int>()->default_value("123"))
+        ("seed", "", cxxopts::value<Random::seed_type>()->default_value("123"))
         ("tol", "", cxxopts::value<double>()->default_value("1e-10"))
         ("exact-sampling", "", cxxopts::value<bool>()->default_value("true"))
         ("sequential-matching", "", cxxopts::value<bool>()->default_value("true"))
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     auto max_em_iter = args["max-em-iter"].as<int>();
     auto parallel = args["parallel"].as<bool>();
     auto max_lbfgs_iter = args["max-lbfgs-iter"].as<int>();
-    auto random = Random(args["seed"].as<int>());
+    auto random = Random(args["seed"].as<Random::seed_type>());
     auto tol = args["tol"].as<double>();
     auto exact_sampling = args["exact-sampling"].as<bool>();
     auto sequential_matching = args["sequential-matching"].as<bool>();

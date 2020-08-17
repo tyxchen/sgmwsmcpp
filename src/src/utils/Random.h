@@ -28,20 +28,22 @@ class Random
 {
 public:
     using device = std::minstd_rand;
-    using result_type = device::result_type;
+    using seed_type = unsigned long long;
+    using result_type = unsigned int;
 
 private:
     device m_rng;
     std::uniform_real_distribution<double> m_01rng;
+    seed_type m_state;
 
 public:
-    explicit Random(int seed);
-    const device &rng() const;
-    device &rng();
+    explicit Random(seed_type seed);
+//    const device &rng() const;
+//    device &rng();
     result_type next(size_t bits);
     result_type operator()();
-    int next_int(int bound);
-    double next_double();
+    result_type next_int(int bound);
+    long double next_double();
 
     static constexpr result_type min() {
         return Random::device::min();

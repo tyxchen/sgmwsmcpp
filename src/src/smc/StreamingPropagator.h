@@ -80,13 +80,14 @@ private:
 
     std::vector<double> extract_sorted_cumulative_probabilites() {
         std::vector<double> res(m_options.num_concrete_particles);
-        std::uniform_real_distribution<double> unif(0.0, 1.0);
-        auto &rng = m_options.resampling_random.rng();
+//        std::uniform_real_distribution<double> unif(0.0, 1.0);
+        auto &rng = m_options.resampling_random;
         auto spacing = 1.0 / m_options.num_concrete_particles;
         auto i = 0;
 
         for (auto &dart : res) {
-            dart = spacing * i + spacing * unif(rng);
+            dart = spacing * i + spacing * rng.next_double();
+//            dart = spacing * i + spacing * unif(rng);
             ++i;
         }
 
