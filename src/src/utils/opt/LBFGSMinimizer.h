@@ -62,9 +62,12 @@ public:
 
         for (auto iteration = 0; iteration < max_iterations; ++iteration) {
 #ifdef NDEBUG
-            if (verbose)
+            if (verbose) {
 #endif
                 sgm::logger << "Value before iteration " << iteration << ": " << value << "\n";
+#ifdef NDEBUG
+            }
+#endif
 
             auto initial_inverse_hessian_diagonal = get_initial_inverse_hessian_diagonal(function);
             auto direction = implicit_multiply(initial_inverse_hessian_diagonal, gradient);

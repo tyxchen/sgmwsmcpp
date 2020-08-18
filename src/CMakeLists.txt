@@ -32,13 +32,18 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
+set(TEST_SOURCES ${SOURCES})
+list(REMOVE_ITEM TEST_SOURCES "src/main.cpp")
+
 add_executable(test
+        ${TEST_SOURCES}
         "test/test.cpp"
-        "test/utils.container.Counter.cpp"
-        "test/utils.container.Indexer.cpp")
+#        "test/utils.container.Counter.cpp"
+#        "test/utils.container.Indexer.cpp"
+        "test/utils.opt.LBFGSMinimizer.cpp")
 
 target_include_directories(test PRIVATE ${Boost_INCLUDE_DIRS} "vendor")
-target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Threads::Threads)
+target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)
 
 include_directories(sgmwsmc "src/")
 include_directories(test "src/" "test/")
