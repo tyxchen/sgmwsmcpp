@@ -127,8 +127,8 @@ struct runtime_error : public std::runtime_error
 template <typename T>
 DECLARE_PRINT_OVERLOAD(sgm::edge_type_base<T>);
 
-template <typename U, typename T>
-DECLARE_PRINT_OVERLOAD(std::pair<U, T>);
+template <typename T, typename U>
+DECLARE_PRINT_OVERLOAD(std::pair<T, U>);
 
 template <typename T>
 DECLARE_PRINT_OVERLOAD(std::vector<T>);
@@ -178,8 +178,8 @@ DEFINE_PRINT_OVERLOAD(edge, sgm::edge_type_base<T>) {
     return print(out, *edge, sep);
 }
 
-template <typename U, typename T>
-DEFINE_PRINT_OVERLOAD(pair, std::pair<U, T>) {
+template <typename T, typename U>
+DEFINE_PRINT_OVERLOAD(pair, std::pair<T, U>) {
     out << "(" << pair.first << sep << pair.second << ")";
     return out;
 }

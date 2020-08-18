@@ -108,10 +108,8 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             BOARDS.emplace_back(path / board);
         }
-#ifndef NDEBUG
         // Sort for compatibility with reference impl
         std::sort(BOARDS.begin(), BOARDS.end());
-#endif
     }
 
     for (const auto &dir : test_data_directories) {
@@ -125,10 +123,8 @@ int main(int argc, char** argv) {
             if (board.string()[0] == '.') continue;
             TEST_BOARDS.emplace_back(path / board);
         }
-#ifndef NDEBUG
         // Sort for compatibility with reference impl
         std::sort(TEST_BOARDS.begin(), TEST_BOARDS.end());
-#endif
     }
 
     SupervisedLearningConfig::parallel = parallel;
@@ -141,8 +137,6 @@ int main(int argc, char** argv) {
 
     auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
     sgm::logger << "Test instances size: " << test_instances.size() << std::endl;
-
-    std::cout << training_data << "\n";
 
     PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
     EllipticalKnotFeatureExtractor fe;
@@ -214,14 +208,16 @@ int main(int argc, char** argv) {
 
     for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
         auto segment = test_instances[j][0];
-        GraphMatchingState<std::string, EllipticalKnot> initial_state(segment.knots());
-        smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot> transition_density(command, initial_state,
-                                                                                            false, true);
-        smc::ExactProposalObservationDensity<std::string, EllipticalKnot> observation_density(command);
+        auto initial_state = GraphMatchingState<std::string, EllipticalKnot>(segment.knots());
+        auto transition_density = smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot>(command,
+                                                                                                   initial_state,
+                                                                                                   false, true);
+        auto observation_density = smc::ExactProposalObservationDensity<std::string, EllipticalKnot>(command);
         auto emissions = std::vector<node_type>(segment.knots());
 
-        smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot> smc(transition_density, observation_density,
-                                                                             emissions, use_spf);
+        auto smc = smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot>(transition_density,
+                                                                                    observation_density,
+                                                                                    emissions, use_spf);
 
         Timers::start("testing data");
         smc.sample(random, target_ess, 1000);
@@ -231,7 +227,7 @@ int main(int argc, char** argv) {
 
         auto &samples = smc.samples();
         auto best_log_density = -std::numeric_limits<double>::infinity();
-        auto &best_sample = samples[0];
+        auto best_sample = samples[0];
 
         for (auto &sample : samples) {
             if (sample.log_density() > best_log_density) {
@@ -242,8 +238,9 @@ int main(int argc, char** argv) {
 
         auto filename = TEST_BOARDS[j].filename();
         auto output_filename = output_dir / filename;
-        std::ofstream output_csv(output_filename.string());
+        auto output_csv = std::ofstream(output_filename.string());
         auto idx = 0;
+
         for (auto &matching : best_sample.matchings()) {
             for (auto &knot : *matching) {
                 output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
