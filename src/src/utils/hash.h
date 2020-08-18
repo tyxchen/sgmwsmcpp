@@ -17,19 +17,45 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_TYPES_H
-#define SGMWSMCPP_TYPES_H
+#ifndef SGMWSMCPP_HASH_H
+#define SGMWSMCPP_HASH_H
 
+#include <functional>
 #include <memory>
 
-#ifdef NDEBUG
-#include <parallel_hashmap/phmap.h>
-#else
-#include <unordered_set>
-#include <unordered_map>
-#endif
+namespace sgm
+{
 
-#include "utils/base_types.h"
-#include "utils/types_hash.h"
+template <typename T>
+struct hash;
 
-#endif //SGMWSMCPP_TYPES_H
+template <>
+struct hash<int>
+{
+    std::hash<int> hasher;
+    size_t operator()(int obj) const noexcept {
+        return hasher(obj);
+    }
+};
+
+template <>
+struct hash<double>
+{
+    std::hash<double> hasher;
+    size_t operator()(double obj) const noexcept {
+        return hasher(obj);
+    }
+};
+
+template <typename T>
+struct hash<std::shared_ptr<T>>
+{
+    hash<T> hasher;
+    size_t operator()(const std::shared_ptr<T> &obj) const noexcept {
+        return hasher(*obj);
+    }
+};
+
+}
+
+#endif //SGMWSMCPP_HASH_H

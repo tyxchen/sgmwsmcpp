@@ -202,7 +202,6 @@ std::vector<GraphMatchingState<F, NodeType>> generate_samples(
     int max_virtual_particles,
     bool use_SPF
 ) {
-    sgm::logger << "generate_sample::instance.first\n" << instance.first << "\n------------\n";
     smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
     smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, emissions, use_SPF);

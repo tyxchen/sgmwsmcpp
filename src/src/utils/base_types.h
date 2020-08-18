@@ -17,8 +17,8 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_TYPES_H
-#define SGMWSMCPP_TYPES_H
+#ifndef SGMWSMCPP_BASE_TYPES_H
+#define SGMWSMCPP_BASE_TYPES_H
 
 #include <memory>
 
@@ -29,7 +29,31 @@
 #include <unordered_map>
 #endif
 
-#include "utils/base_types.h"
-#include "utils/types_hash.h"
+#include "utils/hash.h"
 
-#endif //SGMWSMCPP_TYPES_H
+namespace sgm
+{
+
+template <typename T>
+#ifdef NDEBUG
+using set_t = typename phmap::flat_hash_set<T, hash<T>>;
+#else
+using set_t = typename std::unordered_set<T, hash<T>>;
+#endif
+
+template <typename K, typename T>
+#ifdef NDEBUG
+using map_t = typename phmap::flat_hash_map<K, T, hash<K>>;
+#else
+using map_t = typename std::unordered_map<K, T, hash<K>>;
+#endif
+
+template <typename NodeType>
+using node_type_base = typename std::shared_ptr<NodeType>;
+
+template <typename NodeType>
+using edge_type_base = typename std::shared_ptr<set_t<node_type_base<NodeType>>>;
+
+}
+
+#endif //SGMWSMCPP_BASE_TYPES_H

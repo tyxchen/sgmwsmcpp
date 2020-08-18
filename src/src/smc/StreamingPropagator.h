@@ -68,9 +68,13 @@ private:
                 pop.ess() / m_options.num_concrete_particles < m_options.targeted_relative_ess)) {
             auto weight = m_proposal.next_log_weight();
             pop.insert_log_weight(weight);
-#ifndef NDEBUG
-//            sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
-//                        << pop.ess() << ", " << weight << '\n';
+#ifdef NDEBUG
+            if (m_options.verbose) {
+#endif
+//                sgm::logger << pop.num_particles() << ": " << pop.log_sum() << ", " << pop.log_sum_of_squares() << ", "
+//                            << pop.ess() << ", " << weight << '\n';
+#ifdef NDEBUG
+            }
 #endif
         }
 #ifndef NDEBUG

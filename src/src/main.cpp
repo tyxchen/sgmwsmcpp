@@ -76,7 +76,6 @@ int main(int argc, char** argv) {
     }
 
     sgm::logger.set_log_file((log_dir / "stdout.log").string());
-//sgm::logger.set_log_file("log-comp-release.txt");
 
     auto use_spf = args["use-spf"].as<bool>();
     auto target_ess = args["target-ess"].as<int>();

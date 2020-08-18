@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 
+#include "utils/hash.h"
 #include "utils/container/Counter.h"
 #include "knot/data/Knot.h"
 
@@ -54,6 +55,17 @@ public:
     bool operator>(const GraphNode<std::string> &other) const override;
 
     friend std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot);
+
+    friend struct hash<EllipticalKnot>;
+};
+
+template <>
+struct hash<EllipticalKnot>
+{
+    size_t operator()(const EllipticalKnot &obj) const noexcept {
+        // Returns a 10-bit hash, where the upper 2 bits are the partition index and the lower 8 bits are the index
+        return (static_cast<size_t>(obj.m_pidx) << 8u) | (static_cast<size_t>(obj.m_idx) & 0xFFul);
+    }
 };
 
 }
