@@ -1,5 +1,9 @@
 src/cmake-build-debug
+src/cmake-build-release
 src/build
+
+logs
+results
 
 .Rbuildignore
 .Rhistory

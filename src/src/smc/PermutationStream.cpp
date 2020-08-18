@@ -20,6 +20,7 @@
 #include "PermutationStream.h"
 
 #include <algorithm>
+#include <numeric>
 
 using namespace sgm;
 

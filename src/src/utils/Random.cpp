@@ -22,17 +22,9 @@
 using namespace sgm;
 
 
-Random::Random(seed_type seed) : m_rng(seed), m_state((seed ^ 0x5DEECE66Dull) & ((1ull << 48u) - 1)) {}
+Random::Random(seed_type seed) : m_state((seed ^ 0x5DEECE66Dull) & ((1ull << 48u) - 1)) {}
 
-//const Random::device & Random::rng() const {
-//    return m_rng;
-//}
-//
-//Random::device & Random::rng() {
-//    return m_rng;
-//}
-
-Random::result_type Random::next(size_t bits) {
+Random::result_type Random::next(std::uint32_t bits) {
 #ifndef NDEBUG
     ++m_num_calls;
 #endif
@@ -57,14 +49,11 @@ Random::result_type Random::next_int(int bound) {
         for (int u = r; u - (r = u % bound) + m < 0; u = next(31));
     }
     return r;
-//   std::uniform_int_distribution<int> rng(0, bound - 1);
-//   return rng(m_rng);
 }
 
 long double Random::next_double() {
     // Again uses the "Java algorithm" to generate random doubles
     return ((static_cast<seed_type>(next(26)) << 27u) + next(27)) / static_cast<long double>(1ull << 53u);
-//    return m_01rng(m_rng);
 }
 
 #ifndef NDEBUG

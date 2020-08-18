@@ -20,37 +20,32 @@
 #ifndef SGMWSMCPP_RANDOM_H
 #define SGMWSMCPP_RANDOM_H
 
-#include <random>
+#include <cstdint>
 
 namespace sgm
 {
 class Random
 {
 public:
-    using device = std::minstd_rand;
     using seed_type = unsigned long long;
-    using result_type = unsigned int;
+    using result_type = std::uint32_t;
 
 private:
-    device m_rng;
-    std::uniform_real_distribution<double> m_01rng;
     seed_type m_state;
 
 public:
     explicit Random(seed_type seed);
-//    const device &rng() const;
-//    device &rng();
-    result_type next(size_t bits);
+    result_type next(std::uint32_t bits);
     result_type operator()();
     result_type next_int(int bound);
     long double next_double();
 
     static constexpr result_type min() {
-        return Random::device::min();
+        return 0;
     }
 
     static constexpr result_type max() {
-        return Random::device::max();
+        return 0xFFFFFFFFull;
     }
 
 #ifndef NDEBUG

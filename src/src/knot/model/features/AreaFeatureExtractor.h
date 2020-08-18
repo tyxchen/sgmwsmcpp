@@ -39,6 +39,7 @@ constexpr const char* THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
 constexpr double NORM_CONST = 1;
 constexpr double NORM_CONST2 = 500;
 constexpr double CONFIDENCE_LEVEL = 0.975;
+//constexpr double SQRT_CRITICAL_VALUE = 2.7162030314820957;
 const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
     static_assert(0 <= CONFIDENCE_LEVEL && CONFIDENCE_LEVEL < 1, "Must choose confidence level in [0,1)");
     boost::math::chi_squared_distribution<double> chi(2);

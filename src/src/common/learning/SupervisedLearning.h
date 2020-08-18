@@ -112,8 +112,6 @@ public:
         if (m_curr_x.rows() == 0 || std::isnan(x(0)))
             m_curr_x = x;
 
-        sgm::logger << x << "\n";
-
         m_log_density = 0.0;
         Counter<F> params;
         for (auto i = 0l, r = x.rows(); i < r; ++i) {
@@ -299,8 +297,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 
         // TODO: can this be parallelized?
         for (auto i = 0u; i < instances_size; ++i) {
-            sgm::logger << initial_states[i] << std::endl;
-
             auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
                                                     command, num_concrete_particles, num_implicit_particles, use_spf);
             ObjectiveFunction<F, NodeType> obj2(command);
@@ -308,13 +304,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
             objective.add_instances(samples);
             obj2.add_instances(samples);
             objs.emplace_back(std::move(obj2));
-
-            sgm::logger << "Samples---\n";
-
-            sgm::logger << samples[0] << "\n===" << std::endl;
-
-            /* DEBUG */
-            break;
         }
 
         if (check_gradient && iter == 0) {
@@ -326,12 +315,8 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
             random_w(i) = random.next_double();
         }
 
-        sgm::logger << "done random vector" << std::endl;
-
         auto w_new = minimizer.minimize(objective, w, tolerance);
         auto nllk_new = objective.value_at(w_new);
-
-        sgm::logger << "done minimizing" << std::endl;
 
         sgm::logger << "curr nllk: " << nllk_new << "\n";
         sgm::logger << "new w:\n" << w_new << "\n";
@@ -358,7 +343,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 #endif
 
         iter++;
-        break;
     }
 
 #ifndef NDEBUG

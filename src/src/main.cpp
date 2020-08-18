@@ -1,19 +1,16 @@
 #include <cmath>
 #include <ctime>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
 #include <utility>
 
 #include <boost/filesystem.hpp>
 #include <cxxopts.hpp>
-#include <parallel_hashmap/phmap.h>
 
 #include "utils/debug.h"
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
-#include "knot/data/KnotDataReader.h"
 #include "common/learning/SupervisedLearning.h"
 #include "utils/ExpUtils.h"
 #include "utils/Random.h"
@@ -206,6 +203,8 @@ int main(int argc, char** argv) {
 
     command.update_model_parameters(ret.second);
 
+    fs::create_directories(output_dir);
+
     for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
         auto segment = test_instances[j][0];
         auto initial_state = GraphMatchingState<std::string, EllipticalKnot>(segment.knots());
@@ -238,16 +237,20 @@ int main(int argc, char** argv) {
 
         auto filename = TEST_BOARDS[j].filename();
         auto output_filename = output_dir / filename;
+        auto log_output_filename = log_dir / filename;
         auto output_csv = std::ofstream(output_filename.string());
+        auto log_output_csv = std::ofstream(log_output_filename.string());
         auto idx = 0;
 
         for (auto &matching : best_sample.matchings()) {
             for (auto &knot : *matching) {
                 output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
+                log_output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
             }
             ++idx;
         }
         output_csv.close();
+        log_output_csv.close();
     }
 
     return 0;
