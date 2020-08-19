@@ -10,18 +10,7 @@ from pathlib import Path
 import argparse
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Compare the accuracy of run results to source data.")
-    parser.add_argument("reference_dir", help="Directory of source data")
-    parser.add_argument("results_dir", help="Directory of run results")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
-
-    args = parser.parse_args()
-
-    reference_dir = Path(args.reference_dir)
-    test_dir = Path(args.results_dir)
-    verbose = args.verbose
-
+def main(reference_dir, test_dir, verbose):
     reference_files = sorted(reference_dir.glob("*.csv"))
     test_results = sorted(test_dir.glob("*.csv"))
 
@@ -48,22 +37,21 @@ def main():
                 pidx = row["surface"]
                 idx = row["idx"]
                 matching = row["matching"]
-                if matching == last_matching or last_matching == -1:
-                    edge_builder.add((pidx, idx))
-                else:
+                if matching != last_matching and last_matching != -1:
                     ref_data.add(frozenset(edge_builder))
                     edge_builder = set()
+                edge_builder.add((pidx, idx))
                 last_matching = matching
             ref_data.add(frozenset(edge_builder))
-
+            
+            edge_builder = set()
             last_matching = -1
             for line in test_result_file:
                 pidx, idx, matching = map(lambda s: s.strip(), line.split(","))
-                if matching == last_matching or last_matching == -1:
-                    edge_builder.add((pidx, idx))
-                else:
+                if matching != last_matching and last_matching != -1:
                     test_result.add(frozenset(edge_builder))
                     edge_builder = set()
+                edge_builder.add((pidx, idx))
                 last_matching = matching
             test_result.add(frozenset(edge_builder))
         except Exception as e:
@@ -90,4 +78,15 @@ def main():
     print("Total match rate: {:.2f}%".format(total_correct_matches / total_matches * 100))
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Compare the accuracy of run results to source data.")
+    parser.add_argument("reference_dir", help="Directory of source data")
+    parser.add_argument("results_dir", help="Directory of run results")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
+
+    args = parser.parse_args()
+
+    reference_dir = Path(args.reference_dir)
+    test_dir = Path(args.results_dir)
+    verbose = args.verbose
+    
+    main(reference_dir, test_dir, verbose)

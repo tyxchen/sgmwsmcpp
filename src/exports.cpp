@@ -11,9 +11,9 @@ using namespace Rcpp;
 //'
 //' @param training_files A string vector. List of CSV filenames containing the training data.
 //' @param test_files A string vector. List of CSV filenames containing the test data.
-//' @param concrete_particles An integer scalar. The minimum number of particles per training sample.
-//' @param max_implicit_particles An integer scalar. The maximum number of particles per training sample.
-//' @param target_ess An integer scalar. The minimum number of particles per test sample.
+//' @param concrete_particles An integer scalar. The minimum number of particles per training sample. Default 100.
+//' @param max_implicit_particles An integer scalar. The maximum number of particles per training sample. Default 1000.
+//' @param target_ess An integer scalar. The minimum number of particles per test sample. Default 100.
 //' @param max_em_iter An integer scalar. The maximum number of iterations for MCEM. Default 10.
 //' @param max_lbfgs_iter An integer scalar. The maximum number of iterations for LBFGS. Default 100.
 //' @param seed An integer scalar. The seed to use for the random number generator. Default 123.

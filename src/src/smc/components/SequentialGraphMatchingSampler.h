@@ -65,7 +65,7 @@ public:
             auto &options = spf.options();
             options.num_concrete_particles = num_concrete_particles;
             options.max_virtual_particles = max_virtual_particles;
-            options.verbose = true;
+            options.verbose = false;
             options.targeted_relative_ess = 1.0;
 
             logZ = spf.sample();

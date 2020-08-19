@@ -13,3 +13,4 @@ LinkingTo:
 Imports: 
     Rcpp, RcppEigen, BH
 SystemRequirements: C++14
+Encoding: UTF-8

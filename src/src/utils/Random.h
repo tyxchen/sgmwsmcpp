@@ -21,6 +21,7 @@
 #define SGMWSMCPP_RANDOM_H
 
 #include <cstdint>
+#include <cstddef>
 
 namespace sgm
 {

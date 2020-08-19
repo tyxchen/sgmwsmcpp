@@ -23,11 +23,11 @@ train_and_predict(
 
 \item{test_files}{A string vector. List of CSV filenames containing the test data.}
 
-\item{concrete_particles}{An integer scalar. The minimum number of particles per training sample.}
+\item{concrete_particles}{An integer scalar. The minimum number of particles per training sample. Default 100.}
 
-\item{max_implicit_particles}{An integer scalar. The maximum number of particles per training sample.}
+\item{max_implicit_particles}{An integer scalar. The maximum number of particles per training sample. Default 1000.}
 
-\item{target_ess}{An integer scalar. The minimum number of particles per test sample.}
+\item{target_ess}{An integer scalar. The minimum number of particles per test sample. Default 100.}
 
 \item{max_em_iter}{An integer scalar. The maximum number of iterations for MCEM. Default 10.}
 
