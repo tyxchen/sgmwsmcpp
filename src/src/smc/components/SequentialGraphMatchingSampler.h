@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "utils/types.h"
+#include "utils/debug.h"
 #include "utils/Random.h"
 #include "smc/components/GenericMatchingLatentSimulator.h"
 #include "smc/ObservationDensity.h"
@@ -57,7 +58,7 @@ public:
           m_use_SPF(use_SPF) {}
 
     double sample(Random &random, int num_concrete_particles, int max_virtual_particles) {
-        double logZ = -std::numeric_limits<double>::infinity();
+        auto logZ = -std::numeric_limits<double>::infinity();
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
                                                      Random(random()));
@@ -69,6 +70,8 @@ public:
 
             logZ = spf.sample();
             m_samples = std::move(spf.samples());
+        } else {
+            throw sgm::runtime_error("Using non-streaming particle filter SMC is not yet supported.");
         }
         return logZ;
     }
