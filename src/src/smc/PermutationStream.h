@@ -39,7 +39,7 @@ class PermutationStream
     void reshuffle();
 
 public:
-    PermutationStream(int size, const Random &random);
+    PermutationStream(int size, Random &random);
 
     int index();
 
