@@ -333,14 +333,6 @@ public:
         return m_log_forward_proposal;
     }
 
-    void remove_match_duplicates() {
-        set_t<edge_type> unique_matchings(m_matchings.size());
-        for (auto &pairing : m_node_to_matching) {
-            unique_matchings.emplace(pairing.second);
-        }
-        m_matchings = std::move(unique_matchings);
-    }
-
     friend std::ostream &operator<<(std::ostream &out, const GraphMatchingState<F, NodeType> &state) {
         std::vector<std::vector<node_type>> sorted_matchings;
         sorted_matchings.reserve(state.m_matchings.size());

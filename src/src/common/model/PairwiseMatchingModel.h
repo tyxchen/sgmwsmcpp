@@ -76,7 +76,6 @@ private:
             if (covered_nodes.count(other_node)) continue;
             if (node->pidx() == other_node->pidx()) continue;
 
-            // FIXME: Creates completely new edges with completely new hashes every time.
             decisions.emplace_back(
                 std::make_shared<edge_element_type>(std::initializer_list<node_type>({ other_node }))
             );

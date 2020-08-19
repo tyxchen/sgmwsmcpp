@@ -34,6 +34,7 @@ public:
 
     virtual bool operator<(const GraphNode<F> &other) const = 0;
     virtual bool operator>(const GraphNode<F> &other) const = 0;
+    virtual bool operator==(const GraphNode<F> &other) const = 0;
 
     virtual ~GraphNode() = default;
 };

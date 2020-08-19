@@ -62,6 +62,10 @@ bool EllipticalKnot::operator>(const GraphNode<std::string> &other) const {
     return m_node_features.get("x") > other.node_features().get("x");
 }
 
+bool EllipticalKnot::operator==(const GraphNode<std::string> &other) const {
+    return m_pidx == other.pidx() && m_idx == other.idx();
+}
+
 std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot) {
     out << "(" << knot.m_pidx << ", " << knot.m_idx << ")";
     return out;

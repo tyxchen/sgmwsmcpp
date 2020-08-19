@@ -54,6 +54,8 @@ public:
 
     bool operator>(const GraphNode<std::string> &other) const override;
 
+    bool operator==(const GraphNode<std::string> &other) const override;
+
     friend std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot);
 
     friend struct hash<EllipticalKnot>;

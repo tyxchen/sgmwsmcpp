@@ -17,11 +17,24 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_TYPES_H
-#define SGMWSMCPP_TYPES_H
+#ifndef SGMWSMCPP_TYPES_OPERATORS_H
+#define SGMWSMCPP_TYPES_OPERATORS_H
 
-#include "utils/types/types_base.h"
-#include "utils/types/types_hash.h"
-#include "utils/types/types_operators.h"
+#include "types_base.h"
 
-#endif //SGMWSMCPP_TYPES_H
+namespace sgm
+{
+
+template <typename T>
+bool operator==(const node_type_base<T> &lhs, const node_type_base<T> &rhs) {
+    return *lhs == *rhs;
+}
+
+template <typename T>
+bool operator==(const edge_type_base<T> &lhs, const edge_type_base<T> &rhs) {
+    return *lhs == *rhs;
+}
+
+}
+
+#endif //SGMWSMCPP_TYPES_OPERATORS_H

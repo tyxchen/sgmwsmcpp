@@ -202,13 +202,6 @@ public:
         auto sorted_cumulative_probabilities_for_final_resampling = extract_sorted_cumulative_probabilites();
         auto samples = resample(population, sorted_cumulative_probabilities_for_final_resampling);
 
-        // FIXME: Because of C++'s lack of a universal hash function and how we hash edges by their memory address,
-        //  duplicates will appear in each samples' matchings. Until we manage to figure out a hash specialization, we
-        //  will have to accept the performance penalty here.
-        for (auto &s : samples) {
-            s.remove_match_duplicates();
-        }
-
         return std::make_pair(population, std::move(samples));
     }
 };
