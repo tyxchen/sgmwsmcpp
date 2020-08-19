@@ -8,7 +8,6 @@
 #include <cxxopts.hpp>
 
 #include "utils/debug.h"
-#include "utils/ExpUtils.h"
 #include "utils/Random.h"
 #include "Experiments.h"
 
@@ -125,13 +124,13 @@ int main(int argc, char** argv) {
         auto log_output_csv = std::ofstream(log_output_filename.string());
         auto &result = results[i];
 
-        for (auto _size = std::get<0>(result).size(), j = 0ul; j < _size; ++j) {
-            output_csv << std::get<0>(result)[j] << ","
-                       << std::get<1>(result)[j] << ","
-                       << std::get<2>(result)[j] << std::endl;
-            log_output_csv << std::get<0>(result)[j] << ","
-                           << std::get<1>(result)[j] << ","
-                           << std::get<2>(result)[j] << std::endl;
+        for (auto &row : result) {
+            output_csv << row.pidx << ","
+                       << row.idx << ","
+                       << row.matching << std::endl;
+            log_output_csv << row.pidx << ","
+                           << row.idx << ","
+                           << row.matching << std::endl;
         }
 
         output_csv.close();

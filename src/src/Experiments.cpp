@@ -38,7 +38,10 @@ using node_type = node_type_base<EllipticalKnot>;
 using edge_type = edge_type_base<EllipticalKnot>;
 using datum_type = typename std::vector<std::pair<std::vector<edge_type>, std::vector<node_type>>>;
 
-std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> sgm::train_and_predict(
+TrainAndPredictResult::TrainAndPredictResult(int _pidx, int _idx, int _matching)
+    : pidx(_pidx), idx(_idx), matching(_matching) {}
+
+std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     const std::vector<std::string> &training_boards,
     const std::vector<std::string> &test_boards,
     int concrete_particles, int max_implicit_particles, int target_ess,
@@ -122,7 +125,7 @@ std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> sg
 
     command.update_model_parameters(ret.second);
 
-    std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> matchings_by_dataset;
+    std::vector<std::vector<TrainAndPredictResult>> matchings_by_dataset;
 
     for (auto &test_instance : test_instances) {
         auto &segment = test_instance[0];
@@ -155,21 +158,18 @@ std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> sg
         }
 
         auto match_idx = 0;
-        auto pidxs = std::vector<int>();
-        auto idxs = std::vector<int>();
-        auto matchings = std::vector<int>();
+        auto matchings = std::vector<TrainAndPredictResult>();
 
         for (auto &matching : best_sample.matchings()) {
             for (auto &knot : *matching) {
-                pidxs.push_back(knot->pidx());
-                idxs.push_back(knot->idx());
-                matchings.push_back(match_idx);
+                matchings.emplace_back(knot->pidx(), knot->idx(), match_idx);
             }
             ++match_idx;
         }
 
-        matchings_by_dataset.emplace_back(std::move(pidxs), std::move(idxs), std::move(matchings));
+        matchings_by_dataset.emplace_back(std::move(matchings));
     }
 
     return matchings_by_dataset;
 }
+

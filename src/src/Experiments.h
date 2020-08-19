@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <string>
-#include <utility>
 
 #include "utils/Random.h"
 #include "knot/data/KnotDataReader.h"
@@ -30,7 +29,15 @@
 namespace sgm
 {
 
-std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> train_and_predict(
+struct TrainAndPredictResult
+{
+    int pidx;
+    int idx;
+    int matching;
+    TrainAndPredictResult(int _pidx, int _idx, int _matching);
+};
+
+std::vector<std::vector<TrainAndPredictResult>> train_and_predict(
     const std::vector<std::string> &training_boards,
     const std::vector<std::string> &test_boards,
     int concrete_particles,
