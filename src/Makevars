@@ -1,0 +1,5 @@
+SOURCES = RcppExports.cpp exports.cpp src/Experiments.cpp $(wildcard src/*/*.cpp src/*/*/*.cpp src/*/*/*/*.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+
+PKG_CXXFLAGS = -DCOMPILED_WITH_RCPP -O3
+PKG_CPPFLAGS = -Isrc -Ivendor

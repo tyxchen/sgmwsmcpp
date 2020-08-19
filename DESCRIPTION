@@ -7,3 +7,9 @@ Author: Terry Chen
 Maintainer: Terry Chen <terry.chen@uwaterloo.ca>
 Description: RCpp implementation of (https://doi.org/10.1214/19-AOAS1255)
 License: LGPLv2.1 or later
+RoxygenNote: 7.1.0
+LinkingTo: 
+    Rcpp, RcppEigen, BH
+Imports: 
+    Rcpp, RcppEigen, BH
+SystemRequirements: C++14

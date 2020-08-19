@@ -23,6 +23,10 @@
 #include <iomanip>
 #include <stdexcept>
 
+#ifdef COMPILED_WITH_RCPP
+#include <Rcpp.h>
+#endif
+
 using namespace sgm;
 
 int sgm::count = 0;
@@ -127,7 +131,11 @@ debugstream &debugstream::operator<=(std::ostream &(*func)(std::ostream &)) {
 }
 
 debugstream sgm::logger(
+#ifndef COMPILED_WITH_RCPP
     std::cout,
+#else
+    Rcpp::Rcout,
+#endif
 #ifdef _WIN32
     "nul"
 #else

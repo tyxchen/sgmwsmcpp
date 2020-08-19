@@ -1,1 +1,4 @@
+useDynLib(sgmwsmcpp, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
+import(RcppEigen, BH)
+importFrom(Rcpp, evalCpp)
