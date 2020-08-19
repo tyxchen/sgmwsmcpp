@@ -30,7 +30,6 @@
 #include <Eigen/Dense>
 #include <parallel_hashmap/phmap.h>
 #include <LBFGS.h>
-#include <boost/filesystem.hpp>
 
 #include "utils/debug.h"
 #include "utils/types.h"
@@ -258,7 +257,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     int num_implicit_particles,
     const Eigen::VectorXd &initial,
     double tolerance,
-    const boost::filesystem::path &output_dir,
     bool check_gradient,
     bool use_spf
 ) {
@@ -346,9 +344,9 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     }
 
 #ifndef NDEBUG
-    std::ofstream sum_of_means_output((output_dir / "sum_of_means.csv").string());
-    std::ofstream sum_of_vars_output((output_dir / "sum_of_vars.csv").string());
-    std::ofstream params_output((output_dir / "params.csv").string());
+    std::ofstream sum_of_means_output("sum_of_means.csv");
+    std::ofstream sum_of_vars_output("sum_of_vars.csv");
+    std::ofstream params_output("params.csv");
     Eigen::IOFormat eigen_fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, "", ", ");
 
     for (auto m : means) {

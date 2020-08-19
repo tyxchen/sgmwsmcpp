@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -7,6 +8,7 @@
 #include <cxxopts.hpp>
 
 #include "utils/debug.h"
+#include "utils/ExpUtils.h"
 #include "utils/Random.h"
 #include "Experiments.h"
 
@@ -72,13 +74,69 @@ int main(int argc, char** argv) {
     auto exact_sampling = args["exact-sampling"].as<bool>();
     auto sequential_matching = args["sequential-matching"].as<bool>();
 
-    auto data_directories = args["data-directories"].as<std::vector<std::string>>();
-    auto test_data_directories = args["test-data-directories"].as<std::vector<std::string>>();
+    auto training_directories = args["data-directories"].as<std::vector<std::string>>();
+    auto test_directories = args["test-data-directories"].as<std::vector<std::string>>();
     auto output_dir = args["output-dir"].as<std::string>();
 
-    train_and_predict(data_directories, test_data_directories, output_dir, log_dir.string(),
-                      concrete_particles, max_implicit_particles, target_ess,
-                      max_em_iter, max_lbfgs_iter, seed, tol, use_spf, parallel);
+    std::vector<std::string> BOARDS;
+    std::vector<std::string> TEST_BOARDS;
+
+    for (const auto &dir : training_directories) {
+        auto path = fs::path(dir);
+        if (!fs::is_directory(path)) {
+            throw sgm::runtime_error("Error: Data directory `" + dir + "` is not a directory.");
+        }
+        auto dir_iter = fs::directory_iterator(path);
+        for (const auto &dir_item : dir_iter) {
+            auto board = dir_item.path().filename();
+            if (board.string()[0] == '.') continue;
+            BOARDS.emplace_back((path / board).string());
+        }
+        // Sort for compatibility with reference impl
+        std::sort(BOARDS.begin(), BOARDS.end());
+    }
+
+    for (const auto &dir : test_directories) {
+        auto path = fs::path(dir);
+        if (!fs::is_directory(path)) {
+            throw sgm::runtime_error("Error: Test data directory `" + dir + "` is not a directory.");
+        }
+        auto dir_iter = fs::directory_iterator(path);
+        for (const auto &dir_item : dir_iter) {
+            auto board = dir_item.path().filename();
+            if (board.string()[0] == '.') continue;
+            TEST_BOARDS.emplace_back((path / board).string());
+        }
+        // Sort for compatibility with reference impl
+        std::sort(TEST_BOARDS.begin(), TEST_BOARDS.end());
+    }
+
+    auto results = train_and_predict(BOARDS, TEST_BOARDS,
+                                     concrete_particles, max_implicit_particles, target_ess,
+                                     max_em_iter, max_lbfgs_iter, seed, tol, use_spf, parallel);
+
+    fs::create_directories(output_dir);
+
+    for (auto size = results.size(), i = 0ul; i < size; ++i) {
+        auto filename = fs::path(TEST_BOARDS[i]).filename();
+        auto output_filename = output_dir / filename;
+        auto log_output_filename = log_dir / filename;
+        auto output_csv = std::ofstream(output_filename.string());
+        auto log_output_csv = std::ofstream(log_output_filename.string());
+        auto &result = results[i];
+
+        for (auto _size = std::get<0>(result).size(), j = 0ul; j < _size; ++j) {
+            output_csv << std::get<0>(result)[j] << ","
+                       << std::get<1>(result)[j] << ","
+                       << std::get<2>(result)[j] << std::endl;
+            log_output_csv << std::get<0>(result)[j] << ","
+                           << std::get<1>(result)[j] << ","
+                           << std::get<2>(result)[j] << std::endl;
+        }
+
+        output_csv.close();
+        log_output_csv.close();
+    }
 
     return 0;
 }

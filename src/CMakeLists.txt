@@ -12,6 +12,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
 file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp" "src/*.h")
+
 add_executable(sgmwsmc ${SOURCES})
 target_include_directories(sgmwsmc SYSTEM PRIVATE ${Boost_INCLUDE_DIRS} "vendor")
 target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)

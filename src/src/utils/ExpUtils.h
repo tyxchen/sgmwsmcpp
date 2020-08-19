@@ -22,11 +22,8 @@
 
 #include <string>
 #include <vector>
-#include <boost/filesystem.hpp>
 
 #include "knot/data/KnotDataReader.h"
-
-namespace fs = boost::filesystem;
 
 namespace sgm
 {
@@ -43,7 +40,7 @@ struct ExpUtilsConfig
 
 namespace ExpUtils
 {
-std::vector<std::vector<KnotDataReader::Segment>> read_test_boards(const std::vector<fs::path> &boards,
+std::vector<std::vector<KnotDataReader::Segment>> read_test_boards(const std::vector<std::string> &boards,
                                                                    bool reverse_sequence);
 
 template <typename KnotType>

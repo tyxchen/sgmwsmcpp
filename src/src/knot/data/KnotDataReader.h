@@ -22,13 +22,11 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
-#include <boost/filesystem.hpp>
 
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
-
-namespace fs = boost::filesystem;
 
 namespace sgm
 {
@@ -67,7 +65,7 @@ public:
     void add_node(int label, const node_type& knot);
 };
 
-std::vector<Segment> read_segmented_test_board(const fs::path &file);
+std::vector<Segment> read_segmented_test_board(const std::string &file);
 }
 }
 

@@ -19,8 +19,6 @@
 
 #include "Experiments.h"
 
-#include <boost/filesystem.hpp>
-
 #include "utils/debug.h"
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
@@ -36,61 +34,25 @@
 
 using namespace sgm;
 
-namespace fs = boost::filesystem;
 using node_type = node_type_base<EllipticalKnot>;
 using edge_type = edge_type_base<EllipticalKnot>;
 using datum_type = typename std::vector<std::pair<std::vector<edge_type>, std::vector<node_type>>>;
 
-void sgm::train_and_predict(const std::vector<std::string> &training_directories,
-                            const std::vector<std::string> &test_directories,
-                            const std::string &output_directory, const std::string &log_directory,
-                            int concrete_particles, int max_implicit_particles, int target_ess,
-                            int max_em_iter, int max_lbfgs_iter,
-                            sgm::Random::seed_type seed, double tol, bool use_spf, bool parallelize) {
+std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> sgm::train_and_predict(
+    const std::vector<std::string> &training_boards,
+    const std::vector<std::string> &test_boards,
+    int concrete_particles, int max_implicit_particles, int target_ess,
+    int max_em_iter, int max_lbfgs_iter,
+    sgm::Random::seed_type seed, double tol, bool use_spf, bool parallelize
+) {
     auto random = Random(seed);
-    std::vector<fs::path> BOARDS;
-    std::vector<fs::path> TEST_BOARDS;
-
-    for (const auto &dir : training_directories) {
-        auto path = fs::path(dir);
-        if (!fs::is_directory(path)) {
-            throw sgm::runtime_error("Error: Data directory `" + dir + "` is not a directory.");
-        }
-        auto dir_iter = fs::directory_iterator(path);
-        for (const auto &dir_item : dir_iter) {
-            auto board = dir_item.path().filename();
-            if (board.string()[0] == '.') continue;
-            BOARDS.emplace_back(path / board);
-        }
-        // Sort for compatibility with reference impl
-        std::sort(BOARDS.begin(), BOARDS.end());
-    }
-
-    for (const auto &dir : test_directories) {
-        auto path = fs::path(dir);
-        if (!fs::is_directory(path)) {
-            throw sgm::runtime_error("Error: Test data directory `" + dir + "` is not a directory.");
-        }
-        auto dir_iter = fs::directory_iterator(path);
-        for (const auto &dir_item : dir_iter) {
-            auto board = dir_item.path().filename();
-            if (board.string()[0] == '.') continue;
-            TEST_BOARDS.emplace_back(path / board);
-        }
-        // Sort for compatibility with reference impl
-        std::sort(TEST_BOARDS.begin(), TEST_BOARDS.end());
-    }
 
     SupervisedLearningConfig::parallel = parallelize;
     SupervisedLearningConfig::num_lbfgs_iters = max_lbfgs_iter;
 
-    sgm::logger << "Current working dir: " << fs::current_path() << std::endl;
-
-    auto training_instances = ExpUtils::read_test_boards(BOARDS, false);
+    auto training_instances = ExpUtils::read_test_boards(training_boards, false);
+    auto test_instances = ExpUtils::read_test_boards(test_boards, false);
     auto training_data = ExpUtils::unpack<EllipticalKnot>(training_instances);
-
-    auto test_instances = ExpUtils::read_test_boards(TEST_BOARDS, false);
-    sgm::logger << "Test instances size: " << test_instances.size() << std::endl;
 
     PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
     EllipticalKnotFeatureExtractor fe;
@@ -154,22 +116,22 @@ void sgm::train_and_predict(const std::vector<std::string> &training_directories
     auto initial = Eigen::VectorXd::Zero(fe_dim);
     auto instances = ExpUtils::pack<EllipticalKnot>(training_data);
     auto ret = SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
-                                                max_implicit_particles, initial, tol, log_directory, false, use_spf);
+                                                max_implicit_particles, initial, tol, false, use_spf);
 
     sgm::logger << ret.first << "\n" << ret.second << std::endl;
 
     command.update_model_parameters(ret.second);
 
-    fs::create_directories(output_directory);
+    std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> matchings_by_dataset;
 
-    for (auto j = 0ul, size = test_instances.size(); j < size; ++j) {
-        auto segment = test_instances[j][0];
-        auto initial_state = GraphMatchingState<std::string, EllipticalKnot>(segment.knots());
+    for (auto &test_instance : test_instances) {
+        auto &segment = test_instance[0];
+        auto &emissions = segment.knots();
+        auto initial_state = GraphMatchingState<std::string, EllipticalKnot>(emissions);
         auto transition_density = smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot>(command,
                                                                                                    initial_state,
                                                                                                    false, true);
         auto observation_density = smc::ExactProposalObservationDensity<std::string, EllipticalKnot>(command);
-        auto emissions = std::vector<node_type>(segment.knots());
 
         auto smc = smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot>(transition_density,
                                                                                     observation_density,
@@ -192,21 +154,22 @@ void sgm::train_and_predict(const std::vector<std::string> &training_directories
             }
         }
 
-        auto filename = TEST_BOARDS[j].filename();
-        auto output_filename = output_directory / filename;
-        auto log_output_filename = log_directory / filename;
-        auto output_csv = std::ofstream(output_filename.string());
-        auto log_output_csv = std::ofstream(log_output_filename.string());
-        auto idx = 0;
+        auto match_idx = 0;
+        auto pidxs = std::vector<int>();
+        auto idxs = std::vector<int>();
+        auto matchings = std::vector<int>();
 
         for (auto &matching : best_sample.matchings()) {
             for (auto &knot : *matching) {
-                output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
-                log_output_csv << knot->pidx() << "," << knot->idx() << "," << idx << std::endl;
+                pidxs.push_back(knot->pidx());
+                idxs.push_back(knot->idx());
+                matchings.push_back(match_idx);
             }
-            ++idx;
+            ++match_idx;
         }
-        output_csv.close();
-        log_output_csv.close();
+
+        matchings_by_dataset.emplace_back(std::move(pidxs), std::move(idxs), std::move(matchings));
     }
+
+    return matchings_by_dataset;
 }

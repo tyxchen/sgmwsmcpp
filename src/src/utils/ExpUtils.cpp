@@ -30,7 +30,7 @@ double ExpUtilsConfig::tol = 1e-6;
 bool ExpUtilsConfig::exact_sampling = true;
 bool ExpUtilsConfig::sequential_matching = true;
 
-std::vector<std::vector<KnotDataReader::Segment>> ExpUtils::read_test_boards(const std::vector<fs::path> &boards,
+std::vector<std::vector<KnotDataReader::Segment>> ExpUtils::read_test_boards(const std::vector<std::string> &boards,
                                                                              bool reverse_sequence) {
     std::vector<std::vector<KnotDataReader::Segment>> instances;
     auto idx = 1;

@@ -17,33 +17,15 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_EXPERIMENTS_H
-#define SGMWSMCPP_EXPERIMENTS_H
+#ifndef SGMWSMCPP_FILESYSTEM_H
+#define SGMWSMCPP_FILESYSTEM_H
 
-#include <vector>
-#include <string>
-#include <utility>
+#ifdef __cpp_lib_filesystem
+#include <filesystem>
+namespace fs = std::filesystem;
+#else // __cpp_lib_experimental_filesystem
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
-#include "utils/Random.h"
-#include "knot/data/KnotDataReader.h"
-
-namespace sgm
-{
-
-std::vector<std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>> train_and_predict(
-    const std::vector<std::string> &training_boards,
-    const std::vector<std::string> &test_boards,
-    int concrete_particles,
-    int max_implicit_particles,
-    int target_ess,
-    int max_em_iter,
-    int max_lbfgs_iter,
-    Random::seed_type seed,
-    double tol,
-    bool use_spf,
-    bool parallelize
-);
-
-}
-
-#endif //SGMWSMCPP_EXPERIMENTS_H
+#endif //SGMWSMCPP_FILESYSTEM_H

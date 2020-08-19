@@ -44,11 +44,11 @@ void Segment::add_node(int label, const node_type &knot) {
     m_label_to_edge[label]->insert(knot);
 }
 
-std::vector<Segment> KnotDataReader::read_segmented_test_board(const fs::path &file) {
+std::vector<Segment> KnotDataReader::read_segmented_test_board(const std::string &file) {
     std::cout << "Processing " << file << std::endl;
 
     std::vector<Segment> segments;
-    io::CSVReader<15> test_board(file.string());
+    io::CSVReader<15> test_board(file);
     // TODO: change to reading a header
     test_board.next_line();
 
