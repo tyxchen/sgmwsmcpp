@@ -35,6 +35,7 @@
 #include <boost/accumulators/statistics.hpp>
 
 #include "utils/types.h"
+#include "utils/container/vector_list.h"
 #include "utils/debug_macros.h"
 
 namespace sgm
@@ -134,6 +135,9 @@ template <typename T>
 DECLARE_PRINT_OVERLOAD(std::vector<T>);
 
 template <typename T>
+DECLARE_PRINT_OVERLOAD(vector_list<T>);
+
+template <typename T>
 DECLARE_PRINT_OVERLOAD(sgm::set_t<T>);
 
 template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
@@ -186,6 +190,20 @@ DEFINE_PRINT_OVERLOAD(pair, std::pair<T, U>) {
 
 template <typename T>
 DEFINE_PRINT_OVERLOAD(set, std::vector<T>) {
+    auto i = 0u;
+    auto s = set.size();
+    out << "[";
+    for (const auto &e : set) {
+        use_print_if_exists(out, e);
+        ++i;
+        if (i < s) out << sep;
+    }
+    out << "]";
+    return out;
+}
+
+template <typename T>
+DEFINE_PRINT_OVERLOAD(set, vector_list<T>) {
     auto i = 0u;
     auto s = set.size();
     out << "[";
@@ -274,6 +292,12 @@ std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> 
 
 template <typename T, typename CharT, typename Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> &out, const std::vector<T> &set) {
+    out << sgm::print_wrapper(set);
+    return out;
+}
+
+template <typename T, typename CharT, typename Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> &out, const sgm::vector_list<T> &set) {
     out << sgm::print_wrapper(set);
     return out;
 }

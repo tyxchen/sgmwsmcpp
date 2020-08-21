@@ -41,7 +41,8 @@ add_executable(test
         "test/test.cpp"
 #        "test/utils.container.Counter.cpp"
 #        "test/utils.container.Indexer.cpp"
-        "test/utils.opt.LBFGSMinimizer.cpp")
+        "test/utils.opt.LBFGSMinimizer.cpp"
+        "test/utils.container.vector_list.cpp")
 
 target_include_directories(test PRIVATE ${Boost_INCLUDE_DIRS} "vendor")
 target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)
