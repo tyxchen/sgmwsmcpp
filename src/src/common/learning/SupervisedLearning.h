@@ -108,6 +108,8 @@ public:
     double value_at(const Eigen::VectorXd &x) {
         if (!requires_computation(x)) return -1 * m_log_density;
 
+        Timers::start("value_at");
+
         if (m_curr_x.rows() == 0 || std::isnan(x(0)))
             m_curr_x = x;
 
@@ -124,6 +126,10 @@ public:
             m_log_density += ret.first;
             m_log_gradient.increment_all(ret.second);
         }
+
+        Timers::end("value_at");
+
+        sgm::logger << Timers::diff("value_at") << "ms\n";
 
         return -1 * m_log_density;
     }

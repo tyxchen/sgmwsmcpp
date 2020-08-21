@@ -28,10 +28,10 @@ namespace sgm
 {
 
 template <typename T>
-struct hash<set_t<T>>
+struct hash<edge_t<T>>
 {
     hash<T> hasher;
-    size_t operator()(const set_t<T> &obj) const noexcept {
+    size_t operator()(const edge_t<T> &obj) const noexcept {
         auto hash_v = 0l;
 
         // definitely not perfect, can be improved
@@ -43,22 +43,22 @@ struct hash<set_t<T>>
     }
 };
 
-template <typename K, typename T>
-struct hash<map_t<K, T>>
-{
-    hash<K> key_hasher;
-    hash<T> val_hasher;
-    size_t operator()(const map_t<K, T> &obj) const noexcept {
-        auto hash_v = 0l;
-
-        // definitely not perfect, can be improved
-        for (auto &thing : obj) {
-            hash_v ^= key_hasher(thing.first) + val_hasher(thing.second);
-        }
-
-        return hash_v;
-    }
-};
+//template <typename K, typename T>
+//struct hash<map_t<K, T>>
+//{
+//    hash<K> key_hasher;
+//    hash<T> val_hasher;
+//    size_t operator()(const map_t<K, T> &obj) const noexcept {
+//        auto hash_v = 0l;
+//
+//        // definitely not perfect, can be improved
+//        for (auto &thing : obj) {
+//            hash_v ^= key_hasher(thing.first) + val_hasher(thing.second);
+//        }
+//
+//        return hash_v;
+//    }
+//};
 
 }
 

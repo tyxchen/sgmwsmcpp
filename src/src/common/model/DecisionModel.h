@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "utils/types.h"
+#include "utils/container/vector_list.h"
 #include "common/graph/GraphMatchingState_fwd.h"
 
 namespace sgm
@@ -68,7 +69,7 @@ private:
                                               const GraphMatchingState<F, NodeType> &state) = 0;
 
     virtual std::vector<edge_type> _decisions(const node_type &node,
-                                              const std::vector<node_type> &candidate_nodes,
+                                              const vector_list<node_type> &candidate_nodes,
                                               const set_t<node_type> &covered_nodes,
                                               const set_t<edge_type> &matching,
                                               const map_t<node_type, edge_type> &node_to_edge) = 0;

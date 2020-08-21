@@ -55,7 +55,7 @@ public:
     GraphMatchingState<F, NodeType> sample_forward_transition(Random &random,
                                                               const GraphMatchingState<F, NodeType> &state) {
         auto next = state;
-        m_command.get().sample_next(random, next, m_use_sequential_sampling, m_use_exact_sampling);
+        next.sample_next_state(random, m_command.get(), m_use_sequential_sampling, m_use_exact_sampling);
         return next;
     }
 

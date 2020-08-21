@@ -25,6 +25,7 @@
 
 #include "utils/debug.h"
 #include "utils/types.h"
+#include "utils/container/vector_list.h"
 #include "common/model/DecisionModel.h"
 
 namespace sgm
@@ -46,7 +47,7 @@ private:
     }
 
     std::vector<edge_type> _decisions(const node_type &node,
-                                      const std::vector<node_type> &candidate_nodes,
+                                      const vector_list<node_type> &candidate_nodes,
                                       const set_t<node_type> &covered_nodes,
                                       const set_t<edge_type> &matching,
                                       const map_t<node_type, edge_type> &node_to_edge) override {
@@ -72,7 +73,6 @@ private:
         }
 
         for (const auto &other_node : candidate_nodes) {
-            if (other_node == nullptr) continue;
             if (covered_nodes.count(other_node)) continue;
             if (node->pidx() == other_node->pidx()) continue;
 

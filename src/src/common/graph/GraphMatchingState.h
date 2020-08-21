@@ -31,6 +31,7 @@
 #include "utils/NumericalUtils.h"
 #include "utils/Random.h"
 #include "utils/container/Counter.h"
+#include "utils/container/vector_list.h"
 #include "common/model/Command_fwd.h"
 #include "common/model/DecisionModel_fwd.h"
 #include "common/model/MultinomialLogisticModel.h"
@@ -49,7 +50,7 @@ private:
     set_t<node_type> m_covered_nodes;
     // TODO: implement a ptr_vector sparse container that preserves insertion order, and fast removal and insertion
     std::vector<node_type> m_visited_nodes;
-    std::vector<node_type> m_unvisited_nodes;
+    vector_list<node_type> m_unvisited_nodes;
     map_t<node_type, edge_type> m_node_to_matching;
     std::vector<edge_type> m_decisions;
 
@@ -150,7 +151,8 @@ private:
     }
 
 public:
-    explicit GraphMatchingState(std::vector<node_type> nodes) : m_unvisited_nodes(std::move(nodes)) {}
+    explicit GraphMatchingState(const std::vector<node_type> &nodes)
+        : m_unvisited_nodes(nodes.begin(), nodes.end()) {}
 
 //    bool has_next_step() {
 //    }
@@ -167,8 +169,8 @@ public:
         Counter<F> suff;
         Counter<F> features;
 
-        auto node = std::move(m_unvisited_nodes[unvisited_index]);
-        m_unvisited_nodes[unvisited_index] = nullptr;
+        auto node = std::move(m_unvisited_nodes.front());
+        m_unvisited_nodes.erase(0);
         m_visited_nodes.push_back(node);
 
         auto decision_set = decision_model.decisions(node, *this);
@@ -284,7 +286,7 @@ public:
         }
 
         auto node = std::move(m_unvisited_nodes[idx]);
-        m_unvisited_nodes.erase(m_unvisited_nodes.begin() + idx);
+        m_unvisited_nodes.erase(idx);
 
         auto cur_model = command.current_model();
         auto sample = sample_decision(random, command.decision_model(), cur_model, node, use_exact_sampling);
@@ -294,7 +296,7 @@ public:
         return log_prob - sample.second;
     }
 
-    const std::vector<node_type> &unvisited_nodes() const {
+    const vector_list<node_type> &unvisited_nodes() const {
         return m_unvisited_nodes;
     }
 
