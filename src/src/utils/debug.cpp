@@ -22,6 +22,7 @@
 #include <ctime>
 #include <iomanip>
 #include <stdexcept>
+#include <parallel_hashmap/phmap.h>
 
 #ifdef COMPILED_WITH_RCPP
 #include <Rcpp.h>
@@ -54,8 +55,8 @@ std::chrono::high_resolution_clock::duration::rep performance_timer::diff() cons
     return std::chrono::duration_cast<std::chrono::microseconds>(m_end - m_start).count();
 }
 
-static std::unordered_map<std::string, sgm::performance_timer> performance_timers;
-static std::unordered_map<std::string, sgm::performance_accumulator> performance_accumulators;
+static phmap::parallel_flat_hash_map<std::string, sgm::performance_timer> performance_timers;
+static phmap::parallel_flat_hash_map<std::string, sgm::performance_accumulator> performance_accumulators;
 
 performance_timer &Timers::get_timer(const std::string &id) {
     return performance_timers[id];

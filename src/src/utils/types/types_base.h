@@ -23,12 +23,7 @@
 #include <functional>
 #include <memory>
 
-#ifdef NDEBUG
 #include <parallel_hashmap/phmap.h>
-#else
-#include <unordered_set>
-#include <unordered_map>
-#endif
 
 #include "utils/hash.h"
 
@@ -36,25 +31,13 @@ namespace sgm
 {
 
 template <typename T>
-#ifdef NDEBUG
 using set_t = typename phmap::parallel_flat_hash_set<T, hash<T>, std::equal_to<T>>;
-#else
-using set_t = typename std::unordered_set<T, hash<T>, std::equal_to<T>>;
-#endif
 
 template <typename K, typename T>
-#ifdef NDEBUG
 using map_t = typename phmap::parallel_flat_hash_map<K, T, hash<K>, std::equal_to<K>>;
-#else
-using map_t = typename std::unordered_map<K, T, hash<K>, std::equal_to<K>>;
-#endif
 
 template <typename T>
-#ifdef NDEBUG
 using edge_t = typename phmap::flat_hash_set<T, hash<T>, std::equal_to<T>>;
-#else
-using edge_t = typename std::unordered_set<T, hash<T>, std::equal_to<T>>;
-#endif
 
 template <typename NodeType>
 using node_type_base = typename std::shared_ptr<NodeType>;

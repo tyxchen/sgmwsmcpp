@@ -20,33 +20,23 @@
 #ifndef SGMWSMCPP_INDEXER_H
 #define SGMWSMCPP_INDEXER_H
 
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <vector>
 #include <utility>
-#include <boost/container_hash/hash.hpp>
-
-#ifdef NDEBUG
 #include <parallel_hashmap/phmap.h>
-#else
-#include <unordered_map>
-#endif
 
 namespace sgm
 {
 
-template<typename T,
-         typename Hash = boost::hash<T>>
+template<typename T, typename Hash = std::hash<T>>
 class Indexer
 {
 public:
     using object_type = T;
     using index_type = size_t;
-#ifdef NDEBUG
     using map_type = phmap::parallel_flat_hash_map<object_type, index_type, Hash>;
-#else
-    using map_type = std::unordered_map<object_type, index_type, Hash>;
-#endif
 
 private:
     std::vector<object_type> m_i2o;
@@ -67,7 +57,7 @@ public:
     Indexer(std::initializer_list<object_type> init) : Indexer(init.begin(), init.end()) {}
 
     template <typename InitList>
-    explicit Indexer(InitList &&init) : Indexer(init.begin(), init.end()) {}
+    explicit Indexer(const InitList &init) : Indexer(init.begin(), init.end()) {}
 
     Indexer(std::initializer_list<typename map_type::value_type> init): m_o2i(init), m_i2o(init.size()) {
         auto i = 0;

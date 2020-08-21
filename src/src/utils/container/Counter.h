@@ -28,12 +28,7 @@
 #include <vector>
 #include <utility>
 #include <tbb/tbb.h>
-
-#ifdef NDEBUG
 #include <parallel_hashmap/phmap.h>
-#else
-#include <unordered_map>
-#endif
 
 namespace sgm
 {
@@ -67,11 +62,7 @@ public:
     using key_type = T;
     using mapped_type = Count;
     using value_type = std::pair<const T &, mapped_type>;
-#ifdef NDEBUG
     using map_type = phmap::parallel_flat_hash_map<key_type, mapped_type, Hash>;
-#else
-    using map_type = std::unordered_map<key_type, mapped_type, Hash>;
-#endif
 
 private:
     tbb::atomic<size_t> m_current_mod_count { 1 };

@@ -28,7 +28,6 @@
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <unordered_map>
 #include <Eigen/Core>
 
 #include <boost/accumulators/accumulators.hpp>
