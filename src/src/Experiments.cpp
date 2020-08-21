@@ -25,7 +25,6 @@
 #include "common/learning/SupervisedLearning.h"
 #include "utils/ExpUtils.h"
 #include "utils/Random.h"
-#include "common/model/PairwiseMatchingModel.h"
 #include "knot/model/features/EllipticalKnotFeatureExtractor.h"
 #include "common/model/Command.h"
 #include "common/graph/GraphMatchingState.h"
@@ -57,10 +56,9 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     auto test_instances = ExpUtils::read_test_boards(test_boards, false);
     auto training_data = ExpUtils::unpack<EllipticalKnot>(training_instances);
 
-    PairwiseMatchingModel<std::string, EllipticalKnot> decision_model;
     EllipticalKnotFeatureExtractor fe;
     auto fe_dim = fe.dim();
-    Command<std::string, EllipticalKnot> command(decision_model, fe);
+    Command<std::string, EllipticalKnot> command(fe);
 
     // compute the features on each of these data points and standardization
     std::vector<std::vector<double>> standardizations(fe_dim);

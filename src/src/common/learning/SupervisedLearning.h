@@ -59,21 +59,15 @@ namespace detail
 {
 
 template <typename F, typename NodeType>
-std::pair<double, Counter<F>> evaluate(Command<F, NodeType> &command, Counter<F> &params,
-                                       std::pair<std::vector<edge_type_base<NodeType>>,
-                                                 std::vector<node_type_base<NodeType>>> &instance) {
-    auto &decision_model = command.decision_model();
-    MultinomialLogisticModel<F, NodeType> model(command.feature_extractor(), params);
-
-    auto &permutation = instance.second;
-    auto &decisions = instance.first;
+std::pair<double, Counter<F>> evaluate(MultinomialLogisticModel<F, NodeType> &model,
+                                       const std::pair<std::vector<edge_type_base<NodeType>>,
+                                                       std::vector<node_type_base<NodeType>>> &instance) {
+    const auto &permutation = instance.second;
+    const auto &decisions = instance.first;
     GraphMatchingState<F, NodeType> state(permutation);
 
-    auto index = 0;
-
     for (auto &decision : decisions) {
-        state.evaluate_decision(decision, decision_model, model, index);
-        ++index;
+        state.evaluate_decision(decision, model);
     }
 
     return std::make_pair(state.log_density(), std::move(state.log_gradient()));
@@ -121,15 +115,21 @@ public:
         }
 
         // TODO: implement parallelization
-        for (auto &instance : m_latent_decisions) {
-            auto ret = detail::evaluate(m_command.get(), params, instance);
+        auto model = MultinomialLogisticModel<F, NodeType>(m_command.get().feature_extractor(), params);
+
+        Timers::reset("value_at_loop");
+        for (const auto &instance : m_latent_decisions) {
+            Timers::start("value_at_loop");
+            auto ret = detail::evaluate(model, instance);
             m_log_density += ret.first;
             m_log_gradient.increment_all(ret.second);
+            Timers::end("value_at_loop");
+            Timers::save("value_at_loop");
         }
 
         Timers::end("value_at");
 
-        sgm::logger << Timers::diff("value_at") << "ms\n";
+        sgm::logger << Timers::diff("value_at") << "ms    " << Timers::mean("value_at_loop") << "ms\n";
 
         return -1 * m_log_density;
     }
@@ -161,8 +161,10 @@ public:
 
         std::vector<double> stats;
 
+        auto model = MultinomialLogisticModel<F, NodeType>(m_command.get().feature_extractor(),
+                                                           m_command.get().model_parameters());
         for (auto &instance : m_latent_decisions) {
-            auto ret = detail::evaluate(m_command.get(), m_command.get().model_parameters(), instance);
+            auto ret = detail::evaluate(model, instance);
             stats.push_back(ret.first);
         }
 

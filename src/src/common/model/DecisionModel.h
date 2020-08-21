@@ -29,58 +29,61 @@
 
 namespace sgm
 {
+
 template <typename F, typename NodeType>
-class DecisionModel
-{
-public:
+std::vector<edge_type_base<NodeType>> generate_decisions(const node_type_base<NodeType> &node,
+                                                         const GraphMatchingState<F, NodeType> &state) {
+    return generate_decisions(node, state.unvisited_nodes(), state.covered_nodes(), state.matchings(),
+                              state.node_to_edge_view());
+}
+
+template <typename NodeType>
+std::vector<edge_type_base<NodeType>> generate_decisions(const node_type_base<NodeType> &node,
+                                                         const vector_list<node_type_base<NodeType>> &candidate_nodes,
+                                                         const set_t<node_type_base<NodeType>> &covered_nodes,
+                                                         const set_t<edge_type_base<NodeType>> &matching,
+                                                         const map_t<node_type_base<NodeType>,
+                                                                     edge_type_base<NodeType>> &node_to_edge) {
     using node_type = node_type_base<NodeType>;
     using edge_type = edge_type_base<NodeType>;
+    using edge_element_type = typename edge_type::element_type;
 
-    std::vector<edge_type> decisions(const node_type &node,
-                                     const GraphMatchingState<F, NodeType> &state) {
-        return _decisions(node, state);
+    std::vector<edge_type> decisions;
+
+    if (covered_nodes.count(node)) {
+        // if the node is already covered, then the only decision that is available is an empty decision for now
+        decisions.emplace_back(std::make_shared<edge_element_type>());
+        return decisions;
+    } else {
+        // this node is not yet covered so consider all existing edges as long as the edge does not contain a node
+        // from the same partition as the node being considered
+        for (const auto &edge : matching) {
+            if (edge->size() >= 3 || edge->size() == 0) continue;
+                // the first node in the edge is not on the same partition as our chosen node, and either the edge is a
+                // singleton or the second node is also not on the same partition
+            else if (node->pidx() != (*edge->begin())->pidx() &&
+                     (edge->size() == 1 || node->pidx() != (*(++edge->begin()))->pidx())) {  // loop unrolling
+                decisions.emplace_back(edge);
+            }
+        }
     }
 
-    std::vector<edge_type> decisions(const node_type &node,
-                                     const std::vector<node_type> &candidate_nodes,
-                                     const set_t<node_type> &covered_nodes,
-                                     const std::vector<edge_type> &matching,
-                                     const map_t<node_type, edge_type> &node_to_edge) {
-        return _decisions(node, candidate_nodes, covered_nodes, matching, node_to_edge);
+    for (const auto &other_node : candidate_nodes) {
+        if (covered_nodes.count(other_node)) continue;
+        if (node->pidx() == other_node->pidx()) continue;
+
+        decisions.emplace_back(
+            std::make_shared<edge_element_type>(std::initializer_list<node_type>({ other_node }))
+        );
     }
 
-//    bool in_support(const GraphMatchingState<F, NodeType> &state) {
-//        return _in_support(state);
-//    }
-//
-//    bool path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-//                     const map_t<node_type, set_t<node_type>> &final_state) {
-//        return _path_exists(cur_state, final_state);
-//    }
-
-    int num_parents(const GraphMatchingState<F, NodeType> &cur_latent) {
-        return _num_parents(cur_latent);
+    if (decisions.empty()) {
+        decisions.emplace_back(std::make_shared<edge_element_type>());
     }
 
-    virtual ~DecisionModel() = default;
+    return decisions;
+}
 
-private:
-    virtual std::vector<edge_type> _decisions(const node_type &node,
-                                              const GraphMatchingState<F, NodeType> &state) = 0;
-
-    virtual std::vector<edge_type> _decisions(const node_type &node,
-                                              const vector_list<node_type> &candidate_nodes,
-                                              const set_t<node_type> &covered_nodes,
-                                              const set_t<edge_type> &matching,
-                                              const map_t<node_type, edge_type> &node_to_edge) = 0;
-
-//    virtual bool _in_support(const GraphMatchingState<F, NodeType> &state) = 0;
-//
-//    virtual bool _path_exists(const GraphMatchingState<F, NodeType> &cur_state,
-//                              const map_t<node_type, set_t<node_type>> &final_state) = 0;
-//
-    virtual int _num_parents(const GraphMatchingState<F, NodeType> &cur_latent) = 0;
-};
 }
 
 #endif //SGMWSMCPP_DECISIONMODEL_H

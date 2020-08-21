@@ -33,7 +33,7 @@
 #include "utils/container/Counter.h"
 #include "utils/container/vector_list.h"
 #include "common/model/Command_fwd.h"
-#include "common/model/DecisionModel_fwd.h"
+#include "common/model/DecisionModel.h"
 #include "common/model/MultinomialLogisticModel.h"
 
 namespace sgm
@@ -59,12 +59,11 @@ private:
     Counter<F> m_log_gradient;
 
     std::pair<double, double> sample_decision(Random &random,
-                                              DecisionModel<F, NodeType> &decision_model,
                                               MultinomialLogisticModel<F, NodeType> &model,
                                               const node_type &node,
                                               bool use_exact_sampling) {
         // TODO: make sure this works correctly
-        auto decisions = decision_model.decisions(node, *this);
+        auto decisions = generate_decisions(node, *this);
         auto decisions_size = decisions.size();
         auto idx = 0u;
         auto log_prob = 0.0;
@@ -163,8 +162,7 @@ public:
 //        const map_t<node_type, set_t<node_type>> &final_state) {
 //    }
 
-    void evaluate_decision(edge_type &decision, DecisionModel<F, NodeType> &decision_model,
-                           MultinomialLogisticModel<F, NodeType> &model, size_t unvisited_index) {
+    void evaluate_decision(const edge_type &decision, MultinomialLogisticModel<F, NodeType> &model) {
         auto log_norm = -std::numeric_limits<double>::infinity();
         Counter<F> suff;
         Counter<F> features;
@@ -173,7 +171,7 @@ public:
         m_unvisited_nodes.erase(0);
         m_visited_nodes.push_back(node);
 
-        auto decision_set = decision_model.decisions(node, *this);
+        auto decision_set = generate_decisions(node, *this);
         auto decision_is_subset = [&decision](const edge_type &superset) -> bool {
             for (auto &d : *decision) {
                 if (!superset->count(d)) return false;
@@ -289,11 +287,78 @@ public:
         m_unvisited_nodes.erase(idx);
 
         auto cur_model = command.current_model();
-        auto sample = sample_decision(random, command.decision_model(), cur_model, node, use_exact_sampling);
+        auto sample = sample_decision(random, cur_model, node, use_exact_sampling);
         auto log_prob = sample.first;
         m_log_density += log_prob - sample.second;
         m_visited_nodes.emplace_back(std::move(node));
         return log_prob - sample.second;
+    }
+
+    int num_parents() const {
+        auto num_p = 0;
+        auto num_singletons = 0;
+        for (auto &e : m_matchings) {
+            if (e->size() == 1) {
+                ++num_singletons;
+            }
+        }
+
+        auto singleton_exists = num_singletons > 0;
+        num_p += num_singletons;
+
+        for (auto &e : m_matchings) {
+            if (e->size() == 1) continue;
+
+            int num_visited = 0;
+            for (auto &node : *e) {
+                for (auto &vn : m_visited_nodes) {
+                    if (vn == node) {
+                        ++num_visited;
+                        break;
+                    }
+                }
+            }
+
+            if (e->size() == 2) {
+                if (singleton_exists) {
+                    if (num_visited == 1) {
+                        return 1;
+                    } else if (num_visited == 2) {
+                        num_p += 2;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                } else {
+                    if (num_visited == 1) {
+                        num_p += 1;
+                    } else if (num_visited == 2) {
+                        num_p += 2;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                }
+            } else if (e->size() == 3) {
+                if (singleton_exists) {
+                    if (num_visited == 2) {
+                        return num_singletons;
+                    } else if (num_visited == 3) {
+                        num_p += 3;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                } else {
+                    if (num_visited == 2) {
+                        num_p += 2;
+                    } else if (num_visited == 3) {
+                        num_p += 6;
+                    } else {
+                        throw sgm::runtime_error("");
+                    }
+                }
+            }
+        }
+
+        return num_p;
     }
 
     const vector_list<node_type> &unvisited_nodes() const {

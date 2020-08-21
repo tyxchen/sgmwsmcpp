@@ -80,7 +80,7 @@ public:
     double _log_weight_correction(const GraphMatchingState<F, NodeType> &cur_latent,
                                   const GraphMatchingState<F, NodeType> &old_latent) override {
         /*
-        auto num_parents = command.get_decision_model().num_parents(cur_latent);
+        auto num_parents = cur_latent.num_parents();
         return -std::log(num_parents) - cur_latent.log_forward_proposal();
         */
         //return -cur_latent.log_forward_proposal();
