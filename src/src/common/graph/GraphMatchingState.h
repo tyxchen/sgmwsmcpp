@@ -86,13 +86,11 @@ private:
             }
             for (auto &prob : probs) {
                 prob = std::exp(prob - max_prob);
+                sum += prob;
             }
 
             // normalize
-            for (auto prob : probs) {
-                sum += prob;
-            }
-            if (sum == 0) throw sgm::runtime_error("Normalization should be positive.");
+//            if (sum == 0) throw sgm::runtime_error("Normalization should be positive.");
             if (sum != 1) {
                 for (auto &prob : probs) {
                     prob /= sum;

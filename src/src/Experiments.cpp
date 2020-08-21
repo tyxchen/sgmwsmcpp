@@ -128,7 +128,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     for (auto &test_instance : test_instances) {
         auto &segment = test_instance[0];
         auto &emissions = segment.knots();
-        auto initial_state = GraphMatchingState<std::string, EllipticalKnot>(emissions);
+        auto initial_state = std::make_shared<GraphMatchingState<std::string, EllipticalKnot>>(emissions);
         auto transition_density = smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot>(command,
                                                                                                    initial_state,
                                                                                                    false, true);
@@ -139,7 +139,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
                                                                                     emissions, use_spf);
 
         Timers::start("testing data");
-        smc.sample(random, target_ess, 1000);
+        smc.sample(random(), target_ess, 1000);
         Timers::end("testing data");
 
         sgm::logger << "Run time: " << Timers::diff("testing data") / 1000 << "ms\n";
@@ -149,8 +149,8 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         auto best_sample = samples[0];
 
         for (auto &sample : samples) {
-            if (sample.log_density() > best_log_density) {
-                best_log_density = sample.log_density();
+            if (sample->log_density() > best_log_density) {
+                best_log_density = sample->log_density();
                 best_sample = sample;
             }
         }
@@ -158,7 +158,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         auto match_idx = 0;
         auto matchings = std::vector<TrainAndPredictResult>();
 
-        for (auto &matching : best_sample.matchings()) {
+        for (auto &matching : best_sample->matchings()) {
             for (auto &knot : *matching) {
                 matchings.emplace_back(knot->pidx(), knot->idx(), match_idx);
             }

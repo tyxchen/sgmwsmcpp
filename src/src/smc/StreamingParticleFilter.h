@@ -39,10 +39,10 @@ namespace smc
 {
 
 template <typename F, typename NodeType>
-class StreamingBootstrapProposal : public Proposal<GraphMatchingState<F, NodeType>,
+class StreamingBootstrapProposal : public Proposal<std::shared_ptr<GraphMatchingState<F, NodeType>>,
                                                    StreamingBootstrapProposal<F, NodeType>>
 {
-    using latent_type = GraphMatchingState<F, NodeType>;
+    using latent_type = std::shared_ptr<GraphMatchingState<F, NodeType>>;
     using emissions_type = node_type_base<NodeType>;
 
     int m_seed;
@@ -51,7 +51,7 @@ class StreamingBootstrapProposal : public Proposal<GraphMatchingState<F, NodeTyp
 
     emissions_type m_cur_emission;
     emissions_type m_old_emission;
-    std::shared_ptr<const std::vector<latent_type>> m_old_latents;
+    std::vector<latent_type> const * m_old_latents;
 
     std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
     std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
@@ -60,13 +60,13 @@ public:
     StreamingBootstrapProposal(int seed,
                                emissions_type cur_emission,
                                emissions_type old_emission,
-                               std::shared_ptr<const std::vector<latent_type>> old_latents,
+                               std::vector<latent_type> const * old_latents,
                                GenericMatchingLatentSimulator<F, NodeType> &transition_density,
                                ObservationDensity<F, NodeType> &observation_density)
         : m_seed(seed), m_random(seed * 171),
-          m_permutation_stream(old_latents.get() != nullptr ? old_latents->size() : 0, m_random),
+          m_permutation_stream(old_latents != nullptr ? old_latents->size() : 0, m_random),
           m_cur_emission(std::move(cur_emission)), m_old_emission(std::move(old_emission)),
-          m_old_latents(std::move(old_latents)),
+          m_old_latents(old_latents),
           m_transition_density(transition_density), m_observation_density(observation_density) {}
 
     StreamingBootstrapProposal(int seed, emissions_type cur_emission,
@@ -77,7 +77,7 @@ public:
 
 private:
     bool is_initial() const {
-        return m_old_latents.get() == nullptr;
+        return m_old_latents == nullptr;
     }
 
     const latent_type &sample_old_latent() {
@@ -86,21 +86,21 @@ private:
     }
 
     std::pair<double, latent_type> _next_log_weight_sample_pair() override {
-        auto *old_latent = is_initial() ? nullptr : &sample_old_latent();
+        auto old_latent = is_initial() ? latent_type(nullptr) : sample_old_latent();
         auto cur_latent = is_initial()
                           ? m_transition_density.get().sample_initial(m_random)
-                          : m_transition_density.get().sample_forward_transition(m_random, *old_latent);
+                          : m_transition_density.get().sample_forward_transition(m_random, old_latent);
 
         auto log_weight = m_observation_density.get().log_density(cur_latent, m_cur_emission);
 
 //        if (old_latent)
-//            sgm::logger << "SBP::next_log_weight old_latent\n" << *old_latent << "\n----------------\n";
+//            sgm::logger << "SBP::next_log_weight old_latent\n" << old_latent << "\n----------------\n";
 //        sgm::logger << "SBP::next_log_weight cur_latent " << log_weight << "\n" << cur_latent << "\n+++++++++++++\n";
 
         if (old_latent != nullptr) {
-            auto old_weight = m_observation_density.get().log_density(*old_latent, m_old_emission);
+            auto old_weight = m_observation_density.get().log_density(old_latent, m_old_emission);
             log_weight -= old_weight;
-            log_weight += m_observation_density.get().log_weight_correction(cur_latent, *old_latent);
+            log_weight += m_observation_density.get().log_weight_correction(cur_latent, old_latent);
         }
 
         return std::make_pair(log_weight, std::move(cur_latent));
@@ -115,7 +115,7 @@ private:
 template <typename F, typename NodeType>
 class StreamingParticleFilter
 {
-    using latent_type = GraphMatchingState<F, NodeType>;
+    using latent_type = std::shared_ptr<GraphMatchingState<F, NodeType>>;
     using emissions_type = node_type_base<NodeType>;
 
     std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
@@ -162,10 +162,7 @@ public:
         for (auto i = 1u; i < m_transition_density.get().iterations(); ++i) {
             StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> rec_propagator(
                 StreamingBootstrapProposal<F, NodeType>(m_random(), m_emissions.get()[i], m_emissions.get()[i - 1],
-                                                        std::shared_ptr<const std::vector<latent_type>>(
-                                                            &m_results.second,
-                                                            [](auto *) {}
-                                                        ),
+                                                        &m_results.second,
                                                         m_transition_density, m_observation_density),
                 m_options
             );

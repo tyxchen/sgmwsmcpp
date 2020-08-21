@@ -43,7 +43,7 @@ class SequentialGraphMatchingSampler
     std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
     std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
     std::reference_wrapper<const std::vector<node_type_base<NodeType>>> m_emissions;
-    std::vector<GraphMatchingState<F, NodeType>> m_samples;
+    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> m_samples;
 
     bool m_use_SPF = true;
 
@@ -57,11 +57,11 @@ public:
           m_emissions(emissions),
           m_use_SPF(use_SPF) {}
 
-    double sample(Random &random, int num_concrete_particles, int max_virtual_particles) {
+    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles) {
         auto logZ = -std::numeric_limits<double>::infinity();
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
-                                                     Random(random()));
+                                                     Random(seed));
             auto &options = spf.options();
             options.num_concrete_particles = num_concrete_particles;
             options.max_virtual_particles = max_virtual_particles;
@@ -76,7 +76,7 @@ public:
         return logZ;
     }
 
-    std::vector<GraphMatchingState<F, NodeType>> &samples() {
+    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples() {
         return m_samples;
     }
 };

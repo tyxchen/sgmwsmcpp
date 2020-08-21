@@ -186,10 +186,9 @@ public:
         return std::make_pair(m, var);
     }
 
-    void add_instances(const std::vector<GraphMatchingState<F, NodeType>> &samples) {
-        for (const auto &sample : samples) {
-
-            m_latent_decisions.emplace_back(sample.decisions(), sample.visited_nodes());
+    void add_instances(std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> samples) {
+        for (auto &sample : samples) {
+            m_latent_decisions.emplace_back(std::move(sample->decisions()), std::move(sample->visited_nodes()));
         }
     }
 
@@ -202,11 +201,10 @@ namespace detail
 {
 
 template <typename F, typename NodeType>
-std::vector<GraphMatchingState<F, NodeType>> generate_samples(
-    Random &random,
+std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> generate_samples(
+    Random::seed_type seed,
     const std::pair<std::vector<edge_type_base<NodeType>>, std::vector<node_type_base<NodeType>>> &instance,
-    const std::vector<node_type_base<NodeType>> &emissions,
-    GraphMatchingState<F, NodeType> &initial,
+    const std::shared_ptr<GraphMatchingState<F, NodeType>> &initial,
     Command<F, NodeType> &command,
     int num_concrete_particles,
     int max_virtual_particles,
@@ -214,8 +212,8 @@ std::vector<GraphMatchingState<F, NodeType>> generate_samples(
 ) {
     smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
-    smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, emissions, use_SPF);
-    smc.sample(random, num_concrete_particles, max_virtual_particles);
+    smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, instance.second, use_SPF);
+    smc.sample(seed, num_concrete_particles, max_virtual_particles);
     auto &samples = smc.samples();
 
     return std::move(samples);
@@ -266,15 +264,13 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     bool check_gradient,
     bool use_spf
 ) {
-    std::vector<std::shared_ptr<std::vector<node_type_base<NodeType>>>> emissions_list;
-    std::vector<GraphMatchingState<F, NodeType>> initial_states;
+    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> initial_states;
+    auto instances_size = instances.size();
 
-    emissions_list.reserve(instances.size());
-    initial_states.reserve(instances.size());
+    initial_states.reserve(instances_size);
 
     for (auto &instance : instances) {
-        emissions_list.emplace_back(&instance.second, [](auto *) {});
-        initial_states.emplace_back(instance.second);
+        initial_states.emplace_back(std::make_shared<GraphMatchingState<F, NodeType>>(instance.second));
     }
 
     auto iter = 0;
@@ -296,18 +292,21 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 
     while (!converged && iter < max_iter) {
         ObjectiveFunction<F, NodeType> objective(command);
+
+#ifndef NDEBUG
         std::vector<ObjectiveFunction<F, NodeType>> objs;
-        auto instances_size = instances.size();
+#endif
 
         // TODO: can this be parallelized?
         for (auto i = 0u; i < instances_size; ++i) {
-            auto samples = detail::generate_samples(random, instances[i], *emissions_list[i], initial_states[i],
-                                                    command, num_concrete_particles, num_implicit_particles, use_spf);
+            auto samples = detail::generate_samples(random(), instances[i], initial_states[i], command,
+                                                    num_concrete_particles, num_implicit_particles, use_spf);
+#ifndef NDEBUG
             ObjectiveFunction<F, NodeType> obj2(command);
-
-            objective.add_instances(samples);
             obj2.add_instances(samples);
             objs.emplace_back(std::move(obj2));
+#endif
+            objective.add_instances(std::move(samples));
         }
 
         if (check_gradient && iter == 0) {
