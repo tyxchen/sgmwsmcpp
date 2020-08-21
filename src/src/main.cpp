@@ -15,6 +15,8 @@ using namespace sgm;
 namespace fs = boost::filesystem;
 
 int main(int argc, char** argv) {
+    Timers::start("__main__");
+
     cxxopts::Options options("sgmwsmc", "Description");
 
     options.add_options()
@@ -136,6 +138,9 @@ int main(int argc, char** argv) {
         output_csv.close();
         log_output_csv.close();
     }
+
+    Timers::end("__main__");
+    sgm::logger << "Ran in " << Timers::diff("__main__") / 1000 << "ms" << std::endl;
 
     return 0;
 }

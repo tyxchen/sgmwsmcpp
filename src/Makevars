@@ -3,3 +3,4 @@ OBJECTS = $(SOURCES:.cpp=.o)
 
 PKG_CXXFLAGS = -DCOMPILED_WITH_RCPP -O3
 PKG_CPPFLAGS = -Isrc -Ivendor
+PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")

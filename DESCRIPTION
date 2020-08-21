@@ -9,8 +9,8 @@ Description: RCpp implementation of (https://doi.org/10.1214/19-AOAS1255)
 License: LGPLv2.1 or later
 RoxygenNote: 7.1.0
 LinkingTo: 
-    Rcpp, RcppEigen, BH
+    Rcpp, RcppParallel, RcppEigen, BH
 Imports: 
-    Rcpp, RcppEigen, BH
-SystemRequirements: C++14
+    Rcpp, RcppParallel, RcppEigen, BH
+SystemRequirements: C++14, GNU make
 Encoding: UTF-8

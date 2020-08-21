@@ -21,12 +21,13 @@
 #define SGMWSMC_COUNTER_H
 
 #include <algorithm>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <vector>
 #include <utility>
-#include <boost/container_hash/hash.hpp>
+#include <tbb/tbb.h>
 
 #ifdef NDEBUG
 #include <parallel_hashmap/phmap.h>
@@ -59,9 +60,7 @@ bool compare(const std::pair<T, V> *lhs, const std::pair<T, V> *rhs) {
  * @author Terry Chen <ty6chen@uwaterloo.ca>
  */
 
-template<typename T,
-         typename Count = double,
-         typename Hash = boost::hash<T>>
+template<typename T, typename Count = double, typename Hash = std::hash<T>>
 class Counter
 {
 public:
@@ -69,13 +68,13 @@ public:
     using mapped_type = Count;
     using value_type = std::pair<const T &, mapped_type>;
 #ifdef NDEBUG
-    using map_type = phmap::flat_hash_map<key_type, mapped_type, Hash>;
+    using map_type = phmap::parallel_flat_hash_map<key_type, mapped_type, Hash>;
 #else
     using map_type = std::unordered_map<key_type, mapped_type, Hash>;
 #endif
 
 private:
-    size_t m_current_mod_count = 1;
+    tbb::atomic<size_t> m_current_mod_count { 1 };
     mutable size_t m_sorted_pairs_mod_count = 0;
     mutable size_t m_total_count_mod_count = 0;
     mutable std::vector<const std::pair<const key_type, mapped_type> *> m_cache_sorted_pairs;
@@ -150,7 +149,7 @@ public:
     }
 
     void set(const key_type &key, mapped_type count) {
-        m_entries[key] = count;
+        m_entries.insert_or_assign(key, count);
         ++m_current_mod_count;
     }
 
@@ -174,7 +173,7 @@ public:
 
     [[nodiscard]]
     mapped_type total_count() const {
-        if (m_current_mod_count != m_total_count_mod_count) {
+        if (m_current_mod_count.load() != m_total_count_mod_count) {
             auto total = 0.0;
             for (const auto &p : m_entries) {
                 total += p.second;
@@ -261,7 +260,7 @@ public:
 
 private:
     void sort_into_cache() const {
-        if (m_current_mod_count != m_sorted_pairs_mod_count) {
+        if (m_current_mod_count.load() != m_sorted_pairs_mod_count) {
             std::vector<const std::pair<const key_type, mapped_type> *> vec(m_entries.size());
             auto i = 0;
             for (const auto &p : m_entries) {

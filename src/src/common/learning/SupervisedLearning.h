@@ -29,7 +29,7 @@
 #include <utility>
 #include <Eigen/Dense>
 #include <parallel_hashmap/phmap.h>
-#include <LBFGS.h>
+#include <tbb/tbb.h>
 
 #include "utils/debug.h"
 #include "utils/types.h"
@@ -92,44 +92,49 @@ class ObjectiveFunction
 public:
     explicit ObjectiveFunction(Command<F, NodeType> &command) : m_command(command) {}
 
-    ObjectiveFunction(Command<F, NodeType> &command, size_t n)
-        : m_command(command), m_curr_x(Eigen::VectorXd::Zero(n)) {}
-
     bool requires_computation(const Eigen::VectorXd &x) {
         return m_curr_x.rows() == 0 || x != m_curr_x;
     }
 
     double value_at(const Eigen::VectorXd &x) {
-        if (!requires_computation(x)) return -1 * m_log_density;
-
-        Timers::start("value_at");
+        if (!requires_computation(x)) {
+            return -1 * m_log_density;
+        }
 
         if (m_curr_x.rows() == 0 || std::isnan(x(0)))
             m_curr_x = x;
 
-        m_log_density = 0.0;
         Counter<F> params;
         for (auto i = 0l, r = x.rows(); i < r; ++i) {
             m_log_gradient.set(m_command.get().indexer().i2o(i), 0.0);
             params.set(m_command.get().indexer().i2o(i), x(i));
         }
 
-        // TODO: implement parallelization
         auto model = MultinomialLogisticModel<F, NodeType>(m_command.get().feature_extractor(), params);
 
-        Timers::reset("value_at_loop");
-        for (const auto &instance : m_latent_decisions) {
-            Timers::start("value_at_loop");
-            auto ret = detail::evaluate(model, instance);
-            m_log_density += ret.first;
-            m_log_gradient.increment_all(ret.second);
-            Timers::end("value_at_loop");
-            Timers::save("value_at_loop");
+        if (SupervisedLearningConfig::parallel) {
+            auto log_density = tbb::make_atomic(0.0);
+
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_latent_decisions.size()), [&](const auto &r) {
+                for (auto i = r.begin(); i != r.end(); ++i) {
+                    auto ret = detail::evaluate(model, m_latent_decisions[i]);
+                    double new_density, old_density;
+                    do {
+                        old_density = log_density;
+                        new_density = old_density + ret.first;
+                    } while (log_density.compare_and_swap(new_density, old_density) != old_density);
+                    m_log_gradient.increment_all(ret.second);
+                }
+            });
+
+            m_log_density = log_density;
+        } else {
+            for (const auto &instance : m_latent_decisions) {
+                auto ret = detail::evaluate(model, instance);
+                m_log_density += ret.first;
+                m_log_gradient.increment_all(ret.second);
+            }
         }
-
-        Timers::end("value_at");
-
-        sgm::logger << Timers::diff("value_at") << "ms    " << Timers::mean("value_at_loop") << "ms\n";
 
         return -1 * m_log_density;
     }

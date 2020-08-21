@@ -47,11 +47,11 @@ void performance_timer::end() {
 
 std::chrono::high_resolution_clock::duration::rep performance_timer::elapsed() const {
     auto end = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(end - m_start).count();
 }
 
 std::chrono::high_resolution_clock::duration::rep performance_timer::diff() const {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(m_end - m_start).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(m_end - m_start).count();
 }
 
 static std::unordered_map<std::string, sgm::performance_timer> performance_timers;

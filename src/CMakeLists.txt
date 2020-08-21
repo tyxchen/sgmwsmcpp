@@ -15,7 +15,7 @@ file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp" "src/*.h")
 
 add_executable(sgmwsmc ${SOURCES})
 target_include_directories(sgmwsmc SYSTEM PRIVATE ${Boost_INCLUDE_DIRS} "vendor")
-target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)
+target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads tbb)
 
 set($ENV{CPLUS_INCLUDE_PATH} "${Boost_INCLUDE_DIRS}:vendor")
 
@@ -45,7 +45,7 @@ add_executable(test
         "test/utils.container.vector_list.cpp")
 
 target_include_directories(test PRIVATE ${Boost_INCLUDE_DIRS} "vendor")
-target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads)
+target_link_libraries(test PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::Threads tbb)
 
 include_directories(sgmwsmc "src/")
 include_directories(test "src/" "test/")

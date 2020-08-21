@@ -43,7 +43,7 @@ public:
     using object_type = T;
     using index_type = size_t;
 #ifdef NDEBUG
-    using map_type = phmap::flat_hash_map<object_type, index_type, Hash>;
+    using map_type = phmap::parallel_flat_hash_map<object_type, index_type, Hash>;
 #else
     using map_type = std::unordered_map<object_type, index_type, Hash>;
 #endif
