@@ -126,14 +126,17 @@ public:
                     double new_density, old_density;
                     do {
                         old_density = log_density;
+                        // if the old value is nan, any op will also result in nan, but the comparison will fail, so
+                        // we break out of the loop early.
+                        if (std::isnan(old_density)) break;
                         new_density = old_density + ret.first;
                     } while (log_density.compare_and_swap(new_density, old_density) != old_density);
 
                     if (i < detail::counter_pool_max) {
-                        // something existed here before, destroy it first
-                        detail::counter_pool[i].~Counter<std::string>();
+                        detail::counter_pool[i] = std::move(ret.second);
+                    } else {
+                        new(detail::counter_pool + i) Counter<F>(std::move(ret.second));
                     }
-                    new(detail::counter_pool + i) Counter<F>(std::move(ret.second));
                 }
             });
 
@@ -145,6 +148,7 @@ public:
 
             m_log_density = log_density;
         } else {
+            m_log_density = 0.0;
             for (const auto &instance : m_latent_decisions) {
                 auto ret = detail::evaluate(model, instance);
                 m_log_density += ret.first;

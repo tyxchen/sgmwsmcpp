@@ -71,7 +71,7 @@ public:
                 step_size *= step_size_multiplier;
                 if (step_size < EPS) {
                     sgm::logger << "BacktrackingLineSearcher::minimize: step_size underflow.\n";
-                    return guess;
+                    return initial;
                 }
             }
         }

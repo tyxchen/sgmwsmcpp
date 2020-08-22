@@ -141,7 +141,6 @@ int main(int argc, char** argv) {
 
     Timers::end("__main__");
     sgm::logger << "Ran in " << Timers::diff("__main__") / 1000 << "ms" << std::endl;
-    sgm::logger << "~GMS mean " << Timers::mean("__gms__") << "ns" << std::endl;
 
     return 0;
 }
