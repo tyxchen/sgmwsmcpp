@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <Eigen/Dense>
 #include <parallel_hashmap/phmap.h>
@@ -73,6 +74,9 @@ std::pair<double, Counter<F>> evaluate(MultinomialLogisticModel<F, NodeType> &mo
     return std::make_pair(state.log_density(), std::move(state.log_gradient()));
 }
 
+static Counter<std::string> *counter_pool = nullptr;
+static size_t counter_pool_max = 0;
+
 }
 
 template <typename F, typename NodeType>
@@ -114,8 +118,9 @@ public:
 
         if (SupervisedLearningConfig::parallel) {
             auto log_density = tbb::make_atomic(0.0);
+            auto ld_size = m_latent_decisions.size();
 
-            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_latent_decisions.size()), [&](const auto &r) {
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, ld_size), [&](const auto &r) {
                 for (auto i = r.begin(); i != r.end(); ++i) {
                     auto ret = detail::evaluate(model, m_latent_decisions[i]);
                     double new_density, old_density;
@@ -123,9 +128,20 @@ public:
                         old_density = log_density;
                         new_density = old_density + ret.first;
                     } while (log_density.compare_and_swap(new_density, old_density) != old_density);
-                    m_log_gradient.increment_all(ret.second);
+
+                    if (i < detail::counter_pool_max) {
+                        // something existed here before, destroy it first
+                        detail::counter_pool[i].~Counter<std::string>();
+                    }
+                    new(detail::counter_pool + i) Counter<F>(std::move(ret.second));
                 }
             });
+
+            detail::counter_pool_max = std::max(detail::counter_pool_max, ld_size);
+
+            for (auto i = 0u; i < ld_size; ++i) {
+                m_log_gradient.increment_all(detail::counter_pool[i]);
+            }
 
             m_log_density = log_density;
         } else {
@@ -290,6 +306,14 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
     param_trajectory.emplace_back(w);
 #endif
 
+    if (SupervisedLearningConfig::parallel) {
+        static_assert(std::is_same<F, std::string>::value, "Counter pool not implemented for counter type");
+        if (detail::counter_pool != nullptr) {
+            throw sgm::runtime_error("Counter pool is in use; cannot reallocate to it");
+        }
+        detail::counter_pool = static_cast<Counter<F> *>(operator new(num_implicit_particles * sizeof(Counter<F>)));
+    }
+
     while (!converged && iter < max_iter) {
         ObjectiveFunction<F, NodeType> objective(command);
 
@@ -366,6 +390,14 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
         params_output << p.format(eigen_fmt) << "\n";
     }
 #endif
+
+    if (SupervisedLearningConfig::parallel) {
+        for (auto i = 0ul; i < detail::counter_pool_max; ++i) {
+            detail::counter_pool[i].~Counter<std::string>();
+        }
+        operator delete(detail::counter_pool);
+        detail::counter_pool = nullptr;
+    }
 
     return std::make_pair(nllk, w);
 }
