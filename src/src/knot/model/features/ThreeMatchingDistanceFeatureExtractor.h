@@ -83,7 +83,7 @@ public:
     using counter_type = typename base_class::counter_type;
 
 private:
-    counter_type _extract_features(const node_type &node, const edge_type &decision) override {
+    counter_type _extract_features(const node_type &node, const edge_type &decision) const override {
         using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
         auto f = _default_parameters();
 
@@ -104,7 +104,7 @@ private:
         return f;
     }
 
-    counter_type _extract_features(const edge_type &e) override {
+    counter_type _extract_features(const edge_type &e) const override {
         using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
         auto f = _default_parameters();
 

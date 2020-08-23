@@ -135,7 +135,7 @@ void extract_features_3_legacy(const AreaFeatureExtractor::node_type &node1,
 }
 
 AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const node_type &node,
-                                                                           const edge_type &decision) {
+                                                                           const edge_type &decision) const {
     auto f = _default_parameters();
 
     if (decision->size() == 1) {
@@ -148,7 +148,7 @@ AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const
     return f;
 }
 
-AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const edge_type &e) {
+AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const edge_type &e) const {
     auto f = _default_parameters();
 
     if (e->size() == 2) {

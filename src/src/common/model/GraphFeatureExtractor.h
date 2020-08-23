@@ -36,11 +36,11 @@ public:
     using edge_type = edge_type_base<NodeType>;
     using counter_type = Counter<F>;
 
-    counter_type extract_features(const node_type &node, const edge_type &decision) {
+    counter_type extract_features(const node_type &node, const edge_type &decision) const {
         return _extract_features(node, decision);
     }
 
-    counter_type extract_features(const edge_type &e) {
+    counter_type extract_features(const edge_type &e) const {
         return _extract_features(e);
     }
 
@@ -59,9 +59,9 @@ public:
     virtual ~GraphFeatureExtractor() = default;
 
 private:
-    virtual counter_type _extract_features(const node_type &node, const edge_type &decision) = 0;
+    virtual counter_type _extract_features(const node_type &node, const edge_type &decision) const = 0;
 
-    virtual counter_type _extract_features(const edge_type &e) = 0;
+    virtual counter_type _extract_features(const edge_type &e) const = 0;
 
     virtual counter_type _default_parameters() const = 0;
 

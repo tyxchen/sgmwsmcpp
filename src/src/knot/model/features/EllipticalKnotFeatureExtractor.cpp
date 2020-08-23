@@ -21,8 +21,8 @@
 
 using namespace sgm;
 
-EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_extract_features(const node_type &node,
-                                                                                               const edge_type &decision) {
+EllipticalKnotFeatureExtractor::counter_type
+EllipticalKnotFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision) const {
     counter_type f;
 
     auto distance_features = m_distance_fe.extract_features(node, decision);
@@ -43,7 +43,8 @@ EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_ex
     return f;
 }
 
-EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) {
+EllipticalKnotFeatureExtractor::counter_type
+EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) const {
     auto f = m_distance_fe.extract_features(e);
 
     f.increment_all(m_area_fe.extract_features(e));
