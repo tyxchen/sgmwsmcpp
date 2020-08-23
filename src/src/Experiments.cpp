@@ -132,7 +132,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         auto transition_density = smc::GenericMatchingLatentSimulator<string_t, EllipticalKnot>(command,
                                                                                                 initial_state,
                                                                                                 false, true);
-        auto observation_density = smc::ExactProposalObservationDensity<string_t, EllipticalKnot>(command);
+        auto observation_density = smc::ExactProposalObservationDensity<string_t, EllipticalKnot>();
 
         auto smc = smc::SequentialGraphMatchingSampler<string_t, EllipticalKnot>(transition_density,
                                                                                  observation_density,

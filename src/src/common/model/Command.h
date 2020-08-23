@@ -46,6 +46,10 @@ public:
     Command(GraphFeatureExtractor<F, NodeType> &fe)
         : m_fe(fe), m_params(fe.default_parameters()), m_indexer(m_params.keys()) {}
 
+    const Indexer<F> &indexer() const {
+        return m_indexer;
+    }
+
     Indexer<F> &indexer() {
         return m_indexer;
     }
@@ -57,12 +61,20 @@ public:
         state.sample_next_state(random, *this, use_sequential_sampling, use_exact_sampling);
     }
 
-    MultinomialLogisticModel<F, NodeType> current_model() {
+    MultinomialLogisticModel<F, NodeType> current_model() const {
         return MultinomialLogisticModel<F, NodeType>(m_fe.get(), m_params);
+    }
+
+    const GraphFeatureExtractor<F, NodeType> &feature_extractor() const {
+        return m_fe;
     }
 
     GraphFeatureExtractor<F, NodeType> &feature_extractor() {
         return m_fe;
+    }
+
+    const Counter<F> &model_parameters() const {
+        return m_params;
     }
 
     Counter<F> &model_parameters() {

@@ -41,16 +41,15 @@ namespace smc
 template <typename F, typename NodeType>
 class SequentialGraphMatchingSampler
 {
-    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
-    std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<const GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<const ObservationDensity<F, NodeType>> m_observation_density;
     std::reference_wrapper<const std::vector<node_type_base<NodeType>>> m_emissions;
-    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> m_samples;
 
     bool m_use_SPF = true;
 
 public:
-    SequentialGraphMatchingSampler(GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                                   ObservationDensity<F, NodeType> &observation_density,
+    SequentialGraphMatchingSampler(const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
+                                   const ObservationDensity<F, NodeType> &observation_density,
                                    const std::vector<node_type_base<NodeType>> &emissions,
                                    bool use_SPF)
         : m_transition_density(transition_density),
@@ -59,7 +58,7 @@ public:
           m_use_SPF(use_SPF) {}
 
     double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles,
-                  std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) {
+                  std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) const {
         auto logZ = -std::numeric_limits<double>::infinity();
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
@@ -76,14 +75,6 @@ public:
             throw sgm::runtime_error("Using non-streaming particle filter SMC is not yet supported.");
         }
         return logZ;
-    }
-
-    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles) {
-        return sample(seed, num_concrete_particles, max_virtual_particles, m_samples);
-    }
-
-    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples() {
-        return m_samples;
     }
 };
 

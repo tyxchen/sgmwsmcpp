@@ -71,7 +71,7 @@ public:
 //        sgm::logger << "ObservationDensity::m_target_state\n" << m_target_state << "\n------------\n";
     }
 
-    double _log_density(const latent_type &latent, const node_type &emission) override {
+    double _log_density(const latent_type &latent, const node_type &emission) const override {
         if (!detail::in_support(latent->node_to_edge_view(), m_target_state)) {
             return -std::numeric_limits<double>::infinity();
         }
@@ -79,7 +79,7 @@ public:
     }
 
     double _log_weight_correction(const latent_type &cur_latent,
-                                  const latent_type &old_latent) override {
+                                  const latent_type &old_latent) const override {
         /*
         auto num_parents = cur_latent->num_parents();
         return -std::log(num_parents) - cur_latent->log_forward_proposal();

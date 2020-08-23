@@ -36,22 +36,22 @@ struct ObservationDensity
     using edge_type = edge_type_base<NodeType>;
     using latent_type = std::shared_ptr<GraphMatchingState<F, NodeType>>;
 
-    double log_density(const latent_type &latent, const node_type &emission) {
+    double log_density(const latent_type &latent, const node_type &emission) const {
         return _log_density(latent, emission);
     }
 
     double log_weight_correction(const latent_type &cur_latent,
-                                 const latent_type &old_latent) {
+                                 const latent_type &old_latent) const {
         return _log_weight_correction(cur_latent, old_latent);
     }
 
     virtual ~ObservationDensity() = default;
 
 private:
-    virtual double _log_density(const latent_type &latent, const node_type &emission) = 0;
+    virtual double _log_density(const latent_type &latent, const node_type &emission) const = 0;
 
     virtual double _log_weight_correction(const latent_type &cur_latent,
-                                          const latent_type &old_latent) = 0;
+                                          const latent_type &old_latent) const = 0;
 };
 
 }

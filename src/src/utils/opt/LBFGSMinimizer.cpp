@@ -45,7 +45,7 @@ void LBFGSMinimizer::update_histories(const Eigen::VectorXd &guess, const Eigen:
     push_onto_list(gradient_change, gradient_difference_vector_list);
 }
 
-void LBFGSMinimizer::push_onto_list(Eigen::VectorXd vector, std::deque<Eigen::VectorXd> &vector_list) {
+void LBFGSMinimizer::push_onto_list(Eigen::VectorXd vector, std::deque<Eigen::VectorXd> &vector_list) const {
     vector_list.emplace_front(std::move(vector));
     if (vector_list.size() > max_history_size) {
         vector_list.pop_back();

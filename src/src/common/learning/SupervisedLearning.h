@@ -59,7 +59,7 @@ namespace detail
 {
 
 template <typename F, typename NodeType>
-std::pair<double, Counter<F>> evaluate(MultinomialLogisticModel<F, NodeType> &model,
+std::pair<double, Counter<F>> evaluate(const MultinomialLogisticModel<F, NodeType> &model,
                                        const std::pair<std::vector<edge_type_base<NodeType>>,
                                                        std::vector<node_type_base<NodeType>>> &instance) {
     const auto &permutation = instance.second;
@@ -181,7 +181,7 @@ public:
 //        return -m_log_density;
 //    }
 
-    std::pair<double, double> compute_variance(Eigen::VectorXd &w) {
+    std::pair<double, double> compute_variance(const Eigen::VectorXd &w) {
         m_command.get().update_model_parameters(w);
 
         std::vector<double> stats;
@@ -231,7 +231,7 @@ void generate_samples(
     Random::seed_type seed,
     const std::pair<std::vector<edge_type_base<NodeType>>, std::vector<node_type_base<NodeType>>> &instance,
     const std::shared_ptr<GraphMatchingState<F, NodeType>> &initial,
-    Command<F, NodeType> &command,
+    const Command<F, NodeType> &command,
     int num_concrete_particles,
     int max_virtual_particles,
     bool use_SPF,

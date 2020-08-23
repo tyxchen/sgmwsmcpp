@@ -42,17 +42,13 @@ public:
     using edge_type = typename ObservationDensity<F, NodeType>::edge_type;
     using latent_type = typename ObservationDensity<F, NodeType>::latent_type;
 
-    explicit ExactProposalObservationDensity(Command<F, NodeType> &command) : m_command(command) {}
-
 private:
-    std::reference_wrapper<Command<F, NodeType>> m_command;
-
-    double _log_density(const latent_type &latent, const node_type &emission) override {
+    double _log_density(const latent_type &latent, const node_type &emission) const override {
         return latent->log_density();
     }
 
     double _log_weight_correction(const latent_type &cur_latent,
-                                  const latent_type &old_latent) override {
+                                  const latent_type &old_latent) const override {
         auto num_parents = cur_latent->num_parents();
         return -1 * std::log(num_parents) - cur_latent->log_forward_proposal();
     }

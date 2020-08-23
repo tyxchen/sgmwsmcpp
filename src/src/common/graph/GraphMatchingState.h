@@ -59,7 +59,7 @@ private:
     Counter<F> m_log_gradient;
 
     std::pair<double, double> sample_decision(Random &random,
-                                              MultinomialLogisticModel<F, NodeType> &model,
+                                              const MultinomialLogisticModel<F, NodeType> &model,
                                               const node_type &node,
                                               bool use_exact_sampling) {
         // TODO: make sure this works correctly
@@ -160,7 +160,7 @@ public:
 //        const map_t<node_type, set_t<node_type>> &final_state) {
 //    }
 
-    void evaluate_decision(const edge_type &decision, MultinomialLogisticModel<F, NodeType> &model) {
+    void evaluate_decision(const edge_type &decision, const MultinomialLogisticModel<F, NodeType> &model) {
         auto log_norm = -std::numeric_limits<double>::infinity();
         Counter<F> suff;
         Counter<F> features;
@@ -209,8 +209,7 @@ public:
                 m_matchings.erase(d);
                 m_matchings.emplace(new_edge);
                 m_log_density += ret.first;
-                // TODO: could be a move
-                features = ret.second;
+                features = std::move(ret.second);
             }
         }
 
@@ -273,7 +272,7 @@ public:
 //    }
 
     double sample_next_state(Random &random,
-                             Command<F, NodeType> &command,
+                             const Command<F, NodeType> &command,
                              bool use_sequential_sampling, bool use_exact_sampling) {
         auto idx = 0;
         if (!use_sequential_sampling) {

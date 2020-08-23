@@ -53,16 +53,16 @@ class StreamingBootstrapProposal : public Proposal<std::shared_ptr<GraphMatching
     emissions_type m_old_emission;
     std::vector<latent_type> const * m_old_latents;
 
-    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
-    std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<const GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<const ObservationDensity<F, NodeType>> m_observation_density;
 
 public:
     StreamingBootstrapProposal(int seed,
                                emissions_type cur_emission,
                                emissions_type old_emission,
                                std::vector<latent_type> const * old_latents,
-                               GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                               ObservationDensity<F, NodeType> &observation_density)
+                               const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
+                               const ObservationDensity<F, NodeType> &observation_density)
         : m_seed(seed), m_random(seed * 171),
           m_permutation_stream(old_latents != nullptr ? old_latents->size() : 0, m_random),
           m_cur_emission(std::move(cur_emission)), m_old_emission(std::move(old_emission)),
@@ -70,8 +70,8 @@ public:
           m_transition_density(transition_density), m_observation_density(observation_density) {}
 
     StreamingBootstrapProposal(int seed, emissions_type cur_emission,
-                               GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                               ObservationDensity<F, NodeType> &observation_density)
+                               const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
+                               const ObservationDensity<F, NodeType> &observation_density)
         : StreamingBootstrapProposal(seed, std::move(cur_emission), nullptr, nullptr, transition_density,
             observation_density) {}
 
@@ -106,7 +106,7 @@ private:
         return std::make_pair(log_weight, std::move(cur_latent));
     }
 
-    StreamingBootstrapProposal<F, NodeType> _restart() override {
+    StreamingBootstrapProposal<F, NodeType> _restart() const override {
         return StreamingBootstrapProposal(m_seed, m_cur_emission, m_old_emission, m_old_latents,
                                           m_transition_density, m_observation_density);
     }
@@ -118,16 +118,16 @@ class StreamingParticleFilter
     using latent_type = std::shared_ptr<GraphMatchingState<F, NodeType>>;
     using emissions_type = node_type_base<NodeType>;
 
-    std::reference_wrapper<GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
-    std::reference_wrapper<ObservationDensity<F, NodeType>> m_observation_density;
+    std::reference_wrapper<const GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
+    std::reference_wrapper<const ObservationDensity<F, NodeType>> m_observation_density;
     std::reference_wrapper<const std::vector<emissions_type>> m_emissions;
     Random m_random { 1 };
 
     PropagatorOptions m_options;
 
 public:
-    StreamingParticleFilter(GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                            ObservationDensity<F, NodeType> &observation_density,
+    StreamingParticleFilter(const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
+                            const ObservationDensity<F, NodeType> &observation_density,
                             const std::vector<emissions_type> &emissions,
                             Random random)
         : m_transition_density(transition_density), m_observation_density(observation_density),
@@ -140,7 +140,7 @@ public:
 private:
     StreamingBootstrapProposal<F, NodeType> initial_distribution_proposal() {
         return StreamingBootstrapProposal<F, NodeType>(
-            m_random(), m_emissions.get()[0], m_transition_density, m_observation_density
+            m_random(), m_emissions.get()[0], m_transition_density.get(), m_observation_density.get()
         );
     }
 

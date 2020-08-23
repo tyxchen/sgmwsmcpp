@@ -104,7 +104,7 @@ private:
     void update_histories(const Eigen::VectorXd &guess, const Eigen::VectorXd &next_guess,
                           const Eigen::VectorXd &gradient, const Eigen::VectorXd &next_gradient);
 
-    void push_onto_list(Eigen::VectorXd vector, std::deque<Eigen::VectorXd> &vector_list);
+    void push_onto_list(Eigen::VectorXd vector, std::deque<Eigen::VectorXd> &vector_list) const;
 
     Eigen::VectorXd implicit_multiply(const Eigen::VectorXd &initial_inverse_hessian_diagonal,
                                       const Eigen::VectorXd &gradient) const;

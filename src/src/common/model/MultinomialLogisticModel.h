@@ -43,18 +43,18 @@ public:
     using edge_type = edge_type_base<NodeType>;
 
 private:
-    std::reference_wrapper<GraphFeatureExtractor<F, NodeType>> m_fe;
-    std::reference_wrapper<Counter<F>> m_params;
+    std::reference_wrapper<const GraphFeatureExtractor<F, NodeType>> m_fe;
+    std::reference_wrapper<const Counter<F>> m_params;
 
 public:
-    MultinomialLogisticModel(GraphFeatureExtractor<F, NodeType> &fe, Counter<F> &params)
+    MultinomialLogisticModel(const GraphFeatureExtractor<F, NodeType> &fe, const Counter<F> &params)
         : m_fe{fe}, m_params{params} {
         if (m_fe.get().dim() != m_params.get().size()) {
             throw std::runtime_error("Feature and parameter dimensions do not match.");
         }
     }
 
-    std::pair<double, Counter<F>> log_prob(const node_type &node, const edge_type &decision) {
+    std::pair<double, Counter<F>> log_prob(const node_type &node, const edge_type &decision) const {
         auto features = m_fe.get().extract_features(node, decision);
         auto prob = 0.0;
         for (const auto &f : features) {

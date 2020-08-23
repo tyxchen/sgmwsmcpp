@@ -47,13 +47,13 @@ public:
         return m_num_calls;
     }
 
-    Derived restart() {
+    Derived restart() const {
         return _restart();
     }
 
-    bool has_next_log_weight_sample_pair() {
-        return _has_next_log_weight_sample_pair();
-    }
+//    bool has_next_log_weight_sample_pair() const {
+//        return _has_next_log_weight_sample_pair();
+//    }
 
     virtual ~Proposal() = default;
 
@@ -62,10 +62,10 @@ private:
     virtual double _next_log_weight() {
         return _next_log_weight_sample_pair().first;
     }
-    virtual Derived _restart() = 0;
-    virtual bool _has_next_log_weight_sample_pair() {
-        return true;
-    }
+    virtual Derived _restart() const = 0;
+//    virtual bool _has_next_log_weight_sample_pair() const {
+//        return true;
+//    }
 };
 
 }

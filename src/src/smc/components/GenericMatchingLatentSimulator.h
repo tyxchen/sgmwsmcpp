@@ -35,26 +35,25 @@ namespace smc
 template <typename F, typename NodeType>
 class GenericMatchingLatentSimulator
 {
-    std::reference_wrapper<Command<F, NodeType>> m_command;
+    std::reference_wrapper<const Command<F, NodeType>> m_command;
     std::shared_ptr<GraphMatchingState<F, NodeType>> m_initial;
     bool m_use_sequential_sampling = true;
     bool m_use_exact_sampling = true;
 
 public:
-    GenericMatchingLatentSimulator(Command<F, NodeType> &command,
+    GenericMatchingLatentSimulator(const Command<F, NodeType> &command,
                                    const std::shared_ptr<GraphMatchingState<F, NodeType>> &initial,
                                    bool use_sequential_sampling,
                                    bool use_exact_sampling)
         : m_command(command), m_initial(initial),
           m_use_sequential_sampling(use_sequential_sampling), m_use_exact_sampling(use_exact_sampling) {}
 
-    std::shared_ptr<GraphMatchingState<F, NodeType>> sample_initial(Random &random) {
+    std::shared_ptr<GraphMatchingState<F, NodeType>> sample_initial(Random &random) const {
         return sample_forward_transition(random, m_initial);
     }
 
-    std::shared_ptr<GraphMatchingState<F, NodeType>> sample_forward_transition(Random &random,
-                                                              const std::shared_ptr<GraphMatchingState<F, NodeType>>
-                                                                  &state) {
+    std::shared_ptr<GraphMatchingState<F, NodeType>>
+    sample_forward_transition(Random &random, const std::shared_ptr<GraphMatchingState<F, NodeType>> &state) const {
         auto next = std::make_shared<GraphMatchingState<F, NodeType>>(*state);
         next->sample_next_state(random, m_command.get(), m_use_sequential_sampling, m_use_exact_sampling);
         return next;
