@@ -52,6 +52,6 @@ double smc::CompactPopulation::logZ_estimate() const {
 
 void smc::CompactPopulation::clear() {
     m_num_particles = 0;
-    m_log_sum = -std::numeric_limits<double>::infinity();
-    m_log_sum_of_squares = -std::numeric_limits<double>::infinity();
+    m_log_sum = Consts::NEGATIVE_INFINITY;
+    m_log_sum_of_squares = Consts::NEGATIVE_INFINITY;
 }

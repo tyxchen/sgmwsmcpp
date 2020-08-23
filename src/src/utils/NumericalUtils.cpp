@@ -29,7 +29,7 @@ double NumericalUtils::log_add(double x, double y) {
         std::swap(x, y);
     }
     // now x is bigger
-    if (x == -std::numeric_limits<double>::infinity()) {
+    if (x == Consts::NEGATIVE_INFINITY) {
         return x;
     }
     auto neg_diff = y - x;

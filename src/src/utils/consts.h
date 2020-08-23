@@ -17,41 +17,25 @@
 // Boston, MA  02110-1301, USA.
 //
 
-#ifndef SGMWSMCPP_COMPACTPOPULATION_H
-#define SGMWSMCPP_COMPACTPOPULATION_H
+#ifndef SGMWSMCPP_CONSTS_H
+#define SGMWSMCPP_CONSTS_H
 
-#include <cstddef>
-
-#include "utils/consts.h"
+#include <limits>
 
 namespace sgm
 {
-namespace smc
+
+namespace Consts
 {
 
-class CompactPopulation
-{
-    size_t m_num_particles = 0;
-    double m_log_sum = Consts::NEGATIVE_INFINITY;
-    double m_log_sum_of_squares = Consts::NEGATIVE_INFINITY;
+static constexpr double POSITIVE_INFINITY = std::numeric_limits<double>::infinity();
 
-public:
-    size_t num_particles() const;
+static constexpr double NEGATIVE_INFINITY = -POSITIVE_INFINITY;
 
-    double log_sum() const;
-
-    double log_sum_of_squares() const;
-
-    void insert_log_weight(double log_weight);
-
-    double ess() const;
-
-    double logZ_estimate() const;
-
-    void clear();
-};
+static constexpr double PI = 3.141592653589793238462643383279502884;
 
 }
+
 }
 
-#endif //SGMWSMCPP_COMPACTPOPULATION_H
+#endif //SGMWSMCPP_CONSTS_H

@@ -21,11 +21,11 @@
 #define SGMWSMCPP_SEQUENTIALGRAPHMATCHINGSAMPLER_H
 
 #include <functional>
-#include <limits>
 #include <memory>
 #include <vector>
 
 #include "utils/types.h"
+#include "utils/consts.h"
 #include "utils/debug.h"
 #include "utils/Random.h"
 #include "smc/components/GenericMatchingLatentSimulator.h"
@@ -59,7 +59,7 @@ public:
 
     double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles,
                   std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) const {
-        auto logZ = -std::numeric_limits<double>::infinity();
+        auto logZ = Consts::NEGATIVE_INFINITY;
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
                                                      Random(seed));

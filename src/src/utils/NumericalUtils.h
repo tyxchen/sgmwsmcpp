@@ -21,7 +21,7 @@
 #define SGMWSMCPP_NUMERICALUTILS_H
 
 #include <cmath>
-#include <limits>
+#include "utils/consts.h"
 
 namespace sgm
 {
@@ -32,7 +32,7 @@ double log_add(double x, double y);
 
 template <typename ForwardIterator>
 double log_add(ForwardIterator begin, ForwardIterator end) {
-    auto max = -std::numeric_limits<double>::infinity();
+    auto max = Consts::NEGATIVE_INFINITY;
     auto max_index = 0;
     auto it = begin;
     auto i = 0;
@@ -42,7 +42,7 @@ double log_add(ForwardIterator begin, ForwardIterator end) {
             max_index = i;
         }
     }
-    if (max == -std::numeric_limits<double>::infinity()) return max;
+    if (max == Consts::NEGATIVE_INFINITY) return max;
     // compute the negative difference
     auto threshold = max - 20;
     auto sum_negative_diffs = 0.0;

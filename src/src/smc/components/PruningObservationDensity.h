@@ -20,10 +20,10 @@
 #ifndef SGMWSMCPP_PRUNINGOBSERVATIONDENSITY_H
 #define SGMWSMCPP_PRUNINGOBSERVATIONDENSITY_H
 
-#include <limits>
 #include <vector>
 
 #include "utils/debug.h"
+#include "utils/consts.h"
 #include "utils/types.h"
 #include "smc/ObservationDensity.h"
 #include "common/graph/GraphMatchingState.h"
@@ -73,7 +73,7 @@ public:
 
     double _log_density(const latent_type &latent, const node_type &emission) const override {
         if (!detail::in_support(latent->node_to_edge_view(), m_target_state)) {
-            return -std::numeric_limits<double>::infinity();
+            return Consts::NEGATIVE_INFINITY;
         }
         return 0;
     }

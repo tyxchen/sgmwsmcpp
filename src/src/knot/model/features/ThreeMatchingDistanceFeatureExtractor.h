@@ -22,9 +22,9 @@
 
 #include <cmath>
 #include <array>
-#include <limits>
 
 #include "utils/types.h"
+#include "utils/consts.h"
 #include "common/model/GraphFeatureExtractor.h"
 #include "knot/data/EllipticalKnot.h"
 #include "knot/model/features/DistanceFeatureExtractor.h"
@@ -53,7 +53,7 @@ void extract_features_3(const node_type_base<NodeType> &node1,
     using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
     constexpr size_t N = 3;
 
-    auto max_dist = 0.0, min_dist = std::numeric_limits<double>::infinity();
+    auto max_dist = 0.0, min_dist = Consts::POSITIVE_INFINITY;
     std::array<const node_type_base<NodeType> *, N> nodes { &node1, &node2, &node3 };
 
     for (auto i = 0u; i < N; ++i) {

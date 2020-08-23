@@ -20,6 +20,7 @@
 #include "Experiments.h"
 
 #include "utils/debug.h"
+#include "utils/consts.h"
 #include "utils/types.h"
 #include "knot/data/EllipticalKnot.h"
 #include "common/learning/SupervisedLearning.h"
@@ -147,7 +148,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
         sgm::logger << "Run time: " << Timers::diff("testing data") / 1000 << "ms\n";
 
-        auto best_log_density = -std::numeric_limits<double>::infinity();
+        auto best_log_density = Consts::NEGATIVE_INFINITY;
         auto best_sample = samples[0];
 
         for (auto &sample : samples) {

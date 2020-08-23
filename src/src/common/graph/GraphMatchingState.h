@@ -22,11 +22,11 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <stdexcept>
 #include <vector>
 
 #include "utils/debug.h"
+#include "utils/consts.h"
 #include "utils/types.h"
 #include "utils/NumericalUtils.h"
 #include "utils/Random.h"
@@ -80,7 +80,7 @@ private:
             // exp normalize
             auto sum = 0.0;
             auto probs = log_probs;
-            auto max_prob = -std::numeric_limits<double>::infinity();
+            auto max_prob = Consts::NEGATIVE_INFINITY;
             for (auto prob : probs) {
                 max_prob = std::max(max_prob, prob);
             }
@@ -161,7 +161,7 @@ public:
 //    }
 
     void evaluate_decision(const edge_type &decision, const MultinomialLogisticModel<F, NodeType> &model) {
-        auto log_norm = -std::numeric_limits<double>::infinity();
+        auto log_norm = Consts::NEGATIVE_INFINITY;
         Counter<F> suff;
         Counter<F> features;
 

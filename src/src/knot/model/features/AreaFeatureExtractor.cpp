@@ -29,11 +29,10 @@
 #include <Eigen/Eigenvalues>
 
 #include "utils/types.h"
+#include "utils/consts.h"
 #include "utils/debug.h"
 
 using namespace sgm;
-
-constexpr double PI = 3.141592653589793238462643383279502884;
 
 const Eigen::Vector2d e1(1.0, 0.0);
 
@@ -46,7 +45,7 @@ std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
     auto eigen = es.compute(S, true);
     auto lambdas = eigen.eigenvalues().real();
 
-    double area = PI * std::sqrt(lambdas(0)) *
+    double area = Consts::PI * std::sqrt(lambdas(0)) *
                   AreaFeatureExtractorConsts::SQRT_CRITICAL_VALUE * std::sqrt(lambdas(1)) *
                   AreaFeatureExtractorConsts::SQRT_CRITICAL_VALUE;
     // compute the rotation angle

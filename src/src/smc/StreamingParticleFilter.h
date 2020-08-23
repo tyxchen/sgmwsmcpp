@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "utils/debug.h"
+#include "utils/consts.h"
 #include "utils/types.h"
 #include "common/graph/GraphMatchingState_fwd.h"
 #include "smc/Proposal.h"
@@ -174,7 +175,7 @@ public:
 
             // This is for if no new matchings were made in this iteration.
             //  If we were to continue, we'd find all the matching states are the same, which doesn't make sense
-            if (population.log_sum() == -std::numeric_limits<double>::infinity()) {
+            if (population.log_sum() == Consts::NEGATIVE_INFINITY) {
                 throw sgm::runtime_error("Run " + std::to_string(i) + " gave no new matchings");
             }
 
