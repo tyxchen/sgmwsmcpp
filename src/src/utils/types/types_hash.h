@@ -61,20 +61,6 @@ struct hash<edge_t<T>>
 //    }
 //};
 
-/**
- * Hash the FIRST character of a const char *.
- */
-template <>
-struct hash<string_t>
-{
-public:
-    size_t operator()(const string_t &str) const noexcept {
-        // WARNING: We are assuming that the given string is null-terminated.
-        // This is OK as we ONLY use null-terminated compile-time strings, but BEWARE when extending code.
-        return str[0];
-    }
-};
-
 }
 
 #endif //SGMWSMCPP_TYPES_HASH_H

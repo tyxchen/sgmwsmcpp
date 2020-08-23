@@ -33,19 +33,19 @@ namespace sgm
 namespace EllipticalKnotFeatureNames
 {
 
-// For speed, custom hashing is done with the first character.
-static constexpr const char* X = "0_x";
-static constexpr const char* Y = "1_y";
-static constexpr const char* Z = "2_z";
-static constexpr const char* N = "3_n";
-static constexpr const char* VAR_X = "4_var_x";
-static constexpr const char* VAR_Y = "5_var_y";
-static constexpr const char* COV = "6_cov";
-static constexpr const char* BOUNDARY_AXIS0 = "7_boundary_axis0";
-static constexpr const char* BOUNDARY_AXIS1 = "8_boundary_axis1";
-static constexpr const char* YAXIS = "9_yaxis";
-static constexpr const char* ZAXIS = "a_zaxis";
-static constexpr const char* AREA_OVER_AXIS = "b_area_over_axis";
+// For speed, we provide a custom hash.
+static constexpr string_t X { "x", 1 };
+static constexpr string_t Y { "y", 2 };
+static constexpr string_t Z { "z", 3 };
+static constexpr string_t N { "n", 4 };
+static constexpr string_t VAR_X { "var_x", 5 };
+static constexpr string_t VAR_Y { "var_y", 6 };
+static constexpr string_t COV { "cov", 7 };
+static constexpr string_t BOUNDARY_AXIS0 { "boundary_axis0", 8 };
+static constexpr string_t BOUNDARY_AXIS1 { "boundary_axis1", 9 };
+static constexpr string_t YAXIS { "yaxis", 10 };
+static constexpr string_t ZAXIS { "zaxis", 11 };
+static constexpr string_t AREA_OVER_AXIS { "area_over_axis", 12 };
 
 }
 

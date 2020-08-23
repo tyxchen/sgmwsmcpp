@@ -35,8 +35,8 @@ namespace sgm
 namespace DistanceFeatureExtractorConsts
 {
 constexpr int DIM = 2;
-static constexpr const char* TWO_MATCHING_DISTANCE_1 = "A_TWO_MATCHING_DISTANCE_1";
-static constexpr const char* TWO_MATCHING_DISTANCE_2 = "B_TWO_MATCHING_DISTANCE_2";
+static constexpr string_t TWO_MATCHING_DISTANCE_1 { "TWO_MATCHING_DISTANCE_1", 201 };
+static constexpr string_t TWO_MATCHING_DISTANCE_2 { "TWO_MATCHING_DISTANCE_2", 202 };
 }
 
 template <typename NodeType>

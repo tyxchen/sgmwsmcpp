@@ -34,8 +34,8 @@ namespace sgm
 namespace AreaFeatureExtractorConsts
 {
 constexpr int DIM = 2;
-static constexpr const char* TWO_MATCHING_AREA_DIFF = "E_TWO_MATCHING_AREA_DIFF";
-static constexpr const char* THREE_MATCHING_AREA_DIFF = "F_THREE_MATCHING_AREA_DIFF";
+static constexpr string_t TWO_MATCHING_AREA_DIFF { "TWO_MATCHING_AREA_DIFF", 211 };
+static constexpr string_t THREE_MATCHING_AREA_DIFF { "THREE_MATCHING_AREA_DIFF", 311 };
 constexpr double NORM_CONST = 1;
 constexpr double NORM_CONST2 = 500;
 constexpr double CONFIDENCE_LEVEL = 0.975;

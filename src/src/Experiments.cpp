@@ -109,7 +109,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
         sgm::logger << "Feature " << i << ":" << std::endl;
-        sgm::logger << "  name: " << (f + 2) << std::endl;
+        sgm::logger << "  name: " << f << std::endl;
         sgm::logger << "  mean: " << fe_mean.get(f) << std::endl;
         sgm::logger << "  sd:   " << fe_sd.get(f) << std::endl;
     }
