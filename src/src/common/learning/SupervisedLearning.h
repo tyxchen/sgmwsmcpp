@@ -206,9 +206,9 @@ public:
         return std::make_pair(m, var);
     }
 
-    void add_instances(std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> samples) {
+    void add_instances(const std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) {
         for (auto &sample : samples) {
-            m_latent_decisions.emplace_back(std::move(sample->decisions()), std::move(sample->visited_nodes()));
+            m_latent_decisions.emplace_back(sample->decisions(), sample->visited_nodes());
         }
     }
 
@@ -221,22 +221,20 @@ namespace detail
 {
 
 template <typename F, typename NodeType>
-std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> generate_samples(
+void generate_samples(
     Random::seed_type seed,
     const std::pair<std::vector<edge_type_base<NodeType>>, std::vector<node_type_base<NodeType>>> &instance,
     const std::shared_ptr<GraphMatchingState<F, NodeType>> &initial,
     Command<F, NodeType> &command,
     int num_concrete_particles,
     int max_virtual_particles,
-    bool use_SPF
+    bool use_SPF,
+    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples
 ) {
     smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
     smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, instance.second, use_SPF);
-    smc.sample(seed, num_concrete_particles, max_virtual_particles);
-    auto &samples = smc.samples();
-
-    return std::move(samples);
+    smc.sample(seed, num_concrete_particles, max_virtual_particles, samples);
 }
 
 template <typename F, typename NodeType>
@@ -318,6 +316,8 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
         detail::counter_pool = static_cast<Counter<F> *>(operator new(num_implicit_particles * sizeof(Counter<F>)));
     }
 
+    auto samples = std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>>();
+
     while (!converged && iter < max_iter) {
         ObjectiveFunction<F, NodeType> objective(command);
 
@@ -327,14 +327,15 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 
         // TODO: can this be parallelized?
         for (auto i = 0u; i < instances_size; ++i) {
-            auto samples = detail::generate_samples(random(), instances[i], initial_states[i], command,
-                                                    num_concrete_particles, num_implicit_particles, use_spf);
+            samples.clear();
+            detail::generate_samples(random(), instances[i], initial_states[i], command,
+                                     num_concrete_particles, num_implicit_particles, use_spf, samples);
 #ifndef NDEBUG
             ObjectiveFunction<F, NodeType> obj2(command);
             obj2.add_instances(samples);
             objs.emplace_back(std::move(obj2));
 #endif
-            objective.add_instances(std::move(samples));
+            objective.add_instances(samples);
         }
 
         if (check_gradient && iter == 0) {

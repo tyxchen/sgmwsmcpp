@@ -49,3 +49,9 @@ double smc::CompactPopulation::ess() const {
 double smc::CompactPopulation::logZ_estimate() const {
     return m_log_sum - std::log(m_num_particles);
 }
+
+void smc::CompactPopulation::clear() {
+    m_num_particles = 0;
+    m_log_sum = -std::numeric_limits<double>::infinity();
+    m_log_sum_of_squares = -std::numeric_limits<double>::infinity();
+}

@@ -123,7 +123,6 @@ class StreamingParticleFilter
     std::reference_wrapper<const std::vector<emissions_type>> m_emissions;
     Random m_random { 1 };
 
-    std::pair<CompactPopulation, std::vector<latent_type>> m_results;
     PropagatorOptions m_options;
 
 public:
@@ -146,7 +145,7 @@ private:
     }
 
 public:
-    double sample() {
+    double sample(CompactPopulation &population, std::vector<latent_type> &samples) {
 //        auto proposal = initial_distribution_proposal();
         StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> propagator(
             initial_distribution_proposal(),
@@ -155,35 +154,35 @@ public:
 
         sgm::logger <= "=== RUN 0 ===\n";
 
-        m_results = propagator.execute();
-        auto logZ = m_results.first.logZ_estimate();
+        propagator.execute(population, samples);
+        auto logZ = population.logZ_estimate();
 
         // recursive
         for (auto i = 1u; i < m_transition_density.get().iterations(); ++i) {
             StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> rec_propagator(
                 StreamingBootstrapProposal<F, NodeType>(m_random(), m_emissions.get()[i], m_emissions.get()[i - 1],
-                                                        &m_results.second,
+                                                        &samples,
                                                         m_transition_density, m_observation_density),
                 m_options
             );
+            // Need to create a new vector to temporarily store results due to recursive condition
+            auto ret_samples = std::vector<latent_type>();
+            population.clear();
+
             sgm::logger <= "=== RUN " <= i <= " ===\n";
-            auto results = rec_propagator.execute();
+            rec_propagator.execute(population, ret_samples);
 
             // This is for if no new matchings were made in this iteration.
             //  If we were to continue, we'd find all the matching states are the same, which doesn't make sense
-            if (results.first.log_sum() == -std::numeric_limits<double>::infinity()) {
+            if (population.log_sum() == -std::numeric_limits<double>::infinity()) {
                 throw sgm::runtime_error("Run " + std::to_string(i) + " gave no new matchings");
             }
 
-            logZ += results.first.logZ_estimate();
-            m_results = std::move(results);
+            logZ += population.logZ_estimate();
+            samples = std::move(ret_samples);
         }
 
         return logZ;
-    }
-
-    std::vector<latent_type> &samples() {
-        return m_results.second;
     }
 };
 

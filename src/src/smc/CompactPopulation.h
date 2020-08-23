@@ -46,6 +46,8 @@ public:
     double ess() const;
 
     double logZ_estimate() const;
+
+    void clear();
 };
 
 }

@@ -95,9 +95,10 @@ private:
         return res;
     }
 
-    std::vector<S> resample_internal(ProposalType &proposal,
-                                     CompactPopulation &population,
-                                     std::vector<double> &sorted_cumulative_probabilities) {
+    void resample_internal(ProposalType &proposal,
+                           CompactPopulation &population,
+                           std::vector<double> &sorted_cumulative_probabilities,
+                           std::vector<S> &result) {
         auto log_sum = population.log_sum();
         auto num_particles = population.num_particles();
         auto pop_after_collapse = sorted_cumulative_probabilities.size();
@@ -105,11 +106,11 @@ private:
 
         CompactPopulation sanity_check;
 
-        std::vector<S> result;
         result.reserve(pop_after_collapse);
         std::vector<S> candidate;  // hack for storing a single candidate
 
-        for (auto next_cumulative_probability : sorted_cumulative_probabilities) {
+        for (auto i = 0ul; i < pop_after_collapse; ++i) {
+            auto next_cumulative_probability = sorted_cumulative_probabilities[i];
             // sum normalized weights until we get to the next resampled cumulative probability
             while (normalized_partial_sum < next_cumulative_probability) {
                 auto before = proposal.num_calls();
@@ -134,8 +135,6 @@ private:
             }
             // we have found one particle that survived the collapse
             result.emplace_back(candidate[0]);
-            // prevent accidental destruction of the most recent candidate
-            // candidates.pop_back();
         }
 
         sgm::logger <= "resample before replay: "
@@ -164,24 +163,27 @@ private:
                 std::to_string(log_sum)
             );
         }
-
-        return result;
     }
 
-    std::vector<S> resample(CompactPopulation &population, std::vector<double> &sorted_cumulative_probabilities) {
+    void resample(CompactPopulation &population, std::vector<double> &sorted_cumulative_probabilities,
+                  std::vector<S> &result) {
         if (m_proposal.num_calls() != 0) {
             // TODO: could replace with m_proposal
             auto proposal = m_proposal.restart();
-            return resample_internal(proposal, population, sorted_cumulative_probabilities);
+            resample_internal(proposal, population, sorted_cumulative_probabilities, result);
         } else {
-            return resample_internal(m_proposal, population, sorted_cumulative_probabilities);
+            resample_internal(m_proposal, population, sorted_cumulative_probabilities, result);
         }
     }
 
 public:
-    std::pair<CompactPopulation, std::vector<S>> execute() {
-        CompactPopulation population;
-
+    /**
+     * Propose and then resample the given proposal.
+     *
+     * @param population A reference to an empty population to store population data.
+     * @param result A reference to an empty vector to store the samples.
+     */
+    void execute(CompactPopulation &population, std::vector<S> &result) {
         propose(population);
 
 #ifdef NDEBUG
@@ -200,9 +202,7 @@ public:
 #endif
 
         auto sorted_cumulative_probabilities_for_final_resampling = extract_sorted_cumulative_probabilites();
-        auto samples = resample(population, sorted_cumulative_probabilities_for_final_resampling);
-
-        return std::make_pair(population, std::move(samples));
+        resample(population, sorted_cumulative_probabilities_for_final_resampling, result);
     }
 };
 

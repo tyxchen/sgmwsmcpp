@@ -29,6 +29,7 @@
 #include "utils/debug.h"
 #include "utils/Random.h"
 #include "smc/components/GenericMatchingLatentSimulator.h"
+#include "smc/CompactPopulation.h"
 #include "smc/ObservationDensity.h"
 #include "smc/StreamingParticleFilter.h"
 
@@ -57,7 +58,8 @@ public:
           m_emissions(emissions),
           m_use_SPF(use_SPF) {}
 
-    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles) {
+    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles,
+                  std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) {
         auto logZ = -std::numeric_limits<double>::infinity();
         if (m_use_SPF) {
             StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
@@ -68,12 +70,16 @@ public:
             options.verbose = false;
             options.targeted_relative_ess = 1.0;
 
-            logZ = spf.sample();
-            m_samples = std::move(spf.samples());
+            auto pop = CompactPopulation();
+            logZ = spf.sample(pop, samples);
         } else {
             throw sgm::runtime_error("Using non-streaming particle filter SMC is not yet supported.");
         }
         return logZ;
+    }
+
+    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles) {
+        return sample(seed, num_concrete_particles, max_virtual_particles, m_samples);
     }
 
     std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples() {

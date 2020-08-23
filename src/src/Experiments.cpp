@@ -137,14 +137,14 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         auto smc = smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot>(transition_density,
                                                                                     observation_density,
                                                                                     emissions, use_spf);
+        auto samples = std::vector<std::shared_ptr<GraphMatchingState<std::string, EllipticalKnot>>>();
 
         Timers::start("testing data");
-        smc.sample(random(), target_ess, 1000);
+        smc.sample(random(), target_ess, 1000, samples);
         Timers::end("testing data");
 
         sgm::logger << "Run time: " << Timers::diff("testing data") / 1000 << "ms\n";
 
-        auto &samples = smc.samples();
         auto best_log_density = -std::numeric_limits<double>::infinity();
         auto best_sample = samples[0];
 
