@@ -30,6 +30,8 @@
 #include <tbb/tbb.h>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/hash.h"
+
 namespace sgm
 {
 
@@ -55,7 +57,7 @@ bool compare(const std::pair<T, V> *lhs, const std::pair<T, V> *rhs) {
  * @author Terry Chen <ty6chen@uwaterloo.ca>
  */
 
-template<typename T, typename Count = double, typename Hash = std::hash<T>>
+template<typename T, typename Count = double, typename Hash = sgm::hash<T>>
 class Counter
 {
 public:

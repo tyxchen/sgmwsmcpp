@@ -27,10 +27,12 @@
 #include <utility>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/hash.h"
+
 namespace sgm
 {
 
-template<typename T, typename Hash = std::hash<T>>
+template<typename T, typename Hash = sgm::hash<T>>
 class Indexer
 {
 public:

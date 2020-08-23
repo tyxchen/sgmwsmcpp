@@ -22,10 +22,10 @@
 
 #include <array>
 #include <memory>
-#include <string>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/types.h"
 #include "common/model/GraphFeatureExtractor.h"
 #include "knot/data/EllipticalKnot.h"
 
@@ -34,8 +34,8 @@ namespace sgm
 namespace AreaFeatureExtractorConsts
 {
 constexpr int DIM = 2;
-constexpr const char* TWO_MATCHING_AREA_DIFF = "TWO_MATCHING_AREA_DIFF";
-constexpr const char* THREE_MATCHING_AREA_DIFF = "THREE_MATCHING_AREA_DIFF";
+static constexpr const char* TWO_MATCHING_AREA_DIFF = "E_TWO_MATCHING_AREA_DIFF";
+static constexpr const char* THREE_MATCHING_AREA_DIFF = "F_THREE_MATCHING_AREA_DIFF";
 constexpr double NORM_CONST = 1;
 constexpr double NORM_CONST2 = 500;
 constexpr double CONFIDENCE_LEVEL = 0.975;
@@ -51,13 +51,13 @@ std::pair<double, double> compute_area(const EllipticalKnot &knot);
 
 bool shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2);
 
-class AreaFeatureExtractor : public GraphFeatureExtractor<std::string, EllipticalKnot>
+class AreaFeatureExtractor : public GraphFeatureExtractor<string_t, EllipticalKnot>
 {
-    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
+    counter_type _extract_features(const node_type &node, const edge_type &decision) override;
 
-    Counter<std::string> _extract_features(const edge_type &e) override;
+    counter_type _extract_features(const edge_type &e) override;
 
-    Counter<std::string> _default_parameters() const override;
+    counter_type _default_parameters() const override;
 
     int _dim() const override;
 

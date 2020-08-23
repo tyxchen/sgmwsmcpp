@@ -29,18 +29,18 @@ EllipticalKnot::EllipticalKnot(int m_pidx, int m_idx,
                                double area_over_axis)
     : m_idx { m_idx },
       m_pidx { m_pidx },
-      m_node_features {{ "x", x },
-                       { "y", y },
-                       { "z", z },
-                       { "n", n },
-                       { "var_x", var_x },
-                       { "var_y", var_y },
-                       { "cov", cov },
-                       { "boundary_axis0", boundary_axis0 },
-                       { "boundary_axis1", boundary_axis1 },
-                       { "yaxis", yaxis },
-                       { "zaxis", zaxis },
-                       { "area_over_axis", area_over_axis }} {}
+      m_node_features {{ EllipticalKnotFeatureNames::X, x },
+                       { EllipticalKnotFeatureNames::Y, y },
+                       { EllipticalKnotFeatureNames::Z, z },
+                       { EllipticalKnotFeatureNames::N, n },
+                       { EllipticalKnotFeatureNames::VAR_X, var_x },
+                       { EllipticalKnotFeatureNames::VAR_Y, var_y },
+                       { EllipticalKnotFeatureNames::COV, cov },
+                       { EllipticalKnotFeatureNames::BOUNDARY_AXIS0, boundary_axis0 },
+                       { EllipticalKnotFeatureNames::BOUNDARY_AXIS1, boundary_axis1 },
+                       { EllipticalKnotFeatureNames::YAXIS, yaxis },
+                       { EllipticalKnotFeatureNames::ZAXIS, zaxis },
+                       { EllipticalKnotFeatureNames::AREA_OVER_AXIS, area_over_axis }} {}
 
 int EllipticalKnot::idx() const {
     return m_idx;
@@ -50,19 +50,21 @@ int EllipticalKnot::pidx() const {
     return m_pidx;
 }
 
-const Counter<std::string> &EllipticalKnot::node_features() const {
+const Counter<string_t> &EllipticalKnot::node_features() const {
     return m_node_features;
 }
 
-bool EllipticalKnot::operator<(const GraphNode<std::string> &other) const {
-    return m_node_features.get("x") < other.node_features().get("x");
+bool EllipticalKnot::operator<(const GraphNode<string_t> &other) const {
+    return m_node_features.get(EllipticalKnotFeatureNames::X) <
+        other.node_features().get(EllipticalKnotFeatureNames::X);
 }
 
-bool EllipticalKnot::operator>(const GraphNode<std::string> &other) const {
-    return m_node_features.get("x") > other.node_features().get("x");
+bool EllipticalKnot::operator>(const GraphNode<string_t> &other) const {
+    return m_node_features.get(EllipticalKnotFeatureNames::X) >
+        other.node_features().get(EllipticalKnotFeatureNames::X);
 }
 
-bool EllipticalKnot::operator==(const GraphNode<std::string> &other) const {
+bool EllipticalKnot::operator==(const GraphNode<string_t> &other) const {
     return m_pidx == other.pidx() && m_idx == other.idx();
 }
 

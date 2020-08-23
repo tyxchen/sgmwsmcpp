@@ -58,7 +58,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
     EllipticalKnotFeatureExtractor fe;
     auto fe_dim = fe.dim();
-    Command<std::string, EllipticalKnot> command(fe);
+    Command<string_t, EllipticalKnot> command(fe);
 
     // compute the features on each of these data points and standardization
     std::vector<std::vector<double>> standardizations(fe_dim);
@@ -74,8 +74,8 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         }
     }
 
-    Counter<std::string> mean;
-    Counter<std::string> sd;
+    Counter<string_t> mean;
+    Counter<string_t> sd;
 
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
@@ -109,7 +109,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
         sgm::logger << "Feature " << i << ":" << std::endl;
-        sgm::logger << "  name: " << f << std::endl;
+        sgm::logger << "  name: " << (f + 2) << std::endl;
         sgm::logger << "  mean: " << fe_mean.get(f) << std::endl;
         sgm::logger << "  sd:   " << fe_sd.get(f) << std::endl;
     }
@@ -128,16 +128,16 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     for (auto &test_instance : test_instances) {
         auto &segment = test_instance[0];
         auto &emissions = segment.knots();
-        auto initial_state = std::make_shared<GraphMatchingState<std::string, EllipticalKnot>>(emissions);
-        auto transition_density = smc::GenericMatchingLatentSimulator<std::string, EllipticalKnot>(command,
-                                                                                                   initial_state,
-                                                                                                   false, true);
-        auto observation_density = smc::ExactProposalObservationDensity<std::string, EllipticalKnot>(command);
+        auto initial_state = std::make_shared<GraphMatchingState<string_t, EllipticalKnot>>(emissions);
+        auto transition_density = smc::GenericMatchingLatentSimulator<string_t, EllipticalKnot>(command,
+                                                                                                initial_state,
+                                                                                                false, true);
+        auto observation_density = smc::ExactProposalObservationDensity<string_t, EllipticalKnot>(command);
 
-        auto smc = smc::SequentialGraphMatchingSampler<std::string, EllipticalKnot>(transition_density,
-                                                                                    observation_density,
-                                                                                    emissions, use_spf);
-        auto samples = std::vector<std::shared_ptr<GraphMatchingState<std::string, EllipticalKnot>>>();
+        auto smc = smc::SequentialGraphMatchingSampler<string_t, EllipticalKnot>(transition_density,
+                                                                                 observation_density,
+                                                                                 emissions, use_spf);
+        auto samples = std::vector<std::shared_ptr<GraphMatchingState<string_t, EllipticalKnot>>>();
 
         Timers::start("testing data");
         smc.sample(random(), target_ess, 1000, samples);

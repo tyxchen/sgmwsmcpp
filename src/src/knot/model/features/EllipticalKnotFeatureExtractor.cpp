@@ -21,9 +21,9 @@
 
 using namespace sgm;
 
-Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const node_type &node,
-                                                                       const edge_type &decision) {
-    Counter<std::string> f;
+EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_extract_features(const node_type &node,
+                                                                                               const edge_type &decision) {
+    counter_type f;
 
     auto distance_features = m_distance_fe.extract_features(node, decision);
     auto area_features = m_area_fe.extract_features(node, decision);
@@ -43,7 +43,7 @@ Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const nod
     return f;
 }
 
-Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) {
+EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) {
     auto f = m_distance_fe.extract_features(e);
 
     f.increment_all(m_area_fe.extract_features(e));
@@ -51,7 +51,7 @@ Counter<std::string> EllipticalKnotFeatureExtractor::_extract_features(const edg
     return f;
 }
 
-Counter<std::string> EllipticalKnotFeatureExtractor::_default_parameters() const {
+EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_default_parameters() const {
     auto p = m_distance_fe.default_parameters();
 
     p.increment_all(m_area_fe.default_parameters());
@@ -63,7 +63,7 @@ int EllipticalKnotFeatureExtractor::_dim() const {
     return m_distance_fe.dim() + m_area_fe.dim();
 }
 
-void EllipticalKnotFeatureExtractor::_standardize(const Counter<std::string> &mean, const Counter<std::string> &sd) {
+void EllipticalKnotFeatureExtractor::_standardize(const counter_type &mean, const counter_type &sd) {
     m_mean = mean;
     m_sd = sd;
 }
@@ -76,11 +76,11 @@ const AreaFeatureExtractor &EllipticalKnotFeatureExtractor::area_fe() const {
     return m_area_fe;
 }
 
-const Counter<std::string> &EllipticalKnotFeatureExtractor::mean() const {
+const EllipticalKnotFeatureExtractor::counter_type &EllipticalKnotFeatureExtractor::mean() const {
     return m_mean;
 }
 
-const Counter<std::string> &EllipticalKnotFeatureExtractor::sd() const {
+const EllipticalKnotFeatureExtractor::counter_type &EllipticalKnotFeatureExtractor::sd() const {
     return m_sd;
 }
 

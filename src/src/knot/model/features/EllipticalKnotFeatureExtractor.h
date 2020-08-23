@@ -21,9 +21,9 @@
 #define SGMWSMCPP_ELLIPTICALKNOTFEATUREEXTRACTOR_H
 
 #include <memory>
-#include <string>
 #include <parallel_hashmap/phmap.h>
 
+#include "utils/types.h"
 #include "utils/container/Counter.h"
 #include "knot/data/EllipticalKnot.h"
 #include "common/model/GraphFeatureExtractor.h"
@@ -32,32 +32,32 @@
 
 namespace sgm
 {
-class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<std::string, EllipticalKnot>
+class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<string_t, EllipticalKnot>
 {
     ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> m_distance_fe;
     AreaFeatureExtractor m_area_fe;
 
-    Counter<std::string> m_mean;
-    Counter<std::string> m_sd;
+    counter_type m_mean;
+    counter_type m_sd;
 
-    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override;
+    counter_type _extract_features(const node_type &node, const edge_type &decision) override;
 
-    Counter<std::string> _extract_features(const edge_type &e) override;
+    counter_type _extract_features(const edge_type &e) override;
 
-    Counter<std::string> _default_parameters() const override;
+    counter_type _default_parameters() const override;
 
     int _dim() const override;
 
-    void _standardize(const Counter<std::string> &mean, const Counter<std::string> &sd) override;
+    void _standardize(const counter_type &mean, const counter_type &sd) override;
 
 public:
     const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &distance_fe() const;
 
     const AreaFeatureExtractor &area_fe() const;
 
-    const Counter<std::string> &mean() const;
+    const counter_type &mean() const;
 
-    const Counter<std::string> &sd() const;
+    const counter_type &sd() const;
 };
 }
 

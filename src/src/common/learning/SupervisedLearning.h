@@ -26,7 +26,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <type_traits>
 #include <utility>
 #include <Eigen/Dense>
 #include <parallel_hashmap/phmap.h>
@@ -74,9 +73,6 @@ std::pair<double, Counter<F>> evaluate(MultinomialLogisticModel<F, NodeType> &mo
     return std::make_pair(state.log_density(), std::move(state.log_gradient()));
 }
 
-static Counter<std::string> *counter_pool = nullptr;
-static size_t counter_pool_max = 0;
-
 }
 
 template <typename F, typename NodeType>
@@ -92,6 +88,10 @@ class ObjectiveFunction
     Counter<F> m_log_gradient;
 
     Eigen::VectorXd m_curr_x;
+
+public:
+    static Counter<F> *counter_pool;
+    static size_t counter_pool_max;
 
 public:
     explicit ObjectiveFunction(Command<F, NodeType> &command) : m_command(command) {}
@@ -132,18 +132,18 @@ public:
                         new_density = old_density + ret.first;
                     } while (log_density.compare_and_swap(new_density, old_density) != old_density);
 
-                    if (i < detail::counter_pool_max) {
-                        detail::counter_pool[i] = std::move(ret.second);
+                    if (i < counter_pool_max) {
+                        counter_pool[i] = std::move(ret.second);
                     } else {
-                        new(detail::counter_pool + i) Counter<F>(std::move(ret.second));
+                        new(counter_pool + i) Counter<F>(std::move(ret.second));
                     }
                 }
             });
 
-            detail::counter_pool_max = std::max(detail::counter_pool_max, ld_size);
+            counter_pool_max = std::max(counter_pool_max, ld_size);
 
             for (auto i = 0u; i < ld_size; ++i) {
-                m_log_gradient.increment_all(detail::counter_pool[i]);
+                m_log_gradient.increment_all(counter_pool[i]);
             }
 
             m_log_density = log_density;
@@ -216,6 +216,12 @@ public:
         return m_command.get().feature_extractor().dim();
     }
 };
+
+template <typename F, typename NodeType>
+Counter<F> * ObjectiveFunction<F, NodeType>::counter_pool = nullptr;
+
+template <typename F, typename NodeType>
+size_t ObjectiveFunction<F, NodeType>::counter_pool_max = 0;
 
 namespace detail
 {
@@ -309,11 +315,11 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 #endif
 
     if (SupervisedLearningConfig::parallel) {
-        static_assert(std::is_same<F, std::string>::value, "Counter pool not implemented for counter type");
-        if (detail::counter_pool != nullptr) {
+        if (ObjectiveFunction<F, NodeType>::counter_pool != nullptr) {
             throw sgm::runtime_error("Counter pool is in use; cannot reallocate to it");
         }
-        detail::counter_pool = static_cast<Counter<F> *>(operator new(num_implicit_particles * sizeof(Counter<F>)));
+        ObjectiveFunction<F, NodeType>::counter_pool = static_cast<Counter<F> *>(operator new(num_implicit_particles *
+            sizeof(Counter<F>)));
     }
 
     auto samples = std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>>();
@@ -397,11 +403,11 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 #endif
 
     if (SupervisedLearningConfig::parallel) {
-        for (auto i = 0ul; i < detail::counter_pool_max; ++i) {
-            detail::counter_pool[i].~Counter<std::string>();
+        for (auto i = 0ul; i < ObjectiveFunction<F, NodeType>::counter_pool_max; ++i) {
+            ObjectiveFunction<F, NodeType>::counter_pool[i].~Counter<F>();
         }
-        operator delete(detail::counter_pool);
-        detail::counter_pool = nullptr;
+        operator delete(ObjectiveFunction<F, NodeType>::counter_pool);
+        ObjectiveFunction<F, NodeType>::counter_pool = nullptr;
     }
 
     return std::make_pair(nllk, w);

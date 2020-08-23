@@ -39,6 +39,8 @@ using map_t = typename phmap::parallel_flat_hash_map<K, T, hash<K>, std::equal_t
 template <typename T>
 using edge_t = typename phmap::flat_hash_set<T, hash<T>, std::equal_to<T>>;
 
+using string_t = const char *;
+
 template <typename NodeType>
 using node_type_base = typename std::shared_ptr<NodeType>;
 

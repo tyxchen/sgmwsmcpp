@@ -21,8 +21,8 @@
 #define SGMWSMC_ELLIPTICALKNOT_H
 
 #include <iostream>
-#include <string>
 
+#include "utils/types.h"
 #include "utils/hash.h"
 #include "utils/container/Counter.h"
 #include "knot/data/Knot.h"
@@ -30,11 +30,30 @@
 namespace sgm
 {
 
-class EllipticalKnot : public Knot<std::string>
+namespace EllipticalKnotFeatureNames
+{
+
+// For speed, custom hashing is done with the first character.
+static constexpr const char* X = "0_x";
+static constexpr const char* Y = "1_y";
+static constexpr const char* Z = "2_z";
+static constexpr const char* N = "3_n";
+static constexpr const char* VAR_X = "4_var_x";
+static constexpr const char* VAR_Y = "5_var_y";
+static constexpr const char* COV = "6_cov";
+static constexpr const char* BOUNDARY_AXIS0 = "7_boundary_axis0";
+static constexpr const char* BOUNDARY_AXIS1 = "8_boundary_axis1";
+static constexpr const char* YAXIS = "9_yaxis";
+static constexpr const char* ZAXIS = "a_zaxis";
+static constexpr const char* AREA_OVER_AXIS = "b_area_over_axis";
+
+}
+
+class EllipticalKnot : public Knot<string_t>
 {
     int m_idx;
     int m_pidx;
-    Counter<std::string> m_node_features;
+    Counter<string_t> m_node_features;
 
 public:
     EllipticalKnot(int m_pidx, int m_idx,
@@ -48,13 +67,13 @@ public:
 
     int pidx() const override;
 
-    const Counter<std::string> &node_features() const override;
+    const Counter<string_t> &node_features() const override;
 
-    bool operator<(const GraphNode<std::string> &other) const override;
+    bool operator<(const GraphNode<string_t> &other) const override;
 
-    bool operator>(const GraphNode<std::string> &other) const override;
+    bool operator>(const GraphNode<string_t> &other) const override;
 
-    bool operator==(const GraphNode<std::string> &other) const override;
+    bool operator==(const GraphNode<string_t> &other) const override;
 
     friend std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot);
 

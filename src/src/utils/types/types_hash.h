@@ -21,6 +21,7 @@
 #define SGMWSMCPP_TYPES_HASH_H
 
 #include <functional>
+#include <iostream>
 #include "utils/hash.h"
 #include "types_base.h"
 
@@ -59,6 +60,20 @@ struct hash<edge_t<T>>
 //        return hash_v;
 //    }
 //};
+
+/**
+ * Hash the FIRST character of a const char *.
+ */
+template <>
+struct hash<string_t>
+{
+public:
+    size_t operator()(const string_t &str) const noexcept {
+        // WARNING: We are assuming that the given string is null-terminated.
+        // This is OK as we ONLY use null-terminated compile-time strings, but BEWARE when extending code.
+        return str[0];
+    }
+};
 
 }
 

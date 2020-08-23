@@ -28,6 +28,7 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
+#include "utils/types.h"
 #include "utils/debug.h"
 
 using namespace sgm;
@@ -39,9 +40,9 @@ const Eigen::Vector2d e1(1.0, 0.0);
 std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
     Eigen::Matrix2d S;
     Eigen::EigenSolver<Eigen::Matrix2d> es;
-    S(0, 0) = knot.node_features().get("var_x");
-    S(0, 1) = S(1, 0) = knot.node_features().get("cov");
-    S(1, 1) = knot.node_features().get("var_y");
+    S(0, 0) = knot.node_features().get(EllipticalKnotFeatureNames::VAR_X);
+    S(0, 1) = S(1, 0) = knot.node_features().get(EllipticalKnotFeatureNames::COV);
+    S(1, 1) = knot.node_features().get(EllipticalKnotFeatureNames::VAR_Y);
     auto eigen = es.compute(S, true);
     auto lambdas = eigen.eigenvalues().real();
 
@@ -57,12 +58,12 @@ std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
 
 bool sgm::shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2) {
     double boundary_axes_1[2] = {
-        k1.node_features().get("boundary_axis0"),
-        k1.node_features().get("boundary_axis1")
+        k1.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS0),
+        k1.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS1)
     };
     double boundary_axes_2[2] = {
-        k2.node_features().get("boundary_axis0"),
-        k2.node_features().get("boundary_axis1")
+        k2.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS0),
+        k2.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS1)
     };
 
     return (boundary_axes_2[0] != 0 &&
@@ -74,13 +75,13 @@ bool sgm::shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2) {
 
 void extract_features_2(const AreaFeatureExtractor::node_type &node1,
                         const AreaFeatureExtractor::node_type &node2,
-                        Counter<std::string> &features) {
+                        Counter<string_t> &features) {
     // 2-matching -- compare the area and the number of points
     auto area1 = compute_area(*node1);
     auto area2 = compute_area(*node2);
 
     if (area1.first == 0.0 || area2.first == 0.0) {
-        throw std::runtime_error("Area is zero: either computation failed or knot detection failed.");
+        throw sgm::runtime_error("Area is zero: either computation failed or knot detection failed.");
     }
 
     if ((node1->pidx() % 2 == 0 && node2->pidx() % 2 == 0) || !shares_axis(*node1, *node2)) {
@@ -117,7 +118,7 @@ std::tuple<double, double, double> extract_features_3_base(const AreaFeatureExtr
 void extract_features_3(const AreaFeatureExtractor::node_type &node1,
                         const AreaFeatureExtractor::node_type &node2,
                         const AreaFeatureExtractor::node_type &node3,
-                        Counter<std::string> &features) {
+                        AreaFeatureExtractor::counter_type &features) {
     auto areas = extract_features_3_base(node1, node2, node3);
     features.set(AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF,
                  std::abs(std::get<2>(areas) - std::get<1>(areas)) / AreaFeatureExtractorConsts::NORM_CONST);
@@ -126,14 +127,15 @@ void extract_features_3(const AreaFeatureExtractor::node_type &node1,
 void extract_features_3_legacy(const AreaFeatureExtractor::node_type &node1,
                                const AreaFeatureExtractor::node_type &node2,
                                const AreaFeatureExtractor::node_type &node3,
-                               Counter<std::string> &features) {
+                               AreaFeatureExtractor::counter_type &features) {
     auto areas = extract_features_3_base(node1, node2, node3);
     features.set(AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF,
                  std::abs(std::get<0>(areas) + std::get<1>(areas) - std::get<2>(areas)) /
                      AreaFeatureExtractorConsts::NORM_CONST);
 }
 
-Counter<std::string> AreaFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision) {
+AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const node_type &node,
+                                                                           const edge_type &decision) {
     auto f = _default_parameters();
 
     if (decision->size() == 1) {
@@ -146,7 +148,7 @@ Counter<std::string> AreaFeatureExtractor::_extract_features(const node_type &no
     return f;
 }
 
-Counter<std::string> AreaFeatureExtractor::_extract_features(const edge_type &e) {
+AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const edge_type &e) {
     auto f = _default_parameters();
 
     if (e->size() == 2) {
@@ -160,8 +162,8 @@ Counter<std::string> AreaFeatureExtractor::_extract_features(const edge_type &e)
     return f;
 }
 
-Counter<std::string> AreaFeatureExtractor::_default_parameters() const {
-    return Counter<std::string> {
+AreaFeatureExtractor::counter_type AreaFeatureExtractor::_default_parameters() const {
+    return counter_type {
         { AreaFeatureExtractorConsts::TWO_MATCHING_AREA_DIFF, 0 },
         { AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF, 0 },
     };

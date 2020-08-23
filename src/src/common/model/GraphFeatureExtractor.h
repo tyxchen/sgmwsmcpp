@@ -34,16 +34,17 @@ class GraphFeatureExtractor
 public:
     using node_type = node_type_base<NodeType>;
     using edge_type = edge_type_base<NodeType>;
+    using counter_type = Counter<F>;
 
-    Counter<F> extract_features(const node_type &node, const edge_type &decision) {
+    counter_type extract_features(const node_type &node, const edge_type &decision) {
         return _extract_features(node, decision);
     }
 
-    Counter<F> extract_features(const edge_type &e) {
+    counter_type extract_features(const edge_type &e) {
         return _extract_features(e);
     }
 
-    Counter<F> default_parameters() const {
+    counter_type default_parameters() const {
         return _default_parameters();
     }
 
@@ -51,22 +52,22 @@ public:
         return _dim();
     }
 
-    void standardize(const Counter<F> &mean, const Counter<F> &sd) {
+    void standardize(const counter_type &mean, const counter_type &sd) {
         _standardize(mean, sd);
     }
 
     virtual ~GraphFeatureExtractor() = default;
 
 private:
-    virtual Counter<F> _extract_features(const node_type &node, const edge_type &decision) = 0;
+    virtual counter_type _extract_features(const node_type &node, const edge_type &decision) = 0;
 
-    virtual Counter<F> _extract_features(const edge_type &e) = 0;
+    virtual counter_type _extract_features(const edge_type &e) = 0;
 
-    virtual Counter<F> _default_parameters() const = 0;
+    virtual counter_type _default_parameters() const = 0;
 
     virtual int _dim() const = 0;
 
-    virtual void _standardize(const Counter<F> &mean, const Counter<F> &sd) {}
+    virtual void _standardize(const counter_type &mean, const counter_type &sd) {}
 };
 }
 

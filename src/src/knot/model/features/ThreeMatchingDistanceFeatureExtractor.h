@@ -23,7 +23,6 @@
 #include <cmath>
 #include <array>
 #include <limits>
-#include <string>
 
 #include "utils/types.h"
 #include "common/model/GraphFeatureExtractor.h"
@@ -35,10 +34,10 @@ namespace sgm
 namespace ThreeMatchingDistanceFeatureExtractorConsts
 {
 constexpr int DIM = 4;
-constexpr const char* TWO_MATCHING_DISTANCE_1 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1;
-constexpr const char* TWO_MATCHING_DISTANCE_2 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2;
-constexpr const char* THREE_MATCHING_DISTANCE_1 = "THREE_MATCHING_DISTANCE_1";
-constexpr const char* THREE_MATCHING_DISTANCE_2 = "THREE_MATCHING_DISTANCE_2";
+static constexpr const char* TWO_MATCHING_DISTANCE_1 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1;
+static constexpr const char* TWO_MATCHING_DISTANCE_2 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2;
+static constexpr const char* THREE_MATCHING_DISTANCE_1 = "C_THREE_MATCHING_DISTANCE_1";
+static constexpr const char* THREE_MATCHING_DISTANCE_2 = "D_THREE_MATCHING_DISTANCE_2";
 
 constexpr double NORM_CONST = 1; // TODO: Do this in R as a pre-processing step and remove this constant
 }
@@ -49,7 +48,7 @@ template <typename NodeType>
 void extract_features_3(const node_type_base<NodeType> &node1,
                         const node_type_base<NodeType> &node2,
                         const node_type_base<NodeType> &node3,
-                        Counter<std::string> &features) {
+                        Counter<string_t> &features) {
     // 3-matching -- maximal distance
     using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
     constexpr size_t N = 3;
@@ -75,14 +74,16 @@ void extract_features_3(const node_type_base<NodeType> &node1,
 }
 
 template <typename KnotType>
-class ThreeMatchingDistanceFeatureExtractor : public GraphFeatureExtractor<std::string, KnotType>
+class ThreeMatchingDistanceFeatureExtractor : public GraphFeatureExtractor<string_t, KnotType>
 {
 public:
-    using node_type = typename GraphFeatureExtractor<std::string, KnotType>::node_type;
-    using edge_type = typename GraphFeatureExtractor<std::string, KnotType>::edge_type;
+    using base_class = GraphFeatureExtractor<string_t, KnotType>;
+    using node_type = typename base_class::node_type;
+    using edge_type = typename base_class::edge_type;
+    using counter_type = typename base_class::counter_type;
 
 private:
-    Counter<std::string> _extract_features(const node_type &node, const edge_type &decision) override {
+    counter_type _extract_features(const node_type &node, const edge_type &decision) override {
         using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
         auto f = _default_parameters();
 
@@ -103,7 +104,7 @@ private:
         return f;
     }
 
-    Counter<std::string> _extract_features(const edge_type &e) override {
+    counter_type _extract_features(const edge_type &e) override {
         using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
         auto f = _default_parameters();
 
@@ -124,8 +125,8 @@ private:
         return f;
     }
 
-    Counter<std::string> _default_parameters() const override {
-        return Counter<std::string> {
+    counter_type _default_parameters() const override {
+        return counter_type {
             { ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1, 0.0 },
             { ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2, 0.0 },
             { ThreeMatchingDistanceFeatureExtractorConsts::THREE_MATCHING_DISTANCE_1, 0.0 },
