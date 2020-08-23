@@ -81,30 +81,22 @@ public:
     using counter_type = typename base_class::counter_type;
 
 private:
-    counter_type _extract_features(const node_type &node, const edge_type &decision) const override {
+    void _extract_features(const node_type &node, const edge_type &decision, counter_type &features) const override {
         if (decision->size() != 1) {
             throw std::runtime_error("Expected two-matching, received " + std::to_string(decision->size() - 1) +
                                      "-matching.");
         }
 
-        auto f = _default_parameters();
-
-        compute_distance(*node, **decision->begin(), f);
-
-        return f;
+        compute_distance(*node, **decision->begin(), features);
     }
 
-    counter_type _extract_features(const edge_type &e) const override {
+    void _extract_features(const edge_type &e, counter_type &features) const override {
         if (e->size() != 2) {
             throw std::runtime_error("Expected two-matching, received " + std::to_string(e->size()) + "-matching.");
         }
 
-        auto f = _default_parameters();
         auto begin = e->begin();
-
-        compute_distance(**begin, **std::next(begin), f);
-
-        return f;
+        compute_distance(**begin, **std::next(begin), features);
     }
 
     counter_type _default_parameters() const override {

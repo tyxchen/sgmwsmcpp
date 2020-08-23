@@ -53,9 +53,9 @@ bool shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2);
 
 class AreaFeatureExtractor : public GraphFeatureExtractor<string_t, EllipticalKnot>
 {
-    counter_type _extract_features(const node_type &node, const edge_type &decision) const override;
+    void _extract_features(const node_type &node, const edge_type &decision, counter_type &features) const override;
 
-    counter_type _extract_features(const edge_type &e) const override;
+    void _extract_features(const edge_type &e, counter_type &features) const override;
 
     counter_type _default_parameters() const override;
 

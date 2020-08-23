@@ -72,7 +72,7 @@ private:
         if (use_exact_sampling) {
             std::vector<double> log_probs(decisions_size);
             for (auto i = 0u; i < decisions_size; ++i) {
-                log_probs[i] = model.log_prob(node, decisions[i]).first;
+                log_probs[i] = model.log_prob(node, decisions[i]);
             }
 
             log_norm = NumericalUtils::log_add(log_probs.begin(), log_probs.end());
@@ -115,7 +115,7 @@ private:
         } else {
             idx = random.next_int(decisions_size);
             m_log_forward_proposal = -std::log(decisions_size);
-            log_prob = model.log_prob(node, decisions[idx]).first;
+            log_prob = model.log_prob(node, decisions[idx]);
         }
 
         // insert the chosen decision
@@ -177,12 +177,14 @@ public:
             return true;
         };
 
+        auto decision_features = Counter<F>();
+
         for (auto &d : decision_set) {
             // compute the quantities needed for evaluating the log-likelihood and gradient of log-likelihood
-            auto ret = model.log_prob(node, d);
-            log_norm = NumericalUtils::log_add(log_norm, ret.first);
-            for (auto &f : ret.second) {
-                suff.increment(f.first, std::exp(ret.first) * ret.second.get(f.first));
+            auto log_prob = model.log_prob(node, d, decision_features);
+            log_norm = NumericalUtils::log_add(log_norm, log_prob);
+            for (auto &f : decision_features) {
+                suff.increment(f.first, std::exp(log_prob) * decision_features.get(f.first));
             }
 
             auto e = m_node_to_matching.count(node)
@@ -208,8 +210,8 @@ public:
 
                 m_matchings.erase(d);
                 m_matchings.emplace(new_edge);
-                m_log_density += ret.first;
-                features = std::move(ret.second);
+                m_log_density += log_prob;
+                features = decision_features;
             }
         }
 

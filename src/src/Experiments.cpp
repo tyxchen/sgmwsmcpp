@@ -62,13 +62,15 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
     // compute the features on each of these data points and standardization
     std::vector<std::vector<double>> standardizations(fe_dim);
+    auto phi = fe.default_parameters();
 
     for (const auto &data : training_data) {
         for (const auto &datum : data) {
             for (const auto &e : datum.first) {
-                auto phi = fe.extract_features(e);
+                phi = fe.default_parameters();
+                fe.extract_features(e, phi);
                 for (const auto &vals : phi) {
-                    standardizations[command.indexer().o2i(vals.first)].push_back(phi.get(vals.first));
+                    standardizations[command.indexer().o2i(vals.first)].push_back(vals.second);
                 }
             }
         }
@@ -99,7 +101,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         sd.set(f, std::sqrt(var / (n - 1)));
     }
 
-    fe.standardize(mean, sd);
+    fe.standardize(std::move(mean), std::move(sd));
 
     /*
      * Train the model parameters and run SMC on test data

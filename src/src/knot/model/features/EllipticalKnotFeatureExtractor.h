@@ -40,15 +40,15 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<string_t, Ell
     counter_type m_mean;
     counter_type m_sd;
 
-    counter_type _extract_features(const node_type &node, const edge_type &decision) const override;
+    void _extract_features(const node_type &node, const edge_type &decision, counter_type &features) const override;
 
-    counter_type _extract_features(const edge_type &e) const override;
+    void _extract_features(const edge_type &e, counter_type &features) const override;
 
     counter_type _default_parameters() const override;
 
     int _dim() const override;
 
-    void _standardize(const counter_type &mean, const counter_type &sd) override;
+    void _standardize(counter_type mean, counter_type sd) override;
 
 public:
     const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &distance_fe() const;

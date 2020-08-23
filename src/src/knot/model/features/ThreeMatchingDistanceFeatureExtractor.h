@@ -83,46 +83,36 @@ public:
     using counter_type = typename base_class::counter_type;
 
 private:
-    counter_type _extract_features(const node_type &node, const edge_type &decision) const override {
-        using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
-        auto f = _default_parameters();
+    void _extract_features(const node_type &node, const edge_type &decision, counter_type &features) const override {
+        using namespace ThreeMatchingDistanceFeatureExtractorConsts;
 
         if (decision->size() == 1) {
             DistanceFeatureExtractor<KnotType> fe;
-            auto fe_features = fe.extract_features(node, decision);
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1,
-                  fe_features.get(DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1) / NORM_CONST);
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2,
-                  fe_features.get(DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2) / NORM_CONST);
+            fe.extract_features(node, decision, features);
+            features.set(TWO_MATCHING_DISTANCE_1, features.get(TWO_MATCHING_DISTANCE_1) / NORM_CONST);
+            features.set(TWO_MATCHING_DISTANCE_2, features.get(TWO_MATCHING_DISTANCE_2) / NORM_CONST);
         } else if (decision->size() == 2) {
             auto begin = decision->begin();
-            detail::extract_features_3<KnotType>(node, *begin, *std::next(begin), f);
+            detail::extract_features_3<KnotType>(node, *begin, *std::next(begin), features);
         } else {
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1, 10);
+            features.set(TWO_MATCHING_DISTANCE_1, 10);
         }
-
-        return f;
     }
 
-    counter_type _extract_features(const edge_type &e) const override {
-        using ThreeMatchingDistanceFeatureExtractorConsts::NORM_CONST;
-        auto f = _default_parameters();
+    void _extract_features(const edge_type &e, counter_type &features) const override {
+        using namespace ThreeMatchingDistanceFeatureExtractorConsts;
 
         if (e->size() == 2) {
             DistanceFeatureExtractor<KnotType> fe;
-            auto fe_features = fe.extract_features(e);
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1,
-                  fe_features.get(DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1) / NORM_CONST);
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2,
-                  fe_features.get(DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2) / NORM_CONST);
+            fe.extract_features(e, features);
+            features.set(TWO_MATCHING_DISTANCE_1, features.get(TWO_MATCHING_DISTANCE_1) / NORM_CONST);
+            features.set(TWO_MATCHING_DISTANCE_2, features.get(TWO_MATCHING_DISTANCE_2) / NORM_CONST);
         } else if (e->size() == 3) {
             auto begin = e->begin();
-            detail::extract_features_3<KnotType>(*begin, *std::next(begin), *std::next(begin, 2), f);
+            detail::extract_features_3<KnotType>(*begin, *std::next(begin), *std::next(begin, 2), features);
         } else {
-            f.set(ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1, 10);
+            features.set(TWO_MATCHING_DISTANCE_1, 10);
         }
-
-        return f;
     }
 
     counter_type _default_parameters() const override {

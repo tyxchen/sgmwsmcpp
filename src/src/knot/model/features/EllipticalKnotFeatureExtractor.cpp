@@ -21,50 +21,37 @@
 
 using namespace sgm;
 
-EllipticalKnotFeatureExtractor::counter_type
-EllipticalKnotFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision) const {
-    counter_type f;
+void EllipticalKnotFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision,
+                                                       counter_type &features) const {
+    m_distance_fe.extract_features(node, decision, features);
+    m_area_fe.extract_features(node, decision, features);
 
-    auto distance_features = m_distance_fe.extract_features(node, decision);
-    auto area_features = m_area_fe.extract_features(node, decision);
-
-    for (const auto &feature : distance_features) {
+    for (const auto &feature : features) {
         const auto &feature_name = feature.first;
-        f.set(feature_name,
-              (distance_features.get(feature_name) - m_mean.get(feature_name)) / m_sd.get(feature_name, 1.0));
+        features.set(feature_name, (feature.second - m_mean.get(feature_name)) / m_sd.get(feature_name, 1.0));
     }
-
-    for (const auto &feature : area_features) {
-        const auto &feature_name = feature.first;
-        f.set(feature_name,
-              (area_features.get(feature_name) - m_mean.get(feature_name)) / m_sd.get(feature_name, 1.0));
-    }
-
-    return f;
 }
 
-EllipticalKnotFeatureExtractor::counter_type
-EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e) const {
-    auto f = m_distance_fe.extract_features(e);
-
-    f.increment_all(m_area_fe.extract_features(e));
-
-    return f;
+void EllipticalKnotFeatureExtractor::_extract_features(const edge_type &e, counter_type &features) const {
+    m_distance_fe.extract_features(e, features);
+    m_area_fe.extract_features(e, features);
 }
 
 EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_default_parameters() const {
-    auto p = m_distance_fe.default_parameters();
+    auto params = m_distance_fe.default_parameters();
 
-    p.increment_all(m_area_fe.default_parameters());
+    for (auto &param : m_area_fe.default_parameters()) {
+        params.set(param.first, param.second);
+    }
 
-    return p;
+    return params;
 }
 
 int EllipticalKnotFeatureExtractor::_dim() const {
     return m_distance_fe.dim() + m_area_fe.dim();
 }
 
-void EllipticalKnotFeatureExtractor::_standardize(const counter_type &mean, const counter_type &sd) {
+void EllipticalKnotFeatureExtractor::_standardize(counter_type mean, counter_type sd) {
     m_mean = mean;
     m_sd = sd;
 }

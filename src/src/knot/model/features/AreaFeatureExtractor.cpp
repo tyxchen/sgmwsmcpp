@@ -134,32 +134,24 @@ void extract_features_3_legacy(const AreaFeatureExtractor::node_type &node1,
                      AreaFeatureExtractorConsts::NORM_CONST);
 }
 
-AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const node_type &node,
-                                                                           const edge_type &decision) const {
-    auto f = _default_parameters();
-
+void AreaFeatureExtractor::_extract_features(const node_type &node, const edge_type &decision,
+                                             counter_type &features) const {
     if (decision->size() == 1) {
-        extract_features_2(node, *decision->begin(), f);
+        extract_features_2(node, *decision->begin(), features);
     } else if (decision->size() == 2) {
         auto begin = decision->begin();
-        extract_features_3(node, *begin, *std::next(begin), f);
+        extract_features_3(node, *begin, *std::next(begin), features);
     }
-
-    return f;
 }
 
-AreaFeatureExtractor::counter_type AreaFeatureExtractor::_extract_features(const edge_type &e) const {
-    auto f = _default_parameters();
-
+void AreaFeatureExtractor::_extract_features(const edge_type &e, counter_type &features) const {
     if (e->size() == 2) {
         auto begin = e->begin();
-        extract_features_2(*begin, *std::next(begin), f);
+        extract_features_2(*begin, *std::next(begin), features);
     } else if (e->size() == 3) {
         auto begin = e->begin();
-        extract_features_3_legacy(*begin, *std::next(begin), *std::next(begin, 2), f);
+        extract_features_3_legacy(*begin, *std::next(begin), *std::next(begin, 2), features);
     }
-
-    return f;
 }
 
 AreaFeatureExtractor::counter_type AreaFeatureExtractor::_default_parameters() const {

@@ -54,8 +54,9 @@ public:
         }
     }
 
-    std::pair<double, Counter<F>> log_prob(const node_type &node, const edge_type &decision) const {
-        auto features = m_fe.get().extract_features(node, decision);
+    double log_prob(const node_type &node, const edge_type &decision, Counter<F> &features) const {
+        features = m_fe.get().default_parameters();
+        m_fe.get().extract_features(node, decision, features);
         auto prob = 0.0;
         for (const auto &f : features) {
             prob += f.second * m_params.get().get(f.first);
@@ -64,7 +65,12 @@ public:
             if (std::isnan(prob)) throw std::runtime_error("");
 #endif
         }
-        return std::make_pair(prob, std::move(features));
+        return prob;
+    }
+
+    double log_prob(const node_type &node, const edge_type &decision) const {
+        Counter<F> tmp;
+        return log_prob(node, decision, tmp);
     }
 
     int num_variables() const {
