@@ -122,7 +122,7 @@ class StreamingParticleFilter
     std::reference_wrapper<const GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
     std::reference_wrapper<const ObservationDensity<F, NodeType>> m_observation_density;
     std::reference_wrapper<const std::vector<emissions_type>> m_emissions;
-    Random m_random { 1 };
+    Random m_random;
 
     PropagatorOptions m_options;
 
@@ -130,9 +130,9 @@ public:
     StreamingParticleFilter(const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
                             const ObservationDensity<F, NodeType> &observation_density,
                             const std::vector<emissions_type> &emissions,
-                            Random random)
+                            Random::seed_type seed)
         : m_transition_density(transition_density), m_observation_density(observation_density),
-          m_emissions(emissions), m_random(random) {}
+          m_emissions(emissions), m_random(seed) {}
 
     PropagatorOptions &options() {
         return m_options;
@@ -146,8 +146,8 @@ private:
     }
 
 public:
-    double sample(CompactPopulation &population, std::vector<latent_type> &samples) {
-//        auto proposal = initial_distribution_proposal();
+    double sample(std::vector<latent_type> &samples) {
+        CompactPopulation population;
         StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> propagator(
             initial_distribution_proposal(),
             m_options

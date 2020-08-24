@@ -39,44 +39,26 @@ namespace smc
 {
 
 template <typename F, typename NodeType>
-class SequentialGraphMatchingSampler
-{
-    std::reference_wrapper<const GenericMatchingLatentSimulator<F, NodeType>> m_transition_density;
-    std::reference_wrapper<const ObservationDensity<F, NodeType>> m_observation_density;
-    std::reference_wrapper<const std::vector<node_type_base<NodeType>>> m_emissions;
+double sample(const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
+              const ObservationDensity<F, NodeType> &observation_density,
+              const std::vector<node_type_base<NodeType>> &emissions,
+              Random::seed_type seed, int num_concrete_particles, int max_virtual_particles, bool use_SPF,
+              std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) {
+    auto logZ = Consts::NEGATIVE_INFINITY;
+    if (use_SPF) {
+        StreamingParticleFilter<F, NodeType> spf(transition_density, observation_density, emissions, seed);
+        auto &options = spf.options();
+        options.num_concrete_particles = num_concrete_particles;
+        options.max_virtual_particles = max_virtual_particles;
+        options.verbose = false;
+        options.targeted_relative_ess = 1.0;
 
-    bool m_use_SPF = true;
-
-public:
-    SequentialGraphMatchingSampler(const GenericMatchingLatentSimulator<F, NodeType> &transition_density,
-                                   const ObservationDensity<F, NodeType> &observation_density,
-                                   const std::vector<node_type_base<NodeType>> &emissions,
-                                   bool use_SPF)
-        : m_transition_density(transition_density),
-          m_observation_density(observation_density),
-          m_emissions(emissions),
-          m_use_SPF(use_SPF) {}
-
-    double sample(Random::seed_type seed, int num_concrete_particles, int max_virtual_particles,
-                  std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) const {
-        auto logZ = Consts::NEGATIVE_INFINITY;
-        if (m_use_SPF) {
-            StreamingParticleFilter<F, NodeType> spf(m_transition_density, m_observation_density, m_emissions,
-                                                     Random(seed));
-            auto &options = spf.options();
-            options.num_concrete_particles = num_concrete_particles;
-            options.max_virtual_particles = max_virtual_particles;
-            options.verbose = false;
-            options.targeted_relative_ess = 1.0;
-
-            auto pop = CompactPopulation();
-            logZ = spf.sample(pop, samples);
-        } else {
-            throw sgm::runtime_error("Using non-streaming particle filter SMC is not yet supported.");
-        }
-        return logZ;
+        logZ = spf.sample(samples);
+    } else {
+        throw sgm::runtime_error("Using non-streaming particle filter SMC is not yet supported.");
     }
-};
+    return logZ;
+}
 
 }
 }

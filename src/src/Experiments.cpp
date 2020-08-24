@@ -19,6 +19,8 @@
 
 #include "Experiments.h"
 
+#include <tbb/tbb.h>
+
 #include "utils/debug.h"
 #include "utils/consts.h"
 #include "utils/types.h"
@@ -126,7 +128,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
     command.update_model_parameters(ret.second);
 
-    std::vector<std::vector<TrainAndPredictResult>> matchings_by_dataset;
+    auto matchings_by_dataset = std::vector<std::vector<TrainAndPredictResult>>();
 
     for (auto &test_instance : test_instances) {
         auto &segment = test_instance[0];
@@ -136,28 +138,25 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
                                                                                                 initial_state,
                                                                                                 false, true);
         auto observation_density = smc::ExactProposalObservationDensity<string_t, EllipticalKnot>();
-
-        auto smc = smc::SequentialGraphMatchingSampler<string_t, EllipticalKnot>(transition_density,
-                                                                                 observation_density,
-                                                                                 emissions, use_spf);
         auto samples = std::vector<std::shared_ptr<GraphMatchingState<string_t, EllipticalKnot>>>();
 
-        Timers::start("testing data");
-        smc.sample(random(), target_ess, 1000, samples);
-        Timers::end("testing data");
+        auto timer = performance_timer(true);
+        smc::sample(transition_density, observation_density, emissions, random(), target_ess, 1000, use_spf, samples);
+        timer.end();
 
-        sgm::logger << "Run time: " << Timers::diff("testing data") / 1000 << "ms\n";
+        sgm::logger << "Run time: " << timer.diff() / 1000 << "ms\n";
 
         auto best_log_density = Consts::NEGATIVE_INFINITY;
-        auto best_sample = samples[0];
+        auto best_sample_idx = 0;
 
-        for (auto &sample : samples) {
-            if (sample->log_density() > best_log_density) {
-                best_log_density = sample->log_density();
-                best_sample = sample;
+        for (auto size = samples.size(), j = 0ul; j < size; ++j) {
+            if (samples[j]->log_density() > best_log_density) {
+                best_log_density = samples[j]->log_density();
+                best_sample_idx = j;
             }
         }
 
+        auto &best_sample = samples[best_sample_idx];
         auto match_idx = 0;
         auto matchings = std::vector<TrainAndPredictResult>();
 

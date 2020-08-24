@@ -58,6 +58,11 @@ private:
     double m_log_forward_proposal = 0.0;
     Counter<F> m_log_gradient;
 
+public:
+    explicit GraphMatchingState(const std::vector<node_type> &nodes)
+        : m_unvisited_nodes(nodes.begin(), nodes.end()) {}
+
+private:
     std::pair<double, double> sample_decision(Random &random,
                                               const MultinomialLogisticModel<F, NodeType> &model,
                                               const node_type &node,
@@ -148,9 +153,6 @@ private:
     }
 
 public:
-    explicit GraphMatchingState(const std::vector<node_type> &nodes)
-        : m_unvisited_nodes(nodes.begin(), nodes.end()) {}
-
 //    bool has_next_step() {
 //    }
 

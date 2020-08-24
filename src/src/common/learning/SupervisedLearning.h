@@ -238,8 +238,9 @@ void generate_samples(
 ) {
     smc::GenericMatchingLatentSimulator<F, NodeType> transition_density(command, initial, false, true);
     smc::PruningObservationDensity<F, NodeType> obs_density(instance.first);
-    smc::SequentialGraphMatchingSampler<F, NodeType> smc(transition_density, obs_density, instance.second, use_SPF);
-    smc.sample(seed, num_concrete_particles, max_virtual_particles, samples);
+    smc::sample(transition_density, obs_density, instance.second,
+                seed, num_concrete_particles, max_virtual_particles, use_SPF,
+                samples);
 }
 
 template <typename F, typename NodeType>
