@@ -25,35 +25,35 @@ def main(reference_dir, test_dir, verbose):
     for i in range(len(test_results)):
         ref_data_file = open(reference_files[i], newline='')
         test_result_file = open(test_results[i])
+        ref_dict = dict()
         ref_data = set()
+        test_dict = dict()
         test_result = set()
         err = None
 
         try:
-            edge_builder = set()
-            last_matching = -1
             ref_reader = csv.DictReader(ref_data_file)
             for row in ref_reader:
                 pidx = row["surface"]
                 idx = row["idx"]
                 matching = row["matching"]
-                if matching != last_matching and last_matching != -1:
-                    ref_data.add(frozenset(edge_builder))
-                    edge_builder = set()
-                edge_builder.add((pidx, idx))
-                last_matching = matching
-            ref_data.add(frozenset(edge_builder))
+                if matching not in ref_dict:
+                    ref_dict[matching] = set()
+                ref_dict[matching].add((pidx, idx))
+
+            for edge in ref_dict.values():
+                ref_data.add(frozenset(edge))
             
             edge_builder = set()
             last_matching = -1
             for line in test_result_file:
                 pidx, idx, matching = map(lambda s: s.strip(), line.split(","))
-                if matching != last_matching and last_matching != -1:
-                    test_result.add(frozenset(edge_builder))
-                    edge_builder = set()
-                edge_builder.add((pidx, idx))
-                last_matching = matching
-            test_result.add(frozenset(edge_builder))
+                if matching not in test_dict:
+                    test_dict[matching] = set()
+                test_dict[matching].add((pidx, idx))
+
+            for edge in test_dict.values():
+                test_result.add(frozenset(edge))
         except Exception as e:
             err = e
         finally:
