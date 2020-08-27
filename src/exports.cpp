@@ -1,3 +1,4 @@
+#define STRICT_R_HEADERS
 #include <Rcpp.h>
 
 #include <string>
@@ -39,7 +40,7 @@ DataFrame train_and_predict(StringVector training_files, StringVector test_files
     auto idxs = std::vector<int>();
     auto matchings = std::vector<int>();
 
-    for (auto size = ret.size(), i = 0ul; i < size; ++i) {
+    for (size_t size = ret.size(), i = 0; i < size; ++i) {
       auto &dataset = ret[i];
       for (auto &row : dataset) {
         names.push_back(test_boards[i]);

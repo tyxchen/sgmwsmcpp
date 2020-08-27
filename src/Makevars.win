@@ -1,0 +1,7 @@
+SOURCES = RcppExports.cpp exports.cpp src/Experiments.cpp $(wildcard src/*/*.cpp src/*/*/*.cpp src/*/*/*/*.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+
+PKG_CXXFLAGS = -DCOMPILED_WITH_RCPP -DRCPP_PARALLEL_USE_TBB=1 -O3
+PKG_CPPFLAGS = -Isrc -Ivendor
+PKG_LIBS += $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" \
+						  -e "RcppParallel::RcppParallelLibs()")

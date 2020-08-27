@@ -36,10 +36,10 @@ public:
     constexpr conststr(const char *data, size_t hash) noexcept : m_data(data), m_hash(hash) {}
     constexpr char operator*() const noexcept { return *m_data; }
     constexpr char operator[](size_t idx) const noexcept { return m_data[idx]; }
-    constexpr operator const char *() const noexcept { return m_data; }
+    // constexpr operator const char *() const noexcept { return m_data; }
     constexpr size_t hash() const noexcept { return m_hash; }
     friend constexpr bool operator==(const conststr &lhs, const conststr &rhs) noexcept {
-        return lhs.m_data == rhs.m_data;
+        return lhs.m_hash == rhs.m_hash;
     }
     friend std::ostream &operator<<(std::ostream &out, const conststr &rhs) {
         out << rhs.m_data;

@@ -34,6 +34,7 @@
 #include <boost/accumulators/statistics.hpp>
 
 #include "utils/types.h"
+#include "utils/type_traits.h"
 #include "utils/container/vector_list.h"
 #include "utils/debug_macros.h"
 
@@ -148,30 +149,27 @@ DECLARE_PRINT_OVERLOAD_WITH_SEP(",\n ", sgm::map_t<K, T>);
 namespace detail
 {
 
-template <typename T, typename = std::void_t<>>
+template <typename T, typename = sgm::void_t<>>
 struct print_exists : std::false_type
 {
 };
 
 template <typename T>
-struct print_exists<T, std::void_t<decltype(print(std::declval<std::ostream &>(),
+struct print_exists<T, sgm::void_t<decltype(print(std::declval<std::ostream &>(),
                                                   std::declval<const T &>(),
                                                   std::declval<const std::string &>()))>>
     : std::true_type
 {
 };
 
-template <typename T>
-constexpr bool print_exists_v = print_exists<T>::value;
-
 }
 
-template <typename T, std::enable_if_t<detail::print_exists_v<T>, int> = 0>
+template <typename T, std::enable_if_t<detail::print_exists<T>::value, int> = 0>
 void use_print_if_exists(std::ostream &out, const T &obj) {
     print(out, obj, ", ");
 }
 
-template <typename T, std::enable_if_t<!detail::print_exists_v<T>, int> = 0>
+template <typename T, std::enable_if_t<!detail::print_exists<T>::value, int> = 0>
 void use_print_if_exists(std::ostream &out, const T &obj) {
     out << obj;
 }

@@ -149,7 +149,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         auto best_log_density = Consts::NEGATIVE_INFINITY;
         auto best_sample_idx = 0;
 
-        for (auto size = samples.size(), j = 0ul; j < size; ++j) {
+        for (size_t size = samples.size(), j = 0; j < size; ++j) {
             if (samples[j]->log_density() > best_log_density) {
                 best_log_density = samples[j]->log_density();
                 best_sample_idx = j;

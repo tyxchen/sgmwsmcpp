@@ -82,7 +82,7 @@ public:
     }
 
     void update_model_parameters(const Eigen::VectorXd &w) {
-        for (auto i = 0l, r = w.rows(); i < r; ++i) {
+        for (size_t r = w.rows(), i = 0; i < r; ++i) {
             m_params.set(m_indexer.i2o(i), w(i));
         }
     }

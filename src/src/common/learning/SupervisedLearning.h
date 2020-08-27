@@ -108,7 +108,7 @@ public:
             m_curr_x = x;
 
         Counter<F> params;
-        for (auto i = 0l, r = x.rows(); i < r; ++i) {
+        for (size_t r = x.rows(), i = 0; i < r; ++i) {
             m_log_gradient.set(m_command.get().indexer().i2o(i), 0.0);
             params.set(m_command.get().indexer().i2o(i), x(i));
         }
@@ -166,7 +166,7 @@ public:
         auto ret = Eigen::VectorXd(x.rows());
         auto &indexer = m_command.get().indexer();
 
-        for (auto j = 0l, r = x.rows(); j < r; ++j) {
+        for (size_t r = x.rows(), j = 0; j < r; ++j) {
             ret(j) = m_log_gradient.get(indexer.i2o(j));
             ret(j) *= -1;
         }
@@ -349,7 +349,7 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
         }
 
         Eigen::VectorXd random_w(w.rows());
-        for (auto i = 0l, dim = w.rows(); i < dim; ++i) {
+        for (size_t dim = w.rows(), i = 0; i < dim; ++i) {
             random_w(i) = random.next_double();
         }
 

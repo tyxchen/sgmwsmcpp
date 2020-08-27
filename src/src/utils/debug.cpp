@@ -105,20 +105,33 @@ debugstream::debugstream(std::ostream &tty, const std::string &filename, int pre
 bool debugstream::init_log() {
     auto t = std::time(nullptr);
     auto time = std::localtime(&t);
+    char log_time_fmt[100];
+    std::strftime(log_time_fmt, sizeof(log_time_fmt) - 1, "%c", time);
 
     if (log_file.is_open()) {
-        log_file << "Started at " << std::put_time(time, "%c") << "\n\n";
+        log_file << "Started at " << log_time_fmt << "\n\n";
         log_file << std::setprecision(precision);
         return true;
     } else
         return false;
 }
 
+/* We hide implementation of set_log_file if the program was compiled with RCpp as that may mean using GCC 4.9,
+ * which does not have support for moving ofstreams.
+ */
+#ifndef COMPILED_WITH_RCPP
+
 void debugstream::set_log_file(const std::string &filename) {
     log_file = std::ofstream(filename, std::ofstream::trunc);
     if (!init_log())
         throw std::runtime_error("Could not open log file " + filename);
 }
+
+#else
+
+void debugstream::set_log_file(const std::string &filename) {}
+
+#endif
 
 debugstream &debugstream::operator<<(std::ostream &(*func)(std::ostream &)) {
     func(tty);
