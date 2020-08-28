@@ -130,6 +130,16 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
     auto matchings_by_dataset = std::vector<std::vector<TrainAndPredictResult>>();
 
+    // The maximum number of GraphMatchingStates that will be active at any given step of sample generation is equal
+    // to 1000 (hardcoded), and the number of GraphMatchingStates saved from a single round of sample
+    // generation is equal to target_ess. Thus, we calculate the memory pool for a GraphMatchingState as
+    // having size
+    //     (instances_size - 1) * target_ess + 1000
+    // We reallocate here after initial allocation in case we need an increase in the size of the memory pool.
+    GraphMatchingState<string_t, EllipticalKnot>::allocate(
+        (test_instances.size() - 1) * target_ess + 1000
+    );
+
     for (auto &test_instance : test_instances) {
         auto &segment = test_instance[0];
         auto &emissions = segment.knots();

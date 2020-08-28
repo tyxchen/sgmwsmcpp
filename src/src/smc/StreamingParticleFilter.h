@@ -159,7 +159,7 @@ public:
         auto logZ = population.logZ_estimate();
 
         // recursive
-        for (auto i = 1u; i < m_transition_density.get().iterations(); ++i) {
+        for (size_t iterations = m_transition_density.get().iterations(), i = 1; i < iterations; ++i) {
             StreamingPropagator<latent_type, StreamingBootstrapProposal<F, NodeType>> rec_propagator(
                 StreamingBootstrapProposal<F, NodeType>(m_random(), m_emissions.get()[i], m_emissions.get()[i - 1],
                                                         &samples,

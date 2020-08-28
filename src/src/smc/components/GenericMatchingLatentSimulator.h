@@ -54,7 +54,7 @@ public:
 
     std::shared_ptr<GraphMatchingState<F, NodeType>>
     sample_forward_transition(Random &random, const std::shared_ptr<GraphMatchingState<F, NodeType>> &state) const {
-        auto next = std::make_shared<GraphMatchingState<F, NodeType>>(*state);
+        auto next = std::shared_ptr<GraphMatchingState<F, NodeType>>(new GraphMatchingState<F, NodeType>(*state));
         next->sample_next_state(random, m_command.get(), m_use_sequential_sampling, m_use_exact_sampling);
         return next;
     }

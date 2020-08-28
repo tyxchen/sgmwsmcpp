@@ -22,7 +22,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <new>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "utils/debug.h"
@@ -32,12 +34,116 @@
 #include "utils/Random.h"
 #include "utils/container/Counter.h"
 #include "utils/container/vector_list.h"
+#include "common/graph/GraphMatchingState_fwd.h"
 #include "common/model/Command_fwd.h"
 #include "common/model/DecisionModel.h"
 #include "common/model/MultinomialLogisticModel.h"
 
 namespace sgm
 {
+
+namespace detail {
+
+template <typename F, typename NodeType>
+class GraphMatchingStateAllocator
+{
+    union Slot
+    {
+        int next;
+        GraphMatchingState<F, NodeType> data;
+        Slot() : next(0) {}
+        // Because this is a union, instead of defining a destructor we define a destroy method that we can call
+        // conditionally
+        ~Slot() {}
+        void destroy() noexcept {
+            data.~GraphMatchingState<F, NodeType>();
+        }
+    };
+
+    Slot *slots;
+    bool *active;
+    size_t capacity;
+    int head;
+
+public:
+    GraphMatchingStateAllocator() noexcept : slots(nullptr), active(nullptr), capacity(0), head(0) {}
+
+    ~GraphMatchingStateAllocator() {
+        for (auto i = 0u; i < capacity; ++i) {
+            if (active[i]) {
+                slots[i].destroy();
+            }
+        }
+        delete[] slots;
+    }
+
+    void initialize(size_t new_cap) {
+        if (new_cap <= capacity) {
+            return;
+        }
+
+        if (capacity == 0) {
+            // initialization from empty state
+            capacity = new_cap;
+            slots = new Slot[capacity];
+            active = new bool[capacity];
+            for (auto i = 0u; i < capacity - 1; ++i) {
+                slots[i].next = i + 1;
+                active[i] = false;
+            }
+            slots[capacity - 1].next = -1;
+            active[capacity - 1] = false;
+        } else {
+            // increase in capacity, must move data over
+            auto i = 0u;
+            auto new_slots = new Slot[new_cap];
+            auto new_active = new bool[new_cap];
+
+            for (; i < capacity; ++i) {
+                if (active[i]) {
+                    ::new (&new_slots[i].data) GraphMatchingState<F, NodeType>(std::move(slots[i].data));
+                    slots[i].destroy();
+                } else {
+                    new_slots[i].next = slots[i].next;
+                }
+                new_active[i] = active[i];
+            }
+            for (; i < new_cap - 1; ++i) {
+                new_slots[i].next = i + 1;
+                new_active[i] = false;
+            }
+            new_slots[new_cap - 1].next = head;
+            new_active[new_cap - 1] = false;
+
+            head = capacity;
+            std::swap(slots, new_slots);
+            std::swap(active, new_active);
+
+            delete[] new_slots;
+            delete[] new_active;
+
+            capacity = new_cap;
+        }
+    }
+
+    GraphMatchingState<F, NodeType> *allocate() noexcept {
+        if (head == -1) return nullptr;
+        auto result = &(slots[head].data);
+        active[head] = true;
+        head = slots[head].next;
+        return result;
+    }
+
+    void deallocate(void *item) noexcept {
+        auto idx = (static_cast<char *>(item) - reinterpret_cast<char *>(slots)) / sizeof(Slot);
+        slots[idx].next = head;
+        active[idx] = false;
+        head = idx;
+    }
+};
+
+}
+
 template <typename F, typename NodeType>
 class GraphMatchingState
 {
@@ -58,9 +164,39 @@ private:
     double m_log_forward_proposal = 0.0;
     Counter<F> m_log_gradient;
 
+    static detail::GraphMatchingStateAllocator<F, NodeType> pool;
+
 public:
-    explicit GraphMatchingState(const std::vector<node_type> &nodes)
-        : m_unvisited_nodes(nodes.begin(), nodes.end()) {}
+    static void allocate(size_t cap) {
+        pool.initialize(cap);
+    }
+
+    static void *operator new(size_t size) {
+        if (size != sizeof(GraphMatchingState<F, NodeType>)) {
+            throw std::bad_alloc();
+        }
+        while (true) {
+            auto p = pool.allocate();
+            if (p) {
+                return p;
+            }
+            std::new_handler h = std::set_new_handler(nullptr);
+            std::set_new_handler(h);
+            if (h) {
+                h();
+            } else {
+                throw std::bad_alloc();
+            }
+        }
+    }
+
+    static void operator delete(void *p) {
+        if (!p) return;
+        pool.deallocate(p);
+    }
+
+public:
+    explicit GraphMatchingState(const std::vector<node_type> &nodes) : m_unvisited_nodes(nodes.begin(), nodes.end()) {}
 
 private:
     std::pair<double, double> sample_decision(Random &random,
@@ -433,6 +569,10 @@ public:
         return out;
     }
 };
+
+template <typename F, typename NodeType>
+detail::GraphMatchingStateAllocator<F, NodeType> GraphMatchingState<F, NodeType>::pool;
+
 }
 
 #endif //SGMWSMCPP_GRAPHMATCHINGSTATE_H

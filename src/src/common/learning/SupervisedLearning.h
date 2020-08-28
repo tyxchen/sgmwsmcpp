@@ -59,10 +59,9 @@ namespace detail
 
 template <typename F, typename NodeType>
 std::pair<double, Counter<F>> evaluate(const MultinomialLogisticModel<F, NodeType> &model,
-                                       const std::pair<std::vector<edge_type_base<NodeType>>,
-                                                       std::vector<node_type_base<NodeType>>> &instance) {
-    const auto &permutation = instance.second;
-    const auto &decisions = instance.first;
+                                       const std::shared_ptr<GraphMatchingState<F, NodeType>> &instance) {
+    const auto &permutation = instance->visited_nodes();
+    const auto &decisions = instance->decisions();
     GraphMatchingState<F, NodeType> state(permutation);
 
     for (auto &decision : decisions) {
@@ -81,6 +80,7 @@ class ObjectiveFunction
     using edge_type = edge_type_base<NodeType>;
 
     std::vector<std::pair<std::vector<edge_type>, std::vector<node_type>>> m_latent_decisions;
+    std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> m_latents;
     std::reference_wrapper<Command<F, NodeType>> m_command;
 
     double m_log_density = 0.0;
@@ -88,12 +88,37 @@ class ObjectiveFunction
 
     Eigen::VectorXd m_curr_x;
 
-public:
+    static size_t count;
     static Counter<F> *counter_pool;
+    static size_t counter_pool_cap;
     static size_t counter_pool_max;
 
 public:
-    explicit ObjectiveFunction(Command<F, NodeType> &command) : m_command(command) {}
+    static void set_counter_pool_capacity(size_t new_cap) {
+        if (new_cap > counter_pool_cap) {
+            counter_pool_cap = new_cap;
+        }
+    }
+
+public:
+    explicit ObjectiveFunction(Command<F, NodeType> &command) : m_command(command) {
+        if (count == 0) {
+            counter_pool = static_cast<Counter<F> *>(operator new(counter_pool_cap * sizeof(Counter<F>)));
+        }
+        ++count;
+    }
+
+    ~ObjectiveFunction() {
+        --count;
+        if (count == 0) {
+            for (auto i = 0ul; i < counter_pool_max; ++i) {
+                counter_pool[i].~Counter<F>();
+            }
+            operator delete(counter_pool);
+            counter_pool = nullptr;
+            counter_pool_max = 0;
+        }
+    }
 
     bool requires_computation(const Eigen::VectorXd &x) {
         return m_curr_x.rows() == 0 || x != m_curr_x;
@@ -117,11 +142,11 @@ public:
 
         if (SupervisedLearningConfig::parallel) {
             auto log_density = tbb::make_atomic(0.0);
-            auto ld_size = m_latent_decisions.size();
+            auto ld_size = m_latents.size();
 
             tbb::parallel_for(tbb::blocked_range<size_t>(0, ld_size), [&](const auto &r) {
                 for (auto i = r.begin(); i != r.end(); ++i) {
-                    auto ret = detail::evaluate(model, m_latent_decisions[i]);
+                    auto ret = detail::evaluate(model, m_latents[i]);
                     double new_density, old_density;
                     do {
                         old_density = log_density;
@@ -148,7 +173,7 @@ public:
             m_log_density = log_density;
         } else {
             m_log_density = 0.0;
-            for (const auto &instance : m_latent_decisions) {
+            for (const auto &instance : m_latents) {
                 auto ret = detail::evaluate(model, instance);
                 m_log_density += ret.first;
                 m_log_gradient.increment_all(ret.second);
@@ -187,7 +212,7 @@ public:
 
         auto model = MultinomialLogisticModel<F, NodeType>(m_command.get().feature_extractor(),
                                                            m_command.get().model_parameters());
-        for (auto &instance : m_latent_decisions) {
+        for (auto &instance : m_latents) {
             auto ret = detail::evaluate(model, instance);
             stats.push_back(ret.first);
         }
@@ -206,9 +231,7 @@ public:
     }
 
     void add_instances(const std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>> &samples) {
-        for (auto &sample : samples) {
-            m_latent_decisions.emplace_back(sample->decisions(), sample->visited_nodes());
-        }
+        m_latents.insert(m_latents.end(), samples.begin(), samples.end());
     }
 
     int dim() {
@@ -217,7 +240,13 @@ public:
 };
 
 template <typename F, typename NodeType>
+size_t ObjectiveFunction<F, NodeType>::count = 0;
+
+template <typename F, typename NodeType>
 Counter<F> * ObjectiveFunction<F, NodeType>::counter_pool = nullptr;
+
+template <typename F, typename NodeType>
+size_t ObjectiveFunction<F, NodeType>::counter_pool_cap = 0;
 
 template <typename F, typename NodeType>
 size_t ObjectiveFunction<F, NodeType>::counter_pool_max = 0;
@@ -293,8 +322,19 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 
     initial_states.reserve(instances_size);
 
+    // The maximum number of GraphMatchingStates that will be active at any given step of sample generation is equal
+    // to num_implicit_particles, and the number of GraphMatchingStates saved from a single round of sample
+    // generation is equal to num_concrete_particles. Thus, we calculate the memory pool for a GraphMatchingState as
+    // having size
+    //     instances_size + (instances_size - 1) * num_concrete_particles + num_implicit_particles
+    GraphMatchingState<F, NodeType>::allocate(
+        instances_size + (instances_size - 1) * num_concrete_particles + num_implicit_particles
+    );
+
     for (auto &instance : instances) {
-        initial_states.emplace_back(std::make_shared<GraphMatchingState<F, NodeType>>(instance.second));
+        initial_states.emplace_back(std::shared_ptr<GraphMatchingState<F, NodeType>>(
+            new GraphMatchingState<F, NodeType>(instance.second)
+        ));
     }
 
     auto iter = 0;
@@ -315,14 +355,10 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 #endif
 
     if (SupervisedLearningConfig::parallel) {
-        if (ObjectiveFunction<F, NodeType>::counter_pool != nullptr) {
-            throw sgm::runtime_error("Counter pool is in use; cannot reallocate to it");
-        }
-        ObjectiveFunction<F, NodeType>::counter_pool = static_cast<Counter<F> *>(operator new(num_implicit_particles *
-            sizeof(Counter<F>)));
+        ObjectiveFunction<F, NodeType>::set_counter_pool_capacity(instances_size * num_concrete_particles);
     }
 
-    auto samples = std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>>();
+    auto samples = std::vector<std::shared_ptr<GraphMatchingState<F, NodeType>>>(num_concrete_particles);
 
     while (!converged && iter < max_iter) {
         ObjectiveFunction<F, NodeType> objective(command);
@@ -331,7 +367,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
         std::vector<ObjectiveFunction<F, NodeType>> objs;
 #endif
 
-        // TODO: can this be parallelized?
         for (auto i = 0u; i < instances_size; ++i) {
             samples.clear();
             detail::generate_samples(random(), instances[i], initial_states[i], command,
@@ -401,14 +436,6 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
         params_output << p.format(eigen_fmt) << "\n";
     }
 #endif
-
-    if (SupervisedLearningConfig::parallel) {
-        for (auto i = 0ul; i < ObjectiveFunction<F, NodeType>::counter_pool_max; ++i) {
-            ObjectiveFunction<F, NodeType>::counter_pool[i].~Counter<F>();
-        }
-        operator delete(ObjectiveFunction<F, NodeType>::counter_pool);
-        ObjectiveFunction<F, NodeType>::counter_pool = nullptr;
-    }
 
     return std::make_pair(nllk, w);
 }
