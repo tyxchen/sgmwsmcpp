@@ -43,10 +43,9 @@ using datum_type = typename std::vector<std::pair<std::vector<edge_type>, std::v
 TrainAndPredictResult::TrainAndPredictResult(int _pidx, int _idx, int _matching)
     : pidx(_pidx), idx(_idx), matching(_matching) {}
 
-std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
+std::tuple<Counter<string_t>, Counter<string_t>, Counter<string_t>> sgm::train(
     const std::vector<std::string> &training_boards,
-    const std::vector<std::string> &test_boards,
-    int concrete_particles, int max_implicit_particles, int target_ess,
+    int concrete_particles, int max_implicit_particles,
     int max_em_iter, int max_lbfgs_iter,
     sgm::Random::seed_type seed, double tol, bool use_spf, bool parallelize
 ) {
@@ -56,7 +55,6 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     SupervisedLearningConfig::num_lbfgs_iters = max_lbfgs_iter;
 
     auto training_instances = ExpUtils::read_test_boards(training_boards, false);
-    auto test_instances = ExpUtils::read_test_boards(test_boards, false);
     auto training_data = ExpUtils::unpack<EllipticalKnot>(training_instances);
 
     EllipticalKnotFeatureExtractor fe;
@@ -102,21 +100,19 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         sd.set(f, std::sqrt(var / (n - 1)));
     }
 
-    fe.standardize(std::move(mean), std::move(sd));
-
-    /*
-     * Train the model parameters and run SMC on test data
-     */
-    const auto &fe_mean = fe.mean();
-    const auto &fe_sd = fe.sd();
     for (auto i = 0; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
         sgm::logger << "Feature " << i << ":" << std::endl;
         sgm::logger << "  name: " << f << std::endl;
-        sgm::logger << "  mean: " << fe_mean.get(f) << std::endl;
-        sgm::logger << "  sd:   " << fe_sd.get(f) << std::endl;
+        sgm::logger << "  mean: " << mean.get(f) << std::endl;
+        sgm::logger << "  sd:   " << sd.get(f) << std::endl;
     }
 
+    fe.standardize(mean, sd);
+
+    /*
+     * Train the model parameters and run SMC on test data
+     */
     auto initial = Eigen::VectorXd::Zero(fe_dim);
     auto ret = SupervisedLearning::MAP_via_MCEM(random, 0, command, training_data, max_em_iter, concrete_particles,
                                                 max_implicit_particles, initial, tol, false, use_spf);
@@ -125,7 +121,29 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
 
     command.update_model_parameters(ret.second);
 
+    return std::make_tuple(std::move(command.model_parameters()),
+                           std::move(mean), std::move(sd));
+}
+
+std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
+    const std::vector<KnotDataReader::Segment> &test_instances,
+    const Counter<string_t> &params,
+    const Counter<string_t> &mean,
+    const Counter<string_t> &sd,
+    int target_ess,
+    Random::seed_type seed,
+    bool use_spf,
+    bool parallelize
+) {
     auto matchings_by_dataset = std::vector<std::vector<TrainAndPredictResult>>();
+    EllipticalKnotFeatureExtractor fe;
+    fe.standardize(mean, sd);
+    Command<string_t, EllipticalKnot> command(fe);
+    command.model_parameters() = params;
+
+    auto random = Random(seed);
+
+    SupervisedLearningConfig::parallel = parallelize;
 
     // The maximum number of GraphMatchingStates that will be active at any given step of sample generation is equal
     // to 1000 (hardcoded), and the number of GraphMatchingStates saved from a single round of sample
@@ -179,3 +197,36 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     return matchings_by_dataset;
 }
 
+std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
+    const std::vector<std::string> &test_boards,
+    const Counter<string_t> &params,
+    const Counter<string_t> &mean,
+    const Counter<string_t> &sd,
+    int target_ess,
+    Random::seed_type seed,
+    bool use_spf,
+    bool parallelize
+) {
+    return predict(ExpUtils::read_test_boards(test_boards, false),
+                   params, mean, sd, target_ess, seed, use_spf, parallelize);
+}
+
+std::vector<std::vector<TrainAndPredictResult>>
+sgm::train_and_predict(
+    const std::vector<std::string> &training_boards,
+    const std::vector<std::string> &test_boards,
+    int concrete_particles,
+    int max_implicit_particles,
+    int target_ess,
+    int max_em_iter,
+    int max_lbfgs_iter,
+    Random::seed_type seed,
+    double tol,
+    bool use_spf,
+    bool parallelize
+) {
+    auto ret = train(training_boards, concrete_particles, max_implicit_particles, max_em_iter, max_lbfgs_iter, seed,
+                     tol, use_spf, parallelize);
+    return predict(test_boards, std::get<0>(ret), std::get<1>(ret), std::get<2>(ret), target_ess, seed, use_spf,
+                   parallelize);
+}

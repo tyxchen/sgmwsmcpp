@@ -37,7 +37,7 @@ struct TrainAndPredictResult
     TrainAndPredictResult(int _pidx, int _idx, int _matching);
 };
 
-std::vector<std::vector<TrainAndPredictResult>> train(
+std::tuple<Counter<string_t>, Counter<string_t>, Counter<string_t>> train(
     const std::vector<std::string> &training_boards,
     int concrete_particles,
     int max_implicit_particles,
@@ -50,10 +50,21 @@ std::vector<std::vector<TrainAndPredictResult>> train(
 );
 
 std::vector<std::vector<TrainAndPredictResult>> predict(
+    const std::vector<KnotDataReader::Segment> &test_instances,
     const Counter<string_t> &params,
     const Counter<string_t> &mean,
     const Counter<string_t> &sd,
+    int target_ess,
+    Random::seed_type seed,
+    bool use_spf,
+    bool parallelize
+);
+
+std::vector<std::vector<TrainAndPredictResult>> predict(
     const std::vector<std::string> &test_boards,
+    const Counter<string_t> &params,
+    const Counter<string_t> &mean,
+    const Counter<string_t> &sd,
     int target_ess,
     Random::seed_type seed,
     bool use_spf,

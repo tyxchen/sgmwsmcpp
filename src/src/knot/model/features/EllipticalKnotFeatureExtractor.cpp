@@ -51,7 +51,7 @@ int EllipticalKnotFeatureExtractor::_dim() const {
     return m_distance_fe.dim() + m_area_fe.dim();
 }
 
-void EllipticalKnotFeatureExtractor::_standardize(counter_type mean, counter_type sd) {
+void EllipticalKnotFeatureExtractor::_standardize(const counter_type &mean, const counter_type &sd) {
     m_mean = mean;
     m_sd = sd;
 }

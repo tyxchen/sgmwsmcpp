@@ -32,6 +32,23 @@
 
 namespace sgm
 {
+
+namespace EllipticalKnotFeatureExtractorConsts
+{
+static constexpr string_t TWO_MATCHING_DISTANCE_1 =
+    ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1;
+static constexpr string_t TWO_MATCHING_DISTANCE_2 =
+    ThreeMatchingDistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2;
+static constexpr string_t TWO_MATCHING_AREA_DIFF =
+    AreaFeatureExtractorConsts::TWO_MATCHING_AREA_DIFF;
+static constexpr string_t THREE_MATCHING_DISTANCE_1 =
+    ThreeMatchingDistanceFeatureExtractorConsts::THREE_MATCHING_DISTANCE_1;
+static constexpr string_t THREE_MATCHING_DISTANCE_2 =
+    ThreeMatchingDistanceFeatureExtractorConsts::THREE_MATCHING_DISTANCE_2;
+static constexpr string_t THREE_MATCHING_AREA_DIFF =
+    AreaFeatureExtractorConsts::THREE_MATCHING_AREA_DIFF;
+}
+
 class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<string_t, EllipticalKnot>
 {
     ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> m_distance_fe;
@@ -48,7 +65,7 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<string_t, Ell
 
     int _dim() const override;
 
-    void _standardize(counter_type mean, counter_type sd) override;
+    void _standardize(const counter_type &mean, const counter_type &sd) override;
 
 public:
     const ThreeMatchingDistanceFeatureExtractor<EllipticalKnot> &distance_fe() const;

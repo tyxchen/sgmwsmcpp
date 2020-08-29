@@ -52,8 +52,8 @@ public:
         return _dim();
     }
 
-    void standardize(counter_type mean, counter_type sd) {
-        _standardize(std::move(mean), std::move(sd));
+    void standardize(const counter_type &mean, const counter_type &sd) {
+        _standardize(mean, sd);
     }
 
     virtual ~GraphFeatureExtractor() = default;
@@ -68,7 +68,7 @@ private:
 
     virtual int _dim() const = 0;
 
-    virtual void _standardize(counter_type mean, counter_type sd) {}
+    virtual void _standardize(const counter_type &mean, const counter_type &sd) {}
 };
 }
 

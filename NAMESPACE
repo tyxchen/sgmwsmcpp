@@ -1,5 +1,7 @@
 useDynLib(sgmwsmcpp, .registration=TRUE)
-exportPattern("^[[:alpha:]]+")
+export(predict)
+export(train)
+export(train_and_predict)
 import(RcppEigen, BH)
 importFrom(Rcpp, evalCpp)
 importFrom(RcppParallel, RcppParallelLibs)

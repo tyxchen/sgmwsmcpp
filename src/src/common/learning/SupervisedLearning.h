@@ -369,6 +369,7 @@ std::pair<double, Eigen::VectorXd> MAP_via_MCEM(
 
         for (auto i = 0u; i < instances_size; ++i) {
             samples.clear();
+            if (instances[i].second.empty()) continue;
             detail::generate_samples(random(), instances[i], initial_states[i], command,
                                      num_concrete_particles, num_implicit_particles, use_spf, samples);
 #ifndef NDEBUG

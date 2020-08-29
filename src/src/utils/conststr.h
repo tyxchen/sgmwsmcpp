@@ -20,7 +20,9 @@
 #ifndef SGMWSMCPP_CONSTSTR_H
 #define SGMWSMCPP_CONSTSTR_H
 
+#include <cstring>
 #include <iostream>
+
 #include "utils/hash.h"
 
 namespace sgm
@@ -36,10 +38,16 @@ public:
     constexpr conststr(const char *data, size_t hash) noexcept : m_data(data), m_hash(hash) {}
     constexpr char operator*() const noexcept { return *m_data; }
     constexpr char operator[](size_t idx) const noexcept { return m_data[idx]; }
-    // constexpr operator const char *() const noexcept { return m_data; }
+    constexpr const char *data() const noexcept { return m_data; }
     constexpr size_t hash() const noexcept { return m_hash; }
     friend constexpr bool operator==(const conststr &lhs, const conststr &rhs) noexcept {
         return lhs.m_hash == rhs.m_hash;
+    }
+    friend bool operator==(const conststr &lhs, const char *rhs) noexcept {
+        return strcmp(lhs.m_data, rhs) == 0;
+    }
+    friend bool operator==(const char *lhs, const conststr &rhs) noexcept {
+        return strcmp(lhs, rhs.m_data) == 0;
     }
     friend std::ostream &operator<<(std::ostream &out, const conststr &rhs) {
         out << rhs.m_data;
