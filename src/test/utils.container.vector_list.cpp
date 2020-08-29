@@ -234,8 +234,14 @@ TEST_CASE("vector_list doesn't leak memory") {
         sgm::vector_list<B> vll, vlll;
         vll.emplace_back(0, 1);
         vll.emplace_back(0, 1);
-        vll.emplace_back(0, 1);
 
+        // test throw on reserve
+        try {
+            vll.emplace_back(0, 1);
+            REQUIRE(1 == 0);
+        } catch (...) {}
+
+        // test throw on copy
         try {
             vlll = vll;
             REQUIRE(1 == 0);
