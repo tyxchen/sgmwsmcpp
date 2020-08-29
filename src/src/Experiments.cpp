@@ -67,14 +67,12 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     std::vector<std::vector<double>> standardizations(fe_dim);
     auto phi = fe.default_parameters();
 
-    for (const auto &data : training_data) {
-        for (const auto &datum : data) {
-            for (const auto &e : datum.first) {
-                phi = fe.default_parameters();
-                fe.extract_features(e, phi);
-                for (const auto &vals : phi) {
-                    standardizations[command.indexer().o2i(vals.first)].push_back(vals.second);
-                }
+    for (const auto &datum : training_data) {
+        for (const auto &e : datum.first) {
+            phi = fe.default_parameters();
+            fe.extract_features(e, phi);
+            for (const auto &vals : phi) {
+                standardizations[command.indexer().o2i(vals.first)].push_back(vals.second);
             }
         }
     }
@@ -120,8 +118,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
     }
 
     auto initial = Eigen::VectorXd::Zero(fe_dim);
-    auto instances = ExpUtils::pack<EllipticalKnot>(training_data);
-    auto ret = SupervisedLearning::MAP_via_MCEM(random, 0, command, instances, max_em_iter, concrete_particles,
+    auto ret = SupervisedLearning::MAP_via_MCEM(random, 0, command, training_data, max_em_iter, concrete_particles,
                                                 max_implicit_particles, initial, tol, false, use_spf);
 
     sgm::logger << ret.first << "\n" << ret.second << std::endl;
@@ -140,8 +137,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::train_and_predict(
         (test_instances.size() - 1) * target_ess + 1000
     );
 
-    for (auto &test_instance : test_instances) {
-        auto &segment = test_instance[0];
+    for (auto &segment : test_instances) {
         auto &emissions = segment.knots();
         auto initial_state = std::make_shared<GraphMatchingState<string_t, EllipticalKnot>>(emissions);
         auto transition_density = smc::GenericMatchingLatentSimulator<string_t, EllipticalKnot>(command,

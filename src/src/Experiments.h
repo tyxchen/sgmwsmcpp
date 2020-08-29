@@ -37,6 +37,29 @@ struct TrainAndPredictResult
     TrainAndPredictResult(int _pidx, int _idx, int _matching);
 };
 
+std::vector<std::vector<TrainAndPredictResult>> train(
+    const std::vector<std::string> &training_boards,
+    int concrete_particles,
+    int max_implicit_particles,
+    int max_em_iter,
+    int max_lbfgs_iter,
+    Random::seed_type seed,
+    double tol,
+    bool use_spf,
+    bool parallelize
+);
+
+std::vector<std::vector<TrainAndPredictResult>> predict(
+    const Counter<string_t> &params,
+    const Counter<string_t> &mean,
+    const Counter<string_t> &sd,
+    const std::vector<std::string> &test_boards,
+    int target_ess,
+    Random::seed_type seed,
+    bool use_spf,
+    bool parallelize
+);
+
 std::vector<std::vector<TrainAndPredictResult>> train_and_predict(
     const std::vector<std::string> &training_boards,
     const std::vector<std::string> &test_boards,

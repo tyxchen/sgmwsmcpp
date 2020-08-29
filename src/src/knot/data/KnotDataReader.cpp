@@ -23,9 +23,6 @@
 using namespace sgm;
 using namespace sgm::KnotDataReader;
 
-const double KnotDataReaderConfig::Y_DIM[2] = { 200.0, 500.0 };
-const double KnotDataReaderConfig::Z_DIM[2] = { 350.0, 500.0 };
-
 Segment::Segment(int id) : m_id(id) {}
 
 int Segment::id() const { return m_id; }
@@ -44,12 +41,15 @@ void Segment::add_node(int label, const node_type &knot) {
     m_label_to_edge[label]->insert(knot);
 }
 
-std::vector<Segment> KnotDataReader::read_segmented_test_board(const std::string &file) {
+Segment KnotDataReader::read_segmented_test_board(const std::string &file) {
     std::cout << "Processing " << file << std::endl;
 
-    std::vector<Segment> segments;
+    Segment segment(1);
     io::CSVReader<15> test_board(file);
-    // TODO: change to reading a header
+//    test_board.read_header(io::ignore_extra_column,
+//                           "surface", "x", "y", "var_x", "var_y", "cov", "n", "idx", "z",
+//                           "boundary_axis_idx1", "boundary_axis_idx2", "yaxis", "zaxis", "area_over",
+//                           "matching");
     test_board.next_line();
 
     int pidx;
@@ -65,14 +65,10 @@ std::vector<Segment> KnotDataReader::read_segmented_test_board(const std::string
     while (test_board.read_row(
         pidx, x, y, var_x, var_y, cov, n, idx, z, boundary_axis0, boundary_axis1, yaxis, zaxis, area_over_axis, label
     )) {
-        if (segments.empty()) {
-            segments.emplace_back(1);
-        }
-        segments[0].add_node(label,
-                             std::make_shared<EllipticalKnot>(pidx, idx, x, y, z, n, var_x, var_y, cov,
-                                                              boundary_axis0, boundary_axis1,
-                                                              yaxis, zaxis, area_over_axis));
+        segment.add_node(label, std::make_shared<EllipticalKnot>(pidx, idx, x, y, z, n, var_x, var_y, cov,
+                                                                 boundary_axis0, boundary_axis1,
+                                                                 yaxis, zaxis, area_over_axis));
     }
 
-    return segments;
+    return segment;
 }

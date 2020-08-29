@@ -27,39 +27,24 @@
 
 namespace sgm
 {
-struct ExpUtilsConfig
-{
-    static int concrete_particles;
-    static int max_virtual_particles;
-    static std::string output_path;
-    static double lambda;
-    static double tol;
-    static bool exact_sampling;
-    static bool sequential_matching;
-};
 
 namespace ExpUtils
 {
-std::vector<std::vector<KnotDataReader::Segment>> read_test_boards(const std::vector<std::string> &boards,
-                                                                   bool reverse_sequence);
+std::vector<KnotDataReader::Segment> read_test_boards(const std::vector<std::string> &boards,
+                                                      bool reverse_sequence);
 
 template <typename KnotType>
-std::vector<std::vector<std::pair<std::vector<edge_type_base<KnotType>>,
-                                  std::vector<node_type_base<KnotType>>>>> unpack(
-    const std::vector<std::vector<KnotDataReader::Segment>> &instances
+std::vector<std::pair<std::vector<edge_type_base<KnotType>>, std::vector<node_type_base<KnotType>>>> unpack(
+    const std::vector<KnotDataReader::Segment> &instances
 ) {
-    std::vector<std::vector<std::pair<std::vector<edge_type_base<KnotType>>,
-                                      std::vector<node_type_base<KnotType>>>>> data;
-    for (auto &instance : instances) {
-        std::vector<std::pair<std::vector<edge_type_base<KnotType>>, std::vector<node_type_base<KnotType>>>> datum;
-        for (auto &segment : instance) {
-            std::vector<edge_type_base<KnotType>> edges;
-            for (auto &matching : segment.label_to_edge()) {
-                edges.emplace_back(matching.second);
-            }
-            datum.emplace_back(std::move(edges), segment.knots());
+    std::vector<std::pair<std::vector<edge_type_base<KnotType>>,
+                          std::vector<node_type_base<KnotType>>>> data;
+    for (auto &segment : instances) {
+        data.emplace_back(std::vector<edge_type_base<KnotType>>(), segment.knots());
+        auto &edges = data.back().first;
+        for (auto &matching : segment.label_to_edge()) {
+            edges.emplace_back(matching.second);
         }
-        data.emplace_back(std::move(datum));
     }
     return data;
 }

@@ -30,15 +30,6 @@
 
 namespace sgm
 {
-struct KnotDataReaderConfig
-{
-    const static double Y_DIM[2];
-    const static double Z_DIM[2];
-    // following units are in inches
-    const static int BOARD_LENGTH;
-    const static int BOARD_WIDTH;
-    const static int BOARD_HEIGHT;
-};
 
 namespace KnotDataReader
 {
@@ -65,7 +56,7 @@ public:
     void add_node(int label, const node_type& knot);
 };
 
-std::vector<Segment> read_segmented_test_board(const std::string &file);
+Segment read_segmented_test_board(const std::string &file);
 }
 }
 
