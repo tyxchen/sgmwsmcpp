@@ -20,23 +20,52 @@ int main(int argc, char** argv) {
     cxxopts::Options options("sgmwsmc", "Description");
 
     options.add_options()
-        ("use-spf", "Use SPF", cxxopts::value<bool>()->default_value("true"))
-        ("target-ess", "", cxxopts::value<int>()->default_value("100"))
-        ("concrete-particles", "Number of concrete particles", cxxopts::value<int>()->default_value("100"))
-        ("max-implicit-particles", "Maximum number of implicit particles",
+        ("use-spf",
+            "Use streaming particle filters",
+            cxxopts::value<bool>()->default_value("true"))
+        ("target-ess",
+            "Minimum number of particles to sample during prediction",
+            cxxopts::value<int>()->default_value("100"))
+        ("concrete-particles",
+            "Minimum number of particles to sample during training",
+            cxxopts::value<int>()->default_value("100"))
+        ("max-implicit-particles",
+            "Maximum number of particles to sample during training",
             cxxopts::value<int>()->default_value("1000"))
-        ("lambda", "", cxxopts::value<double>()->default_value("10.0"))
-        ("max-em-iter", "", cxxopts::value<int>()->default_value("10"))
-        ("parallel", "", cxxopts::value<bool>()->default_value("true"))
-        ("max-lbfgs-iter", "", cxxopts::value<int>()->default_value("100"))
-        ("seed", "", cxxopts::value<Random::seed_type>()->default_value("123"))
-        ("tol", "", cxxopts::value<double>()->default_value("1e-10"))
-        ("exact-sampling", "", cxxopts::value<bool>()->default_value("true"))
-        ("sequential-matching", "", cxxopts::value<bool>()->default_value("true"))
-        ("trace", "", cxxopts::value<std::string>()->default_value(""))
-        ("d,data-directories", "", cxxopts::value<std::vector<std::string>>())
-        ("t,test-data-directories", "", cxxopts::value<std::vector<std::string>>())
-        ("o,output-dir", "", cxxopts::value<std::string>());
+//        ("lambda", "", cxxopts::value<double>()->default_value("10.0"))
+        ("max-em-iter",
+            "Maximum number of MCEM iterations",
+            cxxopts::value<int>()->default_value("10"))
+        ("parallel",
+            "Use parallel processing",
+            cxxopts::value<bool>()->default_value("true"))
+        ("max-lbfgs-iter",
+            "Maximum number of iterations for the LBFGS minimizer",
+            cxxopts::value<int>()->default_value("100"))
+        ("seed",
+            "Seed to initialize the random number generator with",
+            cxxopts::value<Random::seed_type>()->default_value("123"))
+        ("tol",
+            "Tolerance for the LBFGS minimizer",
+            cxxopts::value<double>()->default_value("1e-10"))
+//        ("exact-sampling",
+//            "Use exact sampling",
+//            cxxopts::value<bool>()->default_value("true"))
+//        ("sequential-matching",
+//            "Use sequential matching",
+//            cxxopts::value<bool>()->default_value("true"))
+        ("trace",
+            "Directory to output log files. If blank, defaults to results/<date and time>",
+            cxxopts::value<std::string>()->default_value(""))
+        ("d,data-directories",
+            "List of directories containing training data CSV files",
+            cxxopts::value<std::vector<std::string>>())
+        ("t,test-data-directories",
+            "List of directories containing testing data CSV files",
+            cxxopts::value<std::vector<std::string>>())
+        ("o,output-dir",
+            "Directory to output prediction results",
+            cxxopts::value<std::string>());
 
     auto args = options.parse(argc, argv);
 
@@ -66,14 +95,14 @@ int main(int argc, char** argv) {
     auto target_ess = args["target-ess"].as<int>();
     auto concrete_particles = args["concrete-particles"].as<int>();
     auto max_implicit_particles = args["max-implicit-particles"].as<int>();
-    auto lambda = args["lambda"].as<double>();
+//    auto lambda = args["lambda"].as<double>();
     auto max_em_iter = args["max-em-iter"].as<int>();
     auto parallel = args["parallel"].as<bool>();
     auto max_lbfgs_iter = args["max-lbfgs-iter"].as<int>();
     auto seed = args["seed"].as<Random::seed_type>();
     auto tol = args["tol"].as<double>();
-    auto exact_sampling = args["exact-sampling"].as<bool>();
-    auto sequential_matching = args["sequential-matching"].as<bool>();
+//    auto exact_sampling = args["exact-sampling"].as<bool>();
+//    auto sequential_matching = args["sequential-matching"].as<bool>();
 
     auto training_directories = args["data-directories"].as<std::vector<std::string>>();
     auto test_directories = args["test-data-directories"].as<std::vector<std::string>>();

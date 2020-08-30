@@ -1,12 +1,12 @@
 Package: sgmwsmcpp
 Type: Package
 Title: Sequential graph matching with sequential Monte Carlo
-Version: 1.0
-Date: 2020-06-04
+Version: 1.0.0
+Date: 2020-08-31
 Author: Terry Chen
 Maintainer: Terry Chen <terry.chen@uwaterloo.ca>
-Description: RCpp implementation of (https://doi.org/10.1214/19-AOAS1255)
-License: LGPLv2.1 or later
+Description: Solution for the knot-matching problem using sequential Monte Carlo sampling. Jun, Wong, Zidek, and Bouchard-Côté (2019) <https://doi.org/10.1214/19-AOAS1255>
+License: LGPL-2.1
 RoxygenNote: 7.1.0
 LinkingTo: 
     Rcpp, RcppParallel, RcppEigen, BH

@@ -126,7 +126,7 @@ std::tuple<Counter<string_t>, Counter<string_t>, Counter<string_t>> sgm::train(
 }
 
 std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
-    const std::vector<KnotDataReader::Segment> &test_instances,
+    const std::vector<std::vector<node_type_base<EllipticalKnot>>> &test_instances,
     const Counter<string_t> &params,
     const Counter<string_t> &mean,
     const Counter<string_t> &sd,
@@ -155,8 +155,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
         (test_instances.size() - 1) * target_ess + 1000
     );
 
-    for (auto &segment : test_instances) {
-        auto &emissions = segment.knots();
+    for (auto &emissions : test_instances) {
         auto initial_state = std::make_shared<GraphMatchingState<string_t, EllipticalKnot>>(emissions);
         auto transition_density = smc::GenericMatchingLatentSimulator<string_t, EllipticalKnot>(command,
                                                                                                 initial_state,
@@ -207,8 +206,13 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
     bool use_spf,
     bool parallelize
 ) {
-    return predict(ExpUtils::read_test_boards(test_boards, false),
-                   params, mean, sd, target_ess, seed, use_spf, parallelize);
+    auto test_instances = ExpUtils::read_test_boards(test_boards, false);
+    auto instances = std::vector<std::vector<node_type_base<EllipticalKnot>>>();
+    instances.reserve(test_instances.size());
+    for (auto &test_inst : test_instances) {
+        instances.emplace_back(std::move(test_inst.knots()));
+    }
+    return predict(instances, params, mean, sd, target_ess, seed, use_spf, parallelize);
 }
 
 std::vector<std::vector<TrainAndPredictResult>>

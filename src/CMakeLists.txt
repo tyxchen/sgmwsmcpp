@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(sgmwsmcpp VERSION 0.0.1 DESCRIPTION "Sequential graph matching with sequential Monte Carlo")
+project(sgmwsmcpp VERSION 1.0.0 DESCRIPTION "Sequential graph matching with sequential Monte Carlo")
 
 set(CMAKE_CXX_STANDARD 14)
 set(default_build_type "Release")
