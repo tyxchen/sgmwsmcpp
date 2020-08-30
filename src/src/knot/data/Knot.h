@@ -24,8 +24,7 @@
 
 namespace sgm
 {
-template <typename T>
-class Knot : public GraphNode<T>
+class Knot : public GraphNode
 {};
 }
 

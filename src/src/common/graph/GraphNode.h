@@ -24,17 +24,16 @@
 
 namespace sgm
 {
-template <typename F>
 class GraphNode
 {
 public:
     virtual int idx() const = 0;
     virtual int pidx() const = 0;
-    virtual const Counter<F> &node_features() const = 0;
+    virtual double x() const = 0;
 
-    virtual bool operator<(const GraphNode<F> &other) const = 0;
-    virtual bool operator>(const GraphNode<F> &other) const = 0;
-    virtual bool operator==(const GraphNode<F> &other) const = 0;
+    virtual bool operator<(const GraphNode &other) const = 0;
+    virtual bool operator>(const GraphNode &other) const = 0;
+    virtual bool operator==(const GraphNode &other) const = 0;
 
     virtual ~GraphNode() = default;
 };

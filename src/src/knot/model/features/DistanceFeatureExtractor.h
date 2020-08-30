@@ -41,26 +41,21 @@ static constexpr string_t TWO_MATCHING_DISTANCE_2 { "TWO_MATCHING_DISTANCE_2", 2
 
 template <typename NodeType>
 double compute_distance(const NodeType &node, const NodeType &other) {
-    auto node_f = node.node_features();
-    auto other_f = other.node_features();
-
-    auto diffX = std::pow(node_f.get(EllipticalKnotFeatureNames::X) - other_f.get(EllipticalKnotFeatureNames::X), 2);
-    auto diffY = std::pow(node_f.get(EllipticalKnotFeatureNames::Y) - other_f.get(EllipticalKnotFeatureNames::Y), 2);
-    auto diffZ = std::pow(node_f.get(EllipticalKnotFeatureNames::Z) - other_f.get(EllipticalKnotFeatureNames::Z), 2);
+    auto diffX = std::pow(node.x() - other.x(), 2);
+    auto diffY = std::pow(node.y() - other.y(), 2);
+    auto diffZ = std::pow(node.z() - other.z(), 2);
 
     return std::sqrt(diffX + diffY + diffZ);
 }
 
 template <typename KnotType>
 void compute_distance(const KnotType &node, const KnotType &other, Counter<string_t> &features) {
-    auto node_f = node.node_features();
-    auto other_f = other.node_features();
     auto ind1 = node.pidx() % 2;
     auto ind2 = other.pidx() % 2;
 
-    auto diffX = std::pow(node_f.get(EllipticalKnotFeatureNames::X) - other_f.get(EllipticalKnotFeatureNames::X), 2);
-    auto diffY = std::pow(node_f.get(EllipticalKnotFeatureNames::Y) - other_f.get(EllipticalKnotFeatureNames::Y), 2);
-    auto diffZ = std::pow(node_f.get(EllipticalKnotFeatureNames::Z) - other_f.get(EllipticalKnotFeatureNames::Z), 2);
+    auto diffX = std::pow(node.x() - other.x(), 2);
+    auto diffY = std::pow(node.y() - other.y(), 2);
+    auto diffZ = std::pow(node.z() - other.z(), 2);
 
     if (ind1 == 0 && ind1 == ind2) {
         // both knots are on a wide surface

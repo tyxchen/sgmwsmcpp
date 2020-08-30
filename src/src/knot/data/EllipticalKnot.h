@@ -30,30 +30,22 @@
 namespace sgm
 {
 
-namespace EllipticalKnotFeatureNames
-{
-
-// For speed, we provide a custom hash.
-static constexpr string_t X { "x", 1 };
-static constexpr string_t Y { "y", 2 };
-static constexpr string_t Z { "z", 3 };
-static constexpr string_t N { "n", 4 };
-static constexpr string_t VAR_X { "var_x", 5 };
-static constexpr string_t VAR_Y { "var_y", 6 };
-static constexpr string_t COV { "cov", 7 };
-static constexpr string_t BOUNDARY_AXIS0 { "boundary_axis0", 8 };
-static constexpr string_t BOUNDARY_AXIS1 { "boundary_axis1", 9 };
-static constexpr string_t YAXIS { "yaxis", 10 };
-static constexpr string_t ZAXIS { "zaxis", 11 };
-static constexpr string_t AREA_OVER_AXIS { "area_over_axis", 12 };
-
-}
-
-class EllipticalKnot : public Knot<string_t>
+class EllipticalKnot : public GraphNode
 {
     int m_idx;
     int m_pidx;
-    Counter<string_t> m_node_features;
+    double m_x;
+    double m_y;
+    double m_z;
+    double m_n;
+    double m_var_x;
+    double m_var_y;
+    double m_cov;
+    int m_boundary_axis0;
+    int m_boundary_axis1;
+    double m_yaxis;
+    double m_zaxis;
+    double m_area_over_axis;
 
 public:
     EllipticalKnot(int m_pidx, int m_idx,
@@ -67,13 +59,35 @@ public:
 
     int pidx() const override;
 
-    const Counter<string_t> &node_features() const override;
+    double x() const override;
 
-    bool operator<(const GraphNode<string_t> &other) const override;
+    inline double y() const { return m_y; }
 
-    bool operator>(const GraphNode<string_t> &other) const override;
+    inline double z() const { return m_z; }
 
-    bool operator==(const GraphNode<string_t> &other) const override;
+    inline double n() const { return m_n; }
+
+    inline double var_x() const { return m_var_x; }
+
+    inline double var_y() const { return m_var_y; }
+
+    inline double cov() const { return m_cov; }
+
+    inline int boundary_axis0() const { return m_boundary_axis0; }
+
+    inline int boundary_axis1() const { return m_boundary_axis1; }
+
+    inline double yaxis() const { return m_yaxis; }
+
+    inline double zaxis() const { return m_zaxis; }
+
+    inline double area_over_axis() const { return m_area_over_axis; }
+
+    bool operator<(const GraphNode &other) const override;
+
+    bool operator>(const GraphNode &other) const override;
+
+    bool operator==(const GraphNode &other) const override;
 
     friend std::ostream &operator<<(std::ostream &out, const EllipticalKnot &knot);
 

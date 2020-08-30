@@ -39,9 +39,9 @@ const Eigen::Vector2d e1(1.0, 0.0);
 std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
     Eigen::Matrix2d S;
     Eigen::EigenSolver<Eigen::Matrix2d> es;
-    S(0, 0) = knot.node_features().get(EllipticalKnotFeatureNames::VAR_X);
-    S(0, 1) = S(1, 0) = knot.node_features().get(EllipticalKnotFeatureNames::COV);
-    S(1, 1) = knot.node_features().get(EllipticalKnotFeatureNames::VAR_Y);
+    S(0, 0) = knot.var_x();
+    S(0, 1) = S(1, 0) = knot.cov();
+    S(1, 1) = knot.var_y();
     auto eigen = es.compute(S, true);
     auto lambdas = eigen.eigenvalues().real();
 
@@ -56,13 +56,13 @@ std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
 }
 
 bool sgm::shares_axis(const EllipticalKnot &k1, const EllipticalKnot &k2) {
-    double boundary_axes_1[2] = {
-        k1.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS0),
-        k1.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS1)
+    int boundary_axes_1[2] = {
+        k1.boundary_axis0(),
+        k1.boundary_axis1()
     };
-    double boundary_axes_2[2] = {
-        k2.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS0),
-        k2.node_features().get(EllipticalKnotFeatureNames::BOUNDARY_AXIS1)
+    int boundary_axes_2[2] = {
+        k2.boundary_axis0(),
+        k2.boundary_axis1()
     };
 
     return (boundary_axes_2[0] != 0 &&
