@@ -156,6 +156,12 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
     );
 
     for (auto &emissions : test_instances) {
+        if (emissions.empty()) {
+            sgm::logger << "Board has no knots, skipping.\n";
+            matchings_by_dataset.emplace_back();
+            continue;
+        }
+
         auto initial_state = std::make_shared<GraphMatchingState<string_t, EllipticalKnot>>(emissions);
         auto transition_density = smc::GenericMatchingLatentSimulator<string_t, EllipticalKnot>(command,
                                                                                                 initial_state,
@@ -170,7 +176,7 @@ std::vector<std::vector<TrainAndPredictResult>> sgm::predict(
         sgm::logger << "Run time: " << timer.diff() / 1000 << "ms\n";
 
         auto best_log_density = Consts::NEGATIVE_INFINITY;
-        auto best_sample_idx = 0;
+        auto best_sample_idx = -1;
 
         for (size_t size = samples.size(), j = 0; j < size; ++j) {
             if (samples[j]->log_density() > best_log_density) {

@@ -72,7 +72,10 @@ def main(reference_dir, test_dir, verbose):
 
         total_correct_matches += len(ref_data & test_result)
         total_matches += len(ref_data)
-        print("Match rate: {:.2f}%".format(len(ref_data & test_result) / len(ref_data) * 100))
+        if len(ref_data) > 0:
+            print("Match rate: {:.2f}%".format(len(ref_data & test_result) / len(ref_data) * 100))
+        else:
+            print("No matchings available")
         print("---------")
 
     print("Total match rate: {:.2f}%".format(total_correct_matches / total_matches * 100))
