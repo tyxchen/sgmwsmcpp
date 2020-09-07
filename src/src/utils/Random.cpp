@@ -22,13 +22,13 @@
 using namespace sgm;
 
 
-Random::Random(seed_type seed) : m_state((seed ^ 0x5DEECE66Dull) & ((1ull << 48u) - 1)) {}
+Random::Random(seed_type seed) : m_state((seed ^ multiplier) & modulus_mask) {}
 
 Random::result_type Random::next(std::uint32_t bits) {
 #ifndef NDEBUG
     ++m_num_calls;
 #endif
-    m_state = (m_state * 0x5DEECE66Dull + 0xBull) & ((1ull << 48u) - 1);
+    m_state = (m_state * multiplier + increment) & modulus_mask;
     return static_cast<result_type>(m_state >> (48 - bits));
 }
 

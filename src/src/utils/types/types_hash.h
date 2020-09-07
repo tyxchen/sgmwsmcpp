@@ -31,13 +31,16 @@ namespace sgm
 template <typename T>
 struct hash<edge_t<T>>
 {
+    static constexpr unsigned long long a = 0x1234321ull;
+    static constexpr unsigned long long m = (1ull << 32u) - 1;
     hash<T> hasher;
-    size_t operator()(const edge_t<T> &obj) const noexcept {
-        auto hash_v = 0l;
 
-        // definitely not perfect, can be improved
+    size_t operator()(const edge_t<T> &obj) const noexcept {
+        auto hash_v = 0ull;
+
+        // definitely not perfect, but it's fast
         for (auto &thing : obj) {
-            hash_v += hasher(thing);
+            hash_v = (a * hash_v + hasher(thing)) & m;
         }
 
         return hash_v;

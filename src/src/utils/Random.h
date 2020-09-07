@@ -31,7 +31,13 @@ public:
     using seed_type = unsigned long long;
     using result_type = std::uint32_t;
 
+    static constexpr seed_type multiplier = 0x5DEECE66Dull;
+    static constexpr seed_type increment = 0xBull;
+    static constexpr seed_type modulus = 1ull << 48u;
+
 private:
+    static constexpr seed_type modulus_mask = modulus - 1;
+
     seed_type m_state;
 
 public:
