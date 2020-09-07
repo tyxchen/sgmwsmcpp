@@ -173,12 +173,6 @@ public:
             sgm::logger <= "=== RUN " <= i <= " ===\n";
             rec_propagator.execute(population, ret_samples);
 
-            // This is for if no new matchings were made in this iteration.
-            //  If we were to continue, we'd find all the matching states are the same, which doesn't make sense
-            if (population.log_sum() == Consts::NEGATIVE_INFINITY) {
-                throw sgm::runtime_error("Run " + std::to_string(i) + " gave no new matchings");
-            }
-
             logZ += population.logZ_estimate();
             samples = std::move(ret_samples);
         }
