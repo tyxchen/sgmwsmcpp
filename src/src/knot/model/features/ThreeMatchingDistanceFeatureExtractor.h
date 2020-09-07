@@ -33,13 +33,13 @@ namespace sgm
 {
 namespace ThreeMatchingDistanceFeatureExtractorConsts
 {
-constexpr int DIM = 4;
+static constexpr size_t DIM = 4;
 static constexpr string_t TWO_MATCHING_DISTANCE_1 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_1;
 static constexpr string_t TWO_MATCHING_DISTANCE_2 = DistanceFeatureExtractorConsts::TWO_MATCHING_DISTANCE_2;
 static constexpr string_t THREE_MATCHING_DISTANCE_1 { "THREE_MATCHING_DISTANCE_1", 301 };
 static constexpr string_t THREE_MATCHING_DISTANCE_2 { "THREE_MATCHING_DISTANCE_2", 302 };
 
-constexpr double NORM_CONST = 1; // TODO: Do this in R as a pre-processing step and remove this constant
+static constexpr double NORM_CONST = 1; // TODO: Do this in R as a pre-processing step and remove this constant
 }
 
 namespace detail
@@ -124,7 +124,7 @@ private:
         };
     }
 
-    int _dim() const override {
+    size_t _dim() const override {
         return ThreeMatchingDistanceFeatureExtractorConsts::DIM;
     }
 };

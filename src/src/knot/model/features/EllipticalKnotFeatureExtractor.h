@@ -63,7 +63,7 @@ class EllipticalKnotFeatureExtractor: public GraphFeatureExtractor<string_t, Ell
 
     counter_type _default_parameters() const override;
 
-    int _dim() const override;
+    size_t _dim() const override;
 
     void _standardize(const counter_type &mean, const counter_type &sd) override;
 

@@ -33,17 +33,21 @@ namespace sgm
 {
 namespace AreaFeatureExtractorConsts
 {
-constexpr int DIM = 2;
+static constexpr size_t DIM = 2;
 static constexpr string_t TWO_MATCHING_AREA_DIFF { "TWO_MATCHING_AREA_DIFF", 211 };
 static constexpr string_t THREE_MATCHING_AREA_DIFF { "THREE_MATCHING_AREA_DIFF", 311 };
-constexpr double NORM_CONST = 1;
-constexpr double NORM_CONST2 = 500;
-constexpr double CONFIDENCE_LEVEL = 0.975;
+static constexpr double NORM_CONST = 1;
+//constexpr double NORM_CONST2 = 500;
+static constexpr double CONFIDENCE_LEVEL = 0.975;
 // constexpr double SQRT_CRITICAL_VALUE = 2.7162030314820957;
-const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
+static const double SQRT_CRITICAL_VALUE = []() noexcept -> double {
     static_assert(0 <= CONFIDENCE_LEVEL && CONFIDENCE_LEVEL < 1, "Must choose confidence level in [0,1)");
-    boost::math::chi_squared_distribution<double> chi(2);
-    return std::sqrt(boost::math::quantile(chi, CONFIDENCE_LEVEL));
+    try {
+        boost::math::chi_squared_distribution<double> chi(2);
+        return std::sqrt(boost::math::quantile(chi, CONFIDENCE_LEVEL));
+    } catch (...) {
+        return 0;
+    }
 }();
 }
 
@@ -59,7 +63,7 @@ class AreaFeatureExtractor : public GraphFeatureExtractor<string_t, EllipticalKn
 
     counter_type _default_parameters() const override;
 
-    int _dim() const override;
+    size_t _dim() const override;
 
 };
 }

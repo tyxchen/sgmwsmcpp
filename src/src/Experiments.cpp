@@ -78,7 +78,7 @@ std::tuple<Counter<string_t>, Counter<string_t>, Counter<string_t>> sgm::train(
     Counter<string_t> mean;
     Counter<string_t> sd;
 
-    for (auto i = 0; i < fe_dim; ++i) {
+    for (auto i = 0u; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
         auto &standardization = standardizations[i];
         auto n = static_cast<double>(standardization.size());
@@ -100,7 +100,7 @@ std::tuple<Counter<string_t>, Counter<string_t>, Counter<string_t>> sgm::train(
         sd.set(f, std::sqrt(var / (n - 1)));
     }
 
-    for (auto i = 0; i < fe_dim; ++i) {
+    for (auto i = 0u; i < fe_dim; ++i) {
         auto f = command.indexer().i2o(i);
         sgm::logger << "Feature " << i << ":" << std::endl;
         sgm::logger << "  name: " << f << std::endl;

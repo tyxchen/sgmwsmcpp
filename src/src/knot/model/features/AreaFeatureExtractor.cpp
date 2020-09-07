@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <stdexcept>
 #include <utility>
 
 #include <Eigen/Core>
@@ -34,7 +33,7 @@
 
 using namespace sgm;
 
-const Eigen::Vector2d e1(1.0, 0.0);
+static const Eigen::Vector2d e1(1.0, 0.0);
 
 std::pair<double, double> sgm::compute_area(const EllipticalKnot &knot) {
     Eigen::Matrix2d S;
@@ -160,6 +159,6 @@ AreaFeatureExtractor::counter_type AreaFeatureExtractor::_default_parameters() c
     };
 }
 
-int AreaFeatureExtractor::_dim() const {
+size_t AreaFeatureExtractor::_dim() const {
     return AreaFeatureExtractorConsts::DIM;
 }

@@ -48,7 +48,7 @@ public:
         return _default_parameters();
     }
 
-    inline int dim() const {
+    size_t dim() const {
         return _dim();
     }
 
@@ -66,7 +66,7 @@ private:
 
     virtual counter_type _default_parameters() const = 0;
 
-    virtual int _dim() const = 0;
+    virtual size_t _dim() const = 0;
 
     virtual void _standardize(const counter_type &mean, const counter_type &sd) {}
 };

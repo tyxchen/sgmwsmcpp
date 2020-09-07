@@ -34,7 +34,7 @@ namespace sgm
 
 namespace DistanceFeatureExtractorConsts
 {
-constexpr int DIM = 2;
+static constexpr size_t DIM = 2;
 static constexpr string_t TWO_MATCHING_DISTANCE_1 { "TWO_MATCHING_DISTANCE_1", 201 };
 static constexpr string_t TWO_MATCHING_DISTANCE_2 { "TWO_MATCHING_DISTANCE_2", 202 };
 }
@@ -101,7 +101,7 @@ private:
         };
     }
 
-    int _dim() const override {
+    size_t _dim() const override {
         return DistanceFeatureExtractorConsts::DIM;
     }
 };

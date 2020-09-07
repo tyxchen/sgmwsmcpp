@@ -47,7 +47,7 @@ EllipticalKnotFeatureExtractor::counter_type EllipticalKnotFeatureExtractor::_de
     return params;
 }
 
-int EllipticalKnotFeatureExtractor::_dim() const {
+size_t EllipticalKnotFeatureExtractor::_dim() const {
     return m_distance_fe.dim() + m_area_fe.dim();
 }
 

@@ -19,7 +19,7 @@ target_link_libraries(sgmwsmc PRIVATE ${Boost_LIBRARIES} Eigen3::Eigen Threads::
 
 set($ENV{CPLUS_INCLUDE_PATH} "${Boost_INCLUDE_DIRS}:vendor")
 
-target_compile_options(sgmwsmc PRIVATE -Wall)
+target_compile_options(sgmwsmc PRIVATE -Wall -g)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "3.7")
